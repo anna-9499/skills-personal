@@ -1,0 +1,32 @@
+{
+  "$comment": [
+    "Phần bị bỏ khi mang skill này sang Worker. Xem skills/README.md.",
+    "GIỮ LẠI: vai trò, 14 mục output, AI Guardrails, hướng dẫn Security/Performance,",
+    "tiêu chí Readiness — đó là toàn bộ phần phán đoán."
+  ],
+
+  "dropSections": [
+    "## Tạo task trên Testlane",
+    "## Bước tiếp theo"
+  ],
+
+  "sectionNotes": {
+    "## Tạo task trên Testlane": "Gọi list_projects + get_project_context + create_task qua MCP Testlane. Worker LÀ phía bên kia của MCP nên không gọi được; đường Worker tự chạy phân tích rồi tạo task là POST /api/ai/task-from-jira (Phase 9).",
+    "## Bước tiếp theo": "Hỏi người dùng có chuyển sang skill khác không. Trong Testlane việc nối bước là nút bấm trên UI, không phải câu hỏi trong chat."
+  },
+
+  "replaceSections": {
+    "## Tài liệu tham khảo dùng chung": "Bối cảnh app và các business rule đã xác nhận **đã được nạp sẵn vào prompt này**. Không có filesystem, không đọc file, không suy đoán nội dung file không thấy. Nếu phần ngữ cảnh được nạp không nhắc tới app đang phân tích, nói rõ điều đó ở mục \"11. Missing / Ambiguous Information\" thay vì tự lấp.\n\n**Nếu issue thuộc project `MTRO` (Mailtro):**\n- Mailtro **không phải Shopify app** — không suy luận theo Shopify plan/theme/checkout extensibility. Mục \"7. Impacted Areas\" soi theo kiến trúc riêng: Mailtro ID (`staging-id.mailtro.ai`: signup/login/verify/reset password) vs app workspace (`<slug>.wisle.app`), phân quyền Owner/Admin/Member, sending domain, và các ràng buộc chéo (Sending domain chặn gửi Campaign; Campaign phụ thuộc Contacts + Templates).\n- Phần lớn feature phase 2–4 còn \"To Do\", requirement thường chưa chốt chi tiết UI → đừng tự lấp khoảng trống, đưa vào \"11. Missing / Ambiguous Information\" và \"12. Open Questions for PO/Dev\"; Readiness thường là Partially Ready/Not Ready.\n- Rủi ro cần soi kỹ ở mục \"9. Security Considerations\": multi-tenant isolation giữa các workspace, bảo mật invite token (email phải lấy từ token, không tin query string), user enumeration/rate limit ở các màn auth. Deliverability (DNS SPF/DKIM/DMARC) thuộc \"8. Risks\"; thông lượng gửi mail và xử lý contact list lớn thuộc \"10. Performance Considerations\".\n- Bảng tỷ lệ auto/manual theo epic MTRO cũng đã được nạp sẵn vào prompt — dùng để viết phần định hướng automation ở mục \"13. Suggested Test Focus\". Chỉ áp cho Mailtro.",
+
+    "## Định hướng automation trong mục 13 (chỉ áp dụng cho MTRO)": "Chỉ làm bước này khi issue thuộc project `MTRO`. Với 4 app Shopify, bỏ qua — chưa có tỷ lệ chốt cho các app đó.\n\nDựa vào bảng tỷ lệ auto/manual MTRO **đã nạp sẵn trong prompt** (không đọc file), xác định issue thuộc epic nào, rồi thêm vào cuối mục 13 một đoạn ngắn gồm:\n\n- **Tỷ lệ mục tiêu của epic** (ví dụ: \"MTRO-8 Contacts — mục tiêu 65% auto / 35% manual\") và thư mục test tương ứng (`tests/04-contacts/`).\n- **Phần nên automate**: khu vực nào của thay đổi này rơi vào nhóm nghiêng về auto (rule backend, validate, phân quyền, ràng buộc trạng thái, case lặp lại nhiều data, khu vực regression cao).\n- **Phần nên giữ manual, kèm lý do**: phụ thuộc thị giác, phụ thuộc hệ thống ngoài (mail client render, deliverability, DNS, bounce thật), yếu tố thời gian thực, hoặc đánh giá trải nghiệm.\n\nBa lưu ý:\n\n- Đây là **định hướng phân bổ công sức**, không phải cam kết. Không kết luận \"case X sẽ được automate\" — đó là quyết định ở bước `gen-testcase` và khi UI đã ổn định.\n- Bảng đang ở trạng thái draft vì phần lớn epic MTRO chưa có AC. Nếu issue đang phân tích đã có AC chi tiết và scope thật lệch rõ so với ước lượng, nêu ở mục \"8. Risks\" hoặc \"12. Open Questions for PO/Dev\" và đề nghị cập nhật lại bảng.\n- Epic không có trong bảng: áp bộ nguyên tắc chung (nghiêng auto / nghiêng manual) thay vì bịa một con số mới."
+  },
+
+  "dropParagraphs": [
+    "Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví dụ `TEPO-980`, `https://ownego.atlassian.net/browse/TEPO-980`), dùng công cụ Jira (`getJiraIssue`, cloudId `ownego.atlassian.net`, fields `*all` hoặc tối thiểu summary/description/project/labels/status/priority/issuetype, bao gồm cả comment nếu có để nắm các cập nhật/xác nhận mới nhất) để lấy đầy đủ nội dung issue gốc trước khi phân tích. Đọc kỹ comment — quyết định cuối cùng của PO/khách hàng thường nằm trong comment chứ không phải description gốc.",
+    "12. Tạo task tương ứng trên Testlane, đưa nguyên bản phân tích vào phần mô tả của task — xem mục \"Tạo task trên Testlane\" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira."
+  ],
+
+  "replaceParagraphs": {
+    "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case dạng `.xlsx` + push lên Google Sheets.": "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case vào Testlane dưới dạng `draft` để QA duyệt."
+  }
+}

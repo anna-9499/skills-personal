@@ -1,0 +1,23 @@
+{
+  "$comment": [
+    "Phần bị bỏ khi mang skill này sang Worker. Xem skills/README.md.",
+    "GIỮ LẠI: vai trò, quy tắc merge/phát hiện mâu thuẫn, AI Guardrails, định dạng file",
+    "— phần khó nhất của skill này là 'khi nào KHÔNG được ghi đè', và nó mang sang được nguyên vẹn."
+  ],
+
+  "dropSections": [
+    "## Vị trí file lưu trữ",
+    "## Bước tiếp theo"
+  ],
+
+  "sectionNotes": {
+    "## Vị trí file lưu trữ": "Đường dẫn tương đối tới ../qa-requirement-analysis/references/business-rules/. Trên Worker business rules nằm trong KV key business-rules:<JIRA_PROJECT_KEY>.",
+    "## Bước tiếp theo": "Gợi ý chuyển skill trong chat; trên Testlane là nút bấm."
+  },
+
+  "replaceSections": {
+    "## Nhiệm vụ của bạn": "1. Xác định `<APP_PREFIX>` theo cột **Jira Project Key** trong bảng app (TEPO / QCO / DUOS / QSC / MTRO / …). Với mọi app hiện có, Jira Project Key và Test Case Prefix giống nhau — mã `QCC` cũ của Checkout Customizer đã khai tử 2026-08-12.\n2. Bộ rule hiện có của app đó đã được nạp sẵn vào prompt. Không có thì coi như danh sách rỗng.\n3. So sánh từng rule mới với rule đã có:\n   - **Trùng lặp / diễn đạt lại cùng 1 rule** → không thêm dòng mới, chỉ bổ sung `Nguồn` và `Cập nhật lần cuối`.\n   - **Mâu thuẫn với rule đã có** → **không tự động ghi đè**. Nêu rõ mâu thuẫn, trả về `needsConfirmation` và dừng ở đó.\n   - **Rule hoàn toàn mới** → thêm vào đúng nhóm, tạo nhóm mới nếu chưa có nhóm nào khớp.\n4. Trả về **toàn bộ nội dung file sau khi merge** theo đúng định dạng ở dưới, kèm tóm tắt: thêm mấy rule, cập nhật mấy rule, mâu thuẫn mấy chỗ. Không tự ghi — Testlane ghi vào KV sau khi QA duyệt."
+  },
+
+  "dropParagraphs": []
+}
