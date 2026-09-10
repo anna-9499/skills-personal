@@ -13,6 +13,7 @@ skills/
   qa-requirement-analysis/   Phân tích yêu cầu Jira → báo cáo 14 mục + Readiness 14 điểm + task Testlane
   gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub (Testlane) qua MCP
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/business-rules/
+  daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
 agents/
   req-analyst.md             Subagent chạy qa-requirement-analysis song song ở chế độ chỉ đọc
 ```
@@ -27,7 +28,7 @@ Máy mới:
 ```bash
 git clone --recurse-submodules git@github.com:anna-9499/skills-personal.git
 cd skills-personal
-for s in qa-requirement-analysis gen-testcase update-business-rules; do
+for s in qa-requirement-analysis gen-testcase update-business-rules daily-recap; do
   ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s
 done
 ln -sfn "$PWD/agents/req-analyst.md" ~/.claude/agents/req-analyst.md
@@ -116,3 +117,24 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 - `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md` → `references/method/`
 - `readiness-rubric.md`, `report-template.md` → hoà tan vào `SKILL.md`, không còn file riêng
 - yêu cầu **ngoài 5 app Qikify** vẫn phân tích được — chỉ bỏ qua `references/apps/` và bước tạo task
+
+
+---
+
+## daily-recap: vì sao có `scripts/testlane-digest.py`
+
+Skill này **không** dùng MCP tool `list_tasks`, mà gọi thẳng HTTP endpoint của Testlane. Hai lý do, cả hai đều đã đo được:
+
+1. **`list_tasks` trả về cả field `notes`** — nguyên bản phân tích requirement. Một project (QCO) trả ~14K token, project MTRO 62K ký tự cho 12 task. Gọi cho cả 8 project là vỡ context. Script vứt `notes` đi trước khi in → output còn ~1.5KB.
+2. **Không dùng được `urllib`/`requests`.** QA Hub đứng sau Cloudflare, và CF chặn bằng error 1010 `browser_signature_banned` — chặn theo **TLS fingerprint**, không phải User-Agent, nên đổi UA không cứu được. `curl` thì qua. Script vì vậy shell out sang `curl`; đừng "dọn dẹp" ngược lại.
+
+Token đọc từ `~/.claude.json` lúc chạy, không hardcode, không in ra.
+
+### Testlane vs Atlassian: khác nhau ở chỗ hết hạn
+
+| | Cách xác thực | Hết hạn? |
+|---|---|---|
+| Testlane | Bearer token tĩnh trong `~/.claude.json` | Không |
+| Atlassian | OAuth | **Có** — gặp `requires re-authorization` thì chạy `/mcp` đăng nhập lại |
+
+Vì vậy `daily-recap` được viết để **chịu được việc Jira chết**: vẫn xuất báo cáo phần Testlane và ghi một dòng nói phần Jira bỏ trống. Đừng sửa thành fail cả bài.
