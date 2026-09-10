@@ -1,0 +1,40 @@
+{
+  "name": "Quét open-questions QA hằng tuần",
+  "cron_expression": "0 2 * * 1",
+  "enabled": true,
+  "job_config": {
+    "ccr": {
+      "environment_id": "env_01WmFd3gGd417ZKTMH6zgkyh",
+      "session_context": {
+        "model": "claude-sonnet-5",
+        "sources": [
+          {
+            "git_repository": {
+              "url": "https://github.com/ownego/qa-knowledge-work"
+            }
+          }
+        ],
+        "allowed_tools": [
+          "Bash",
+          "Read",
+          "Glob",
+          "Grep"
+        ]
+      },
+      "events": [
+        {
+          "data": {
+            "uuid": "dbd1a4fb-6a2d-4d16-860a-58a31b9fb31a",
+            "session_id": "",
+            "type": "user",
+            "parent_tool_use_id": null,
+            "message": {
+              "role": "user",
+              "content": "Bạn đang chạy trong một checkout của repo `ownego/qa-knowledge-work` — knowledge công ty dùng cho công việc QA của team Qikify.\n\nNHIỆM VỤ: rà toàn bộ câu hỏi chưa chốt và báo cáo lại. CHỈ ĐỌC — không sửa, không tạo, không commit bất kỳ file nào.\n\n## Bối cảnh repo (đọc kỹ, bạn bắt đầu từ số 0)\n\n- `open-questions/<PREFIX>.md` — câu hỏi CHƯA có câu trả lời từ PO/Dev. Mỗi mục có các field: **Câu hỏi**, **Hỏi** (ai cần trả lời), **Case treo** (test case ID đang không kết luận pass/fail được vì câu hỏi này).\n- `business-rules/<PREFIX>.md` — rule ĐÃ xác nhận. Rule nào còn phần chưa chốt thì có một dòng `> ❓ **Chưa chốt**` trỏ sang open-questions.\n- `conventions/` và `references/apps/` — quy ước và bối cảnh sản phẩm, chỉ đọc khi cần hiểu thuật ngữ.\n- PREFIX là mã app: DUOS (Duos B2B), QCO (Checkout Customizer), QIK (Qikify System), MTRO (Mailtro), QSC (Slide Cart Drawer), TEPO (Custom Product Options).\n\n## Việc cần làm\n\n1. Đọc mọi file trong `open-questions/` (BỎ QUA `README.md` — đó là hướng dẫn, không phải câu hỏi). Liệt kê từng câu hỏi đang treo.\n2. Với mỗi câu hỏi ghi rõ: app nào, cần hỏi ai, bao nhiêu case đang bị treo.\n3. Dùng `git log --diff-filter=A` hoặc `git log -S` để tìm ngày câu hỏi đó được thêm vào file. Câu nào đã quá **14 ngày** mà vẫn còn trong open-questions → đánh dấu ⚠️ CŨ.\n4. Đối chiếu ngược: tìm mọi dòng `> ❓ **Chưa chốt**` trong `business-rules/` mà KHÔNG có mục tương ứng bên `open-questions/`. Đó là chỗ hở — rule tự nhận là chưa chốt nhưng không ai đang theo dõi câu hỏi.\n5. Ngược lại: mục nào trong `open-questions/` không có case treo nào → nêu ra, có thể đây không phải câu hỏi thật.\n\n## Báo cáo\n\nViết bằng **tiếng Việt**, gồm đúng các phần sau:\n\n- **Bảng tổng**: mỗi app bao nhiêu câu hỏi treo, trong đó bao nhiêu câu ⚠️ CŨ.\n- **Câu hỏi cũ cần xử lý trước**: danh sách chi tiết các câu ⚠️ CŨ, kèm tên người/vai trò cần hỏi và số case đang bị chặn. Xếp câu chặn nhiều case nhất lên đầu.\n- **Chỗ hở**: kết quả bước 4 và 5. Không có thì ghi \"không có\".\n\nNếu không có câu hỏi nào treo, hoặc không có câu nào cũ, hãy nói thẳng một dòng — ĐỪNG bịa việc để báo cáo cho dài.\n\n## Giới hạn\n\nKhông đề xuất sửa file. Không chạy `git commit`, `git push`, hay bất kỳ lệnh ghi nào. Đây là routine chỉ đọc."
+            }
+          }
+        }
+      ]
+    }
+  }
+}
