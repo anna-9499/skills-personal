@@ -2,7 +2,7 @@
 
 Capability cá nhân: skill và agent tự viết. Tách khỏi knowledge của công ty.
 
-Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của app không nằm ở đây — nó ở repo [`knowledge-work`](../knowledge-work).
+Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của app không nằm ở đây — nó ở repo [`knowledge-work`](knowledge-work), mount vào đây làm submodule.
 
 ---
 
@@ -10,12 +10,11 @@ Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của 
 
 ```
 skills/
-  qa-requirement-analysis/   Phân tích yêu cầu Jira → báo cáo 14 mục + task Testlane
-  gen-testcase/              Sinh test case 8 loại → JSON + xlsx + push Google Sheet
+  qa-requirement-analysis/   Phân tích yêu cầu Jira → báo cáo 14 mục + Readiness 14 điểm + task Testlane
+  gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub (Testlane) qua MCP
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/business-rules/
-  analyze-req/               Phân tích yêu cầu, chấm Readiness Score (product-agnostic)
 agents/
-  req-analyst.md             Subagent chạy qa analysis song song, giữ context chính gọn
+  req-analyst.md             Subagent chạy qa-requirement-analysis song song ở chế độ chỉ đọc
 ```
 
 ## Nối vào Claude Code
@@ -26,22 +25,51 @@ Skill khác trong `~/.claude/skills/` (cloudflare, wrangler, sandbox-*, nodeterm
 
 Máy mới:
 ```bash
-for s in qa-requirement-analysis gen-testcase update-business-rules analyze-req; do
+git clone --recurse-submodules git@github.com:anna-9499/skills-personal.git
+cd skills-personal
+for s in qa-requirement-analysis gen-testcase update-business-rules; do
   ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s
 done
 ln -sfn "$PWD/agents/req-analyst.md" ~/.claude/agents/req-analyst.md
 ```
 
+> ⚠️ Quên `--recurse-submodules` → `knowledge-work/` rỗng → cả 3 symlink trong
+> `references/` chết mà Claude **không báo lỗi rõ**, chỉ im lặng phân tích thiếu
+> business rule. Lỡ clone thiếu thì `git submodule update --init`.
+
 ## Phụ thuộc knowledge-work
 
-`skills/qa-requirement-analysis/references/` toàn bộ là symlink **tương đối** sang `knowledge-work`:
+`knowledge-work/` là **submodule** trỏ tới [`ownego/qa-knowledge-work`](https://github.com/ownego/qa-knowledge-work) (private, org ownego). Knowledge của công ty do org quản quyền; repo này chỉ pin một commit của nó.
+
+`skills/qa-requirement-analysis/references/` có 3 thư mục là symlink **thư mục** vào submodule đó — symlink thư mục nên thêm app hay convention mới không phải sửa wiring:
 
 ```
-references/qikify-apps-reference.md      → ../../../../knowledge-work/references/…
-references/business-rules/DUOS.md        → ../../../../../knowledge-work/business-rules/…
+references/apps/            → ../../../knowledge-work/references/apps/
+references/business-rules/  → ../../../knowledge-work/business-rules/
+references/conventions/     → ../../../knowledge-work/conventions/
 ```
 
-Tương đối chứ không tuyệt đối, nên repo còn dùng được trên máy khác — **với điều kiện `skills-personal` và `knowledge-work` nằm cùng một thư mục cha**. Clone lệch chỗ là symlink chết.
+Đường dẫn dừng **trong** repo (3 cấp `..`, không phải 4) — trước đây nó thoát ra thư mục cha nên clone lệch chỗ là chết. Giờ clone ở đâu cũng chạy, miễn có `--recurse-submodules`.
+
+Thư mục thứ tư, `references/method/`, là file thật nằm trong repo này — `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md`. Đó là **cách làm**, không phải knowledge của app, nên không đẩy sang `knowledge-work`.
+
+### Sửa knowledge thì làm ở đâu
+
+Sửa thẳng trong `knowledge-work/` — nó là bản làm việc thật, không phải bản sao. Trên đĩa chỉ có đúng một bản; `~/Downloads/AI Agent/knowledge-work` là symlink tương thích trỏ vào đây (repo automation Mailtro còn dùng đường dẫn cũ).
+
+```bash
+cd knowledge-work
+# sửa file, rồi:
+git add -A && git commit -m "..." && git push      # đẩy lên org
+cd ..
+git add knowledge-work && git commit -m "Cập nhật pin knowledge-work"
+```
+
+Bước cuối là **pin lại submodule**. Quên bước đó thì máy khác clone về vẫn nhận commit cũ.
+
+### Vì sao là submodule chứ không phải copy
+
+Quyền do org quản, sửa có audit qua git log, cả team mount cùng một nguồn. Và khi nghỉ việc, org gỡ quyền → submodule không clone được nữa → repo cá nhân này **không mang theo rule của công ty**.
 
 ---
 
@@ -59,8 +87,32 @@ Tương đối chứ không tuyệt đối, nên repo còn dùng được trên 
 
 Đổi tiêu đề một section mà quên sửa `publish.json` → trỏ trượt, không báo lỗi, bản trên Worker âm thầm sai. Sửa tiêu đề thì mở `publish.json` cùng skill sửa theo.
 
-`analyze-req` không có `publish.json` — không dính Testlane.
+Kiểm nhanh trước khi commit — báo ngay nếu có khoá nào trỏ trượt:
 
-### Trùng vai trò cần xử lý
+```bash
+python3 - << 'EOF'
+import io, json
+for skill in ["qa-requirement-analysis", "gen-testcase", "update-business-rules"]:
+    cfg = json.load(io.open(f"skills/{skill}/publish.json", encoding="utf-8"))
+    md  = io.open(f"skills/{skill}/SKILL.md", encoding="utf-8").read()
+    bad = [f"{f}: [{md.count(k)}x] {k[:70]}"
+           for f in ["dropSections", "dropParagraphs"] for k in cfg.get(f, [])
+           if md.count(k) != 1]
+    bad += [f"{f}: [{md.count(k)}x] {k[:70]}"
+            for f in ["sectionNotes", "replaceSections", "replaceParagraphs"] for k in cfg.get(f, {})
+            if md.count(k) != 1]
+    print(("FAIL " if bad else "OK   ") + skill)
+    for b in bad: print("      ", b)
+EOF
+```
 
-`analyze-req` và `qa-requirement-analysis` cùng phân tích requirement và chấm Readiness. Khác biệt: `qa-requirement-analysis` gắn với Qikify + tạo task Testlane, `analyze-req` product-agnostic. Nên gộp hoặc phân vai rõ trong `description`, không thì lúc gọi sẽ phân vân.
+Worker **không có filesystem**. Thêm một câu "đọc `references/...`" vào SKILL.md thì phải đưa câu đó vào `dropParagraphs` (hoặc `replaceParagraphs`), và phần cốt lõi của file đó phải được inline sẵn trong SKILL.md — nếu không bản Worker sẽ mất hẳn phần hướng dẫn ấy mà không báo gì.
+
+### Lịch sử: analyze-req đã bị gộp
+
+`analyze-req` từng là một skill riêng làm cùng việc phân tích requirement, product-agnostic, không tạo task Testlane. Hai `description` gần trùng nhau nên lúc gọi hay phân vân. Đã gộp hẳn vào `qa-requirement-analysis`:
+
+- rubric 7 tiêu chí / 14 điểm + luật ghi đè, phân mức gap Blocker/Major/Minor, kỷ luật trích nguồn cho từng business rule, và các bảng có ID (BR/AS/GAP/RISK/SEC/PERF) → inline vào `SKILL.md`
+- `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md` → `references/method/`
+- `readiness-rubric.md`, `report-template.md` → hoà tan vào `SKILL.md`, không còn file riêng
+- yêu cầu **ngoài 5 app Qikify** vẫn phân tích được — chỉ bỏ qua `references/apps/` và bước tạo task

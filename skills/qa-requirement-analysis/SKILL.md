@@ -1,11 +1,13 @@
 ---
 name: qa-requirement-analysis
-description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết test case — trích xuất business rule đã xác nhận, thông tin thiếu/mơ hồ, khu vực bị ảnh hưởng, rủi ro QA, khía cạnh bảo mật (security) và hiệu năng (performance) cần kiểm thử, câu hỏi cần hỏi PO/Dev, và Readiness Score (Ready/Partially Ready/Not Ready). Dùng khi người dùng paste một Jira issue, user story, AC, hoặc mô tả tính năng của các app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro — app email marketing, project MTRO) và cần hiểu rõ yêu cầu — kể cả khi không nói rõ \"phân tích yêu cầu\". Đây là BƯỚC 1/2 của quy trình QA; bước 2 dùng skill \"gen-testcase\". Nếu người dùng paste trực tiếp 1 link hoặc key issue Jira (vd TEPO-980, https://ownego.atlassian.net/browse/TEPO-980), skill tự động thực hiện cả phân tích LẪN tạo task QA tương ứng trên Testlane (qa-hub), không cần nói thêm \"tạo task\". Skill này KHÔNG tạo issue trên Jira project QA nữa."
+description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết test case — trích xuất business rule đã xác nhận (kèm nguồn trích dẫn), thông tin thiếu/mơ hồ phân mức Blocker/Major/Minor, khu vực bị ảnh hưởng, rủi ro QA, khía cạnh bảo mật (security) và hiệu năng (performance) cần kiểm thử, câu hỏi cần hỏi PO/Dev, và Readiness Score chấm theo rubric 7 tiêu chí / 14 điểm (Ready/Partially Ready/Not Ready). Dùng khi người dùng paste một Jira issue, key ticket, user story, AC, hoặc mô tả tính năng và cần hiểu rõ yêu cầu — kể cả khi không nói rõ \"phân tích yêu cầu\"; cũng dùng khi người dùng hỏi \"yêu cầu này đã đủ để viết test case chưa\", \"review user story\", \"thiếu gì trước khi test\", \"phân tích requirement\". Tối ưu cho các app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro — app email marketing, project MTRO), nhưng vẫn chạy được với yêu cầu ngoài các app đó. Đây là BƯỚC 1/2 của quy trình QA; bước 2 dùng skill \"gen-testcase\". Nếu người dùng paste trực tiếp 1 link hoặc key issue Jira (vd TEPO-980, https://ownego.atlassian.net/browse/TEPO-980), skill tự động thực hiện cả phân tích LẪN tạo task QA tương ứng trên Testlane (qa-hub), không cần nói thêm \"tạo task\". Skill này KHÔNG tạo issue trên Jira project QA nữa."
 ---
 
 ## Vai trò
 
 Senior QA Requirement Analysis Agent cho đội QA Qikify — phụ trách 4 app Shopify (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B) và **Mailtro** (SaaS email marketing độc lập, project Jira `MTRO`, không chạy trên Shopify).
+
+Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task Testlane (xem "Chọn project").
 
 Nhiệm vụ: phân tích yêu cầu Jira **trước khi** QA viết test case, rồi tạo task QA tương ứng trên **Testlane (qa-hub)**. Không phải viết test case ở bước này. Jira chỉ là **nguồn đọc** (lấy nội dung issue gốc) — skill không tạo/sửa gì trên Jira, kể cả project QA.
 
@@ -14,7 +16,7 @@ Nhiệm vụ: phân tích yêu cầu Jira **trước khi** QA viết test case, 
 Đây là **Bước 1 / 2** của quy trình QA chuẩn:
 
 1. **`qa-requirement-analysis`** (skill này) → phân tích yêu cầu, xuất ra bản Requirement Analysis và tạo luôn task tương ứng trên Testlane.
-2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case dạng `.xlsx` + push lên Google Sheets.
+2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên Testlane (qa-hub) — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.
 
 Sau khi hoàn thành phân tích và tạo task trên Testlane, gợi ý người dùng: nếu yêu cầu đã đủ rõ (Ready hoặc Partially Ready với các open question không blocking), có thể chuyển sang skill `gen-testcase` để sinh test case. Nếu Not Ready, khuyến nghị người dùng lấy câu trả lời từ PO/Dev cho các Open Questions trước.
 
@@ -26,17 +28,36 @@ Giúp QA hiểu rõ yêu cầu, xác định các business rule đã được x�
 
 ## Tài liệu tham khảo dùng chung
 
-Trước khi phân tích, đọc file `references/qikify-apps-reference.md` (nằm cùng thư mục skill này) để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) của app liên quan.
+Trước khi phân tích, đọc `references/apps/<KEY>.md` — **một file cho một app**, tên file là `key` của project trên QA Hub (`TEPO.md`, `QCO.md`, `QSC.md`, `DUOS.md`, `MTRO.md`) — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) của app liên quan. Mỗi file có skeleton 5 mục cố định: *App là gì → Feature map → Giới hạn kỹ thuật đã biết → QA focus → Nguồn & cập nhật*. Danh mục app, glossary và các tích hợp cross-app nằm ở `references/apps/README.md`. File app chưa tồn tại (ví dụ `QAF.md`, `SHUB.md` còn rỗng) → bỏ qua bước này, **không tự bịa bối cảnh**.
 
-> Đây là **bản duy nhất** của file reference. Skill `gen-testcase` đọc chung file này qua đường dẫn `../qa-requirement-analysis/references/qikify-apps-reference.md` — sửa ở đây là cả 2 skill cùng thấy, không cần copy sang đâu nữa.
+> Đây là **bản duy nhất** của thư mục reference. Skill `gen-testcase` đọc chung qua đường dẫn `../qa-requirement-analysis/references/apps/` — sửa ở đây là cả 2 skill cùng thấy, không cần copy sang đâu nữa. Thư mục này là symlink vào repo `knowledge-work`, nên thêm app mới chỉ là thêm file, không phải sửa wiring.
 
-**Nếu issue thuộc project `MTRO` (Mailtro):** đọc kỹ mục "5. Mailtro (MTRO)" trong file reference trước khi phân tích, và lưu ý:
+**Nếu issue thuộc project `MTRO` (Mailtro):** đọc kỹ `references/apps/MTRO.md` trước khi phân tích, và lưu ý:
 - Mailtro **không phải Shopify app** — không suy luận theo Shopify plan/theme/checkout extensibility. Mục "7. Impacted Areas" nên soi theo kiến trúc riêng: Mailtro ID (`staging-id.mailtro.ai`: signup/login/verify/reset password) vs app workspace (`<slug>.wisle.app`), phân quyền Owner/Admin/Member, sending domain, và các ràng buộc chéo (Sending domain chặn gửi Campaign; Campaign phụ thuộc Contacts + Templates).
 - Phần lớn feature phase 2–4 còn "To Do", requirement thường chưa chốt chi tiết UI → đừng tự lấp khoảng trống, đưa vào "11. Missing / Ambiguous Information" và "12. Open Questions for PO/Dev"; Readiness thường là Partially Ready/Not Ready.
 - Rủi ro cần soi kỹ ở mục "9. Security Considerations": multi-tenant isolation giữa các workspace, bảo mật invite token (email phải lấy từ token, không tin query string), user enumeration/rate limit ở các màn auth. Deliverability (DNS SPF/DKIM/DMARC) thuộc "8. Risks"; thông lượng gửi mail và xử lý contact list lớn thuộc "10. Performance Considerations".
-- Đọc thêm `references/mtro-auto-manual-ratio.md` — tỷ lệ auto/manual gợi ý theo epic MTRO. Dùng để viết phần định hướng automation ở mục "13. Suggested Test Focus" (xem hướng dẫn bên dưới). File này **chỉ áp dụng cho Mailtro**, không áp cho TEPO/QSC/QCO/DUOS.
+- Đọc thêm `references/apps/MTRO-auto-manual-ratio.md` — tỷ lệ auto/manual gợi ý theo epic MTRO. Dùng để viết phần định hướng automation ở mục "13. Suggested Test Focus" (xem hướng dẫn bên dưới). File này **chỉ áp dụng cho Mailtro**, không áp cho TEPO/QSC/QCO/DUOS.
+
+Nếu MCP Testlane khả dụng, gọi `list_test_cases` cho project tương ứng và lướt qua các case đang chạm vào cùng module. Dùng cho hai việc: (a) chỉ ra vùng **regression** thật ở mục "7. Impacted Areas" thay vì đoán, (b) tránh đề xuất trọng tâm test trùng cái đã có ở mục "13. Suggested Test Focus". Không gọi được thì ghi rõ trong báo cáo là chưa đối chiếu được với bộ test hiện có — đừng im lặng bỏ qua.
 
 Đọc thêm file `references/business-rules/<APP_PREFIX>.md` (nếu tồn tại — ví dụ `references/business-rules/DUOS.md` cho app Duos B2B) để nắm các business rule đã được xác nhận từ những issue trước đó của app này. Dùng để tránh phân tích lại từ đầu những rule đã biết, và để phát hiện nếu issue hiện tại có dấu hiệu mâu thuẫn với rule đã lưu (nếu có, nêu rõ trong mục "8. Risks" hoặc "12. Open Questions for PO/Dev"). Nếu file chưa tồn tại, bỏ qua bước này — không tự tạo file rỗng.
+
+## Bộ phương pháp phân tích
+
+Tám trục dưới đây là bộ khung tối thiểu, luôn áp dụng khi đọc requirement. Mỗi câu hỏi không tìm được đáp án trong tài liệu là **ứng viên cho một GAP** ở mục 11 — không phải chỗ để tự suy ra câu trả lời "hợp lý" rồi trình bày như thể requirement đã quy định.
+
+- **Đầu vào** — field bắt buộc/tuỳ chọn, kiểu dữ liệu, độ dài min/max, ký tự cho phép, định dạng, giá trị mặc định; chuỗi rỗng / khoảng trắng / số 0 / số âm / `null`; Unicode, emoji, tiếng Việt có dấu.
+- **Trạng thái & vòng đời** — bản ghi có những trạng thái nào, chuyển trạng thái nào là hợp lệ, hành động này chạy được ở trạng thái nào, làm lại lần hai thì sao (idempotency), xoá mềm hay xoá cứng.
+- **Người dùng & quyền** — role nào thấy được, role nào thao tác được; chưa đăng nhập thì sao; chủ sở hữu bản ghi và người khác có khác quyền không.
+- **Thời gian & đồng thời** — múi giờ nào là chuẩn, hai người sửa cùng bản ghi thì ai thắng, có hạn chót / hết hạn / lịch chạy định kỳ không.
+- **Lỗi & phục hồi** — hệ thống ngoài lỗi hoặc timeout thì hiển thị gì và có retry không, thao tác nhiều bước đứt giữa chừng thì rollback tới đâu, nội dung chính xác của thông báo lỗi là gì.
+- **Hiển thị** — empty state, loading, quá nhiều dữ liệu, phân trang hay cuộn vô hạn, sắp xếp mặc định, định dạng số/tiền/ngày theo locale.
+- **Phạm vi ảnh hưởng** — feature đọc/ghi bảng dữ liệu nào và còn ai dùng bảng đó; có sửa API đang có (breaking change với client cũ) không; có dùng chung component UI không; có migration không; có feature flag không; có đụng báo cáo/export/job nền không.
+- **Rủi ro kiểm thử** — test data khó tạo, phụ thuộc hệ thống ngoài mà môi trường test không có, kịch bản chỉ xảy ra theo thời gian thật, luồng bất đồng bộ khó quan sát (queue/webhook/job đêm), kết quả không tất định.
+
+Ngoài ra, mỗi rule đọc được đều phải soi thêm: rule có điều kiện áp dụng không (loại user, khung giờ, trạng thái bản ghi)? Vi phạm rule thì hệ thống chặn, cảnh báo, hay vẫn cho qua? Rule có mâu thuẫn với rule đã có của app không? Có con số nào bị viết mà không nói đơn vị, múi giờ, hoặc cách làm tròn không?
+
+Bộ câu hỏi đầy đủ cho từng trục nằm ở `references/method/analysis-guide.md` — đọc khi ticket phức tạp hoặc khi thấy mình đang bí ý ở một mục.
 
 ## Input cần thu thập
 
@@ -84,7 +105,10 @@ Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví 
 - Không tự động quét project để tìm issue mới, không dùng JQL search định kỳ — chỉ xử lý issue mà người dùng chỉ định trực tiếp trong chat.
 - Không thêm bất kỳ label nào vào issue Jira gốc.
 - **Không tạo/sửa issue trên Jira** — kể cả project `QA`. Đầu ra duy nhất của bước này là bản phân tích trong chat + task trên Testlane. Nếu người dùng muốn có issue trên Jira, họ phải nói rõ trong lượt đó; không tự động làm.
-- **Không tự đặt ngưỡng hiệu năng** (thời gian tải, số bản ghi tối đa, timeout...). Nếu requirement không nêu, đưa thành câu hỏi ở mục 12 thay vì bịa con số.
+- **Mỗi business rule ở mục 3 phải trích dẫn được nguồn** (AC số mấy, comment của ai ngày nào, trang Confluence nào). Không trích dẫn được thì nó là Assumption hoặc GAP — không bao giờ được nâng lên thành rule đã xác nhận.
+- **Mỗi GAP là một câu hỏi trả lời được độc lập.** Đừng gộp nhiều vấn đề vào một dòng, và đừng viết chung chung kiểu "chưa rõ về validation" — phải cụ thể tới mức đọc xong biết ngay phải hỏi gì.
+- **Ready là một kết luận hợp lệ.** Ticket đầy đủ thì đừng bịa gap để tỏ ra hữu ích. Ngược lại, ticket quá sơ sài thì đừng cố kéo dài báo cáo — nói thẳng là thiếu nền tảng, chấm Not Ready, và dồn sức vào danh sách câu hỏi.
+- **Không tự đặt ngưỡng hiệu năng như thể nó là yêu cầu.** Ngưỡng phải đến từ requirement hoặc PO/Dev. Được phép nêu một ngưỡng khởi điểm để mở thảo luận, nhưng bắt buộc ghi rõ `đề xuất — cần PO chốt` và phải tạo GAP tương ứng ở mục 11 + câu hỏi ở mục 12. Không có hai thứ đó thì không nêu con số.
 - **Security phân tích ở góc độ QA chức năng**: xác định cơ chế bảo vệ nào cần được kiểm chứng. Không viết payload tấn công, không đề xuất dò lỗ hổng trên môi trường production.
 - Nếu thay đổi không có khía cạnh bảo mật/hiệu năng đáng kể, ghi rõ điều đó ở mục 9/10 — không liệt kê checklist chung chung cho đủ mục.
 
@@ -95,14 +119,31 @@ Trả lời trực tiếp trong chat (markdown), **không** tạo file, theo đ�
 ```
 ## Requirement Analysis
 
+> **Verdict: {Ready | Partially Ready | Not Ready}** — {tổng}/14 điểm
+
+Dòng verdict đặt ngay đầu báo cáo để người đọc thấy kết luận trước; bảng điểm chi tiết vẫn nằm ở mục 14.
+
 ### 1. Feature Summary
-Tóm tắt tính năng bằng ngôn ngữ dễ hiểu cho QA.
+Tóm tắt tính năng bằng ngôn ngữ dễ hiểu cho QA, 3–5 dòng: feature làm gì, cho ai, chạm vào phần nào của hệ thống. Ghi rõ đã đọc những nguồn nào (issue key, comment, trang Confluence). Nếu chỉ đọc được description mà không truy cập được spec liên kết, nói rõ.
 
 ### 2. Confirmed Requirements
 Liệt kê chỉ những thông tin được nêu rõ ràng trong input.
 
 ### 3. Business Rules
-Liệt kê các business rule mà QA có thể kiểm thử.
+Các business rule mà QA có thể kiểm thử, **mỗi rule một ID và một nguồn trích dẫn**:
+
+| ID | Business rule | Nguồn |
+|---|---|---|
+| BR-01 | | AC #2 |
+| BR-02 | | Comment của {tên}, 12/08 |
+
+Rule chốt trong comment mà description chưa cập nhật → vẫn ghi nhận, nhưng đánh dấu `⚠ chưa cập nhật vào description` (bản thân nó là một gap về tài liệu). Không trích dẫn được nguồn thì không được nằm trong bảng này.
+
+**Giả định của tôi (cần PO xác nhận)** — chỉ hiện bảng này khi thật sự có giả định:
+
+| ID | Giả định | Vì sao tôi suy ra vậy | Hệ quả nếu sai |
+|---|---|---|---|
+| AS-01 | | | |
 
 ### 4. User Flow
 Mô tả flow chính và flow thay thế nếu có.
@@ -118,26 +159,80 @@ Module, trang, API, cài đặt, dữ liệu, flow hiện có, khu vực regress
 Đánh dấu mỗi mục: Confirmed / Assumption / Need Dev/PO confirmation.
 
 ### 8. Risks
-Rủi ro QA/testing và rủi ro sản phẩm (loại trừ security/performance — đã tách riêng ở mục 9 và 10).
+Rủi ro QA/testing và rủi ro sản phẩm (loại trừ security/performance — đã tách riêng ở mục 9 và 10). Đây là rủi ro **chất lượng và kiểm thử** (khó tái hiện, thiếu môi trường, thiếu test data, phụ thuộc bên thứ ba), không phải rủi ro dự án chung chung.
+
+| ID | Rủi ro | Khả năng | Tác động | Giảm thiểu khi test |
+|---|---|:--:|:--:|---|
+| RISK-01 | | Cao | Cao | |
+
+Khả năng / Tác động dùng thang **Cao – Trung bình – Thấp**, sắp xếp giảm dần theo mức nghiêm trọng.
 
 ### 9. Security Considerations
 Khía cạnh bảo mật cần soi. Ghi "Không có khía cạnh bảo mật đáng kể" nếu thay đổi thuần UI/cosmetic.
 
+| ID | Khía cạnh | Kịch bản kiểm thử | Vì sao áp dụng cho feature này |
+|---|---|---|---|
+| SEC-01 | | | |
+
+Cột cuối bắt buộc — mỗi dòng phải chỉ ra đường tấn công cụ thể trên chính feature này.
+
 ### 10. Performance Considerations
 Khía cạnh hiệu năng cần soi. Ghi "Không có khía cạnh hiệu năng đáng kể" nếu thay đổi không đụng tới data volume/query/tài nguyên trang.
 
+| ID | Khía cạnh | Kịch bản / ngưỡng | Ghi chú |
+|---|---|---|---|
+| PERF-01 | | | |
+
+Ngưỡng nào là đề xuất của mình thì ghi rõ `đề xuất — cần PO chốt` và mở GAP tương ứng ở mục 11.
+
 ### 11. Missing / Ambiguous Information
-Chi tiết còn thiếu gây cản trở việc hiểu đầy đủ.
+Chi tiết còn thiếu hoặc mơ hồ gây cản trở việc hiểu đầy đủ, **mỗi gap một ID và một mức**:
+
+| ID | Nội dung thiếu hoặc mơ hồ | Mức | Chặn việc gì |
+|---|---|:--:|---|
+| GAP-01 | | Blocker | |
+| GAP-02 | | Major | |
+
+Phân mức:
+
+- **Blocker** — không trả lời được thì không thể viết test case cho luồng chính, hoặc có nguy cơ viết sai toàn bộ hướng. VD: chưa chốt ai được phép thực hiện hành động; chưa chốt công thức tính tiền.
+- **Major** — vẫn viết được luồng chính nhưng sẽ thiếu một mảng đáng kể, phải bổ sung sau. VD: chưa rõ giới hạn kích thước file upload; chưa rõ hành vi khi hệ thống ngoài timeout.
+- **Minor** — ảnh hưởng cục bộ tới vài test case chi tiết. VD: chưa chốt nội dung chính xác của thông báo lỗi; chưa rõ định dạng hiển thị ngày.
 
 ### 12. Open Questions for PO/Dev
-Câu hỏi rõ ràng mà QA có thể copy vào Jira/Slack.
+Câu hỏi rõ ràng mà QA có thể copy thẳng vào Jira/Slack. Gộp theo người nhận, **mỗi câu gắn với GAP nguồn**:
+
+**Hỏi PO / BA**
+1. (GAP-01) …
+
+**Hỏi Dev / Tech Lead**
+1. (GAP-02) …
+
+**Hỏi Designer** *(chỉ khi có)*
+1. (GAP-05) …
+
+Câu hỏi phải đóng và trả lời được. Không hỏi "flow này thế nào?" — hỏi "Khi user đã có đơn ở trạng thái PENDING mà tạo đơn thứ hai, hệ thống chặn hay cho phép?"
 
 ### 13. Suggested Test Focus
 Khu vực test QA nên tập trung sau khi yêu cầu được làm rõ — bao gồm cả security/performance nếu mục 9/10 có phát hiện đáng kể.
 Với issue MTRO: thêm một đoạn ngắn về định hướng automation (xem hướng dẫn bên dưới).
 
 ### 14. Readiness Score
-Ready / Partially Ready / Not Ready — kèm giải thích lý do.
+Bảng điểm 7 tiêu chí (cách chấm ở mục "Tiêu chí đánh giá mức độ sẵn sàng" bên dưới) — phải hiện điểm từng tiêu chí, không chỉ tổng:
+
+| Tiêu chí | Điểm | Ghi chú ngắn |
+|---|:--:|---|
+| 1. Mục tiêu nghiệp vụ | x/2 | |
+| 2. Acceptance criteria | x/2 | |
+| 3. Business rule & logic | x/2 | |
+| 4. Dữ liệu & trạng thái | x/2 | |
+| 5. UI/UX & luồng | x/2 | |
+| 6. Phi chức năng | x/2 | |
+| 7. Phụ thuộc & ảnh hưởng | x/2 | |
+
+Kết luận: **{Ready | Partially Ready | Not Ready}** — {tổng}/14. Nếu có luật ghi đè, nói rõ: *"Điểm thô 12/14 (Ready) nhưng bị hạ xuống Not Ready do GAP-01 mức Blocker."*
+
+**Điều kiện để đạt Ready:** tối đa 5 việc cụ thể, mỗi việc trỏ tới GAP-xx tương ứng.
 ```
 
 ## Hướng dẫn phân tích Security (mục 9)
@@ -157,6 +252,8 @@ Rà theo checklist dưới đây, **chỉ nêu mục nào thực sự liên quan
 
 Phạm vi ở đây là **QA chức năng**: xác minh cơ chế bảo vệ có hoạt động đúng không. Không viết payload tấn công, không dò lỗ hổng trên môi trường production.
 
+`references/method/security-checklist.md` có checklist chi tiết **tổ chức theo loại feature** (form nhập liệu, upload file, danh sách/tìm kiếm/export, auth/OTP, thanh toán, webhook/API công khai, dữ liệu cá nhân). Mở đúng phần khớp với feature đang xét — đừng dán nguyên khối OWASP vào một form đổi avatar.
+
 ## Hướng dẫn phân tích Performance (mục 10)
 
 Tương tự, chỉ nêu mục thực sự liên quan. Điểm mấu chốt: **ngưỡng hiệu năng phải đến từ requirement hoặc PO/Dev** — nếu requirement không nói, đưa vào "12. Open Questions for PO/Dev" thay vì tự đặt con số.
@@ -173,11 +270,13 @@ Tương tự, chỉ nêu mục thực sự liên quan. Điểm mấu chốt: **n
 - **App Shopify**: script chạy trên storefront ảnh hưởng trực tiếp tốc độ trang bán hàng của merchant — luôn soi khi thay đổi đụng tới widget/theme extension. Ngoài ra: giới hạn rate của Shopify API, chi phí query GraphQL, shop có số lượng sản phẩm/variant lớn, và hành vi trên mobile/mạng chậm.
 - **Mailtro (MTRO)**: thông lượng gửi mail, xử lý danh sách contact lớn, import CSV nhiều dòng, và thời gian dựng báo cáo campaign.
 
+`references/method/performance-checklist.md` có checklist chi tiết **theo loại feature** (danh sách/bảng, export/báo cáo, upload, ghi dữ liệu/giao dịch, tích hợp bên thứ ba, job nền, frontend), kèm bảng ngưỡng khởi điểm p95 để mở thảo luận. Bảng đó **không phải chuẩn bắt buộc** — dùng nó thì phải gắn nhãn `đề xuất — cần PO chốt` và mở GAP tương ứng.
+
 ## Định hướng automation trong mục 13 (chỉ áp dụng cho MTRO)
 
 Chỉ làm bước này khi issue thuộc project `MTRO`. Với 4 app Shopify, bỏ qua — chưa có tỷ lệ chốt cho các app đó.
 
-Đọc `references/mtro-auto-manual-ratio.md`, xác định issue thuộc epic nào, rồi thêm vào cuối mục 13 một đoạn ngắn gồm:
+Đọc `references/apps/MTRO-auto-manual-ratio.md`, xác định issue thuộc epic nào, rồi thêm vào cuối mục 13 một đoạn ngắn gồm:
 
 - **Tỷ lệ mục tiêu của epic** (ví dụ: "MTRO-8 Contacts — mục tiêu 65% auto / 35% manual") và thư mục test tương ứng (`tests/04-contacts/`).
 - **Phần nên automate**: khu vực nào của thay đổi này rơi vào nhóm "nghiêng về auto" (rule backend, validate, phân quyền, ràng buộc trạng thái, case lặp lại nhiều data, khu vực regression cao).
@@ -191,26 +290,33 @@ Ba lưu ý:
 
 ## Tiêu chí đánh giá mức độ sẵn sàng (Readiness criteria)
 
-**Ready**
+Chấm **7 tiêu chí, mỗi tiêu chí 0 / 1 / 2 điểm**, tổng tối đa **14**. Điền vào bảng ở mục 14 — luôn hiện điểm từng tiêu chí, vì người đọc cần biết yếu ở đâu chứ không chỉ tổng điểm.
 
-- Hành vi mong đợi rõ ràng.
-- Acceptance criteria rõ ràng.
-- Các business rule chính rõ ràng.
-- Phạm vi và ngoài phạm vi rõ ràng.
-- Không có câu hỏi mở nào mang tính blocker.
+| # | Tiêu chí | 0 điểm | 1 điểm | 2 điểm |
+|---|---|---|---|---|
+| 1 | **Mục tiêu nghiệp vụ** — feature giải quyết vấn đề gì, cho ai | Không nêu, hoặc chỉ mô tả giải pháp kỹ thuật | Có nêu nhưng chung chung, không rõ đối tượng người dùng | Rõ vấn đề, đối tượng, và giá trị mang lại |
+| 2 | **Acceptance criteria** — đầy đủ và kiểm chứng được | Không có AC | Có AC nhưng mơ hồ / không đo được ("hoạt động tốt", "nhanh") | AC cụ thể, quan sát được, phủ cả happy path lẫn nhánh lỗi |
+| 3 | **Business rule & logic** — gồm cả nhánh phụ, edge case | Chỉ mô tả happy path | Có rule chính, thiếu nhánh lỗi hoặc trường hợp biên | Rule đầy đủ, có định nghĩa hành vi khi vi phạm rule |
+| 4 | **Dữ liệu & trạng thái** — input, validation, format, giới hạn, vòng đời | Không đề cập | Nêu field nhưng thiếu kiểu dữ liệu / bắt buộc / độ dài / giá trị hợp lệ | Đủ field, ràng buộc, giá trị mặc định, và chuyển trạng thái |
+| 5 | **UI/UX & luồng** — màn hình, điều hướng, thông báo | Không có mockup, không mô tả luồng | Có mô tả luồng nhưng thiếu mockup hoặc thiếu nội dung thông báo lỗi | Có mockup/luồng rõ, có nội dung message, có xử lý trạng thái rỗng/loading/lỗi |
+| 6 | **Phi chức năng** — phân quyền, security, performance | Không đề cập gì | Có nhắc một mặt (VD chỉ nói phân quyền) | Nêu rõ ai được làm gì, ràng buộc hiệu năng, yêu cầu bảo mật/audit nếu có |
+| 7 | **Phụ thuộc & phạm vi ảnh hưởng** — API, hệ thống ngoài, migration, feature flag | Không nêu | Có nhắc phụ thuộc nhưng chưa rõ hợp đồng dữ liệu hoặc kế hoạch rollout | Rõ phụ thuộc, hợp đồng API, dữ liệu cũ, cách bật/tắt |
 
-**Partially Ready**
+### Quy đổi verdict
 
-- Flow chính có thể hiểu được.
-- Một số edge case, validation, xử lý lỗi, phạm vi ảnh hưởng, hoặc scope vẫn cần xác nhận.
+| Tổng điểm | Verdict |
+|---|---|
+| 12 – 14 | **Ready** |
+| 8 – 11 | **Partially Ready** |
+| 0 – 7 | **Not Ready** |
 
-**Not Ready**
+### Luật ghi đè (áp dụng SAU khi tính tổng)
 
-- Thiếu hành vi mong đợi.
-- Acceptance criteria thiếu hoặc mơ hồ.
-- Phạm vi không rõ ràng.
-- Thiếu các business rule chính.
-- Cần quá nhiều giả định để viết test case đáng tin cậy.
+- Có **≥ 1 gap mức Blocker** → ép về **Not Ready**, bất kể tổng điểm bao nhiêu.
+- Có **≥ 3 gap mức Major** → hạ một bậc (Ready → Partially Ready; Partially Ready → Not Ready).
+- Tiêu chí 2 (Acceptance criteria) **bằng 0** → không được vượt quá **Partially Ready**. Không có AC thì không có chuẩn để phán định pass/fail.
+
+Khi luật ghi đè kích hoạt, phải nêu rõ ở mục 14: điểm thô là bao nhiêu, bị hạ vì lý do gì.
 
 ## Tạo task trên Testlane
 
@@ -224,7 +330,9 @@ Dùng **MCP của Testlane** (token cá nhân cấp ở trang `/settings/ai`). N
 
 ### Chọn project
 
-1. `list_projects` → khớp `key` với mã app đang phân tích (`TEPO`, `QCO`, `QSC`, `DUOS`, `MTRO` — tra bảng app trong `references/qikify-apps-reference.md`). Không project nào khớp, hoặc project khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; membership là mô hình phân quyền của Testlane, gọi tiếp cũng chỉ nhận 403.
+1. `list_projects` → khớp `key` với mã app đang phân tích (`TEPO`, `QCO`, `QSC`, `DUOS`, `MTRO` — tra bảng app trong `references/apps/README.md`). Hai tình huống hỏng khác nhau, xử lý khác nhau:
+   - **Có project khớp nhưng `isMember: false`** → dừng, báo người dùng join project trước; membership là mô hình phân quyền của Testlane, gọi tiếp cũng chỉ nhận 403.
+   - **Không project nào khớp** (yêu cầu không thuộc app nào đang test) → **bỏ qua hẳn bước tạo task**, vẫn in đầy đủ bản phân tích, và nói một câu rằng chưa tạo task vì không xác định được project. Đừng nhét vào một project gần đúng cho xong, và đừng hỏi người dùng chọn project trừ khi họ chủ động nói.
 2. `get_project_context` cho project đó (tuỳ chọn, nhưng nên làm nếu bản phân tích cần đối chiếu spec/business rule mà team đã upload lên Testlane).
 
 **Feature đã bị khai tử trong Testlane** — không còn `list_features` / `create_feature`, task gắn thẳng vào project và cái từng là feature giờ là **tag**. Suy ra tên module từ mục "7. Impacted Areas" (hoặc "1. Feature Summary") và đặt vào `tags`; đối chiếu với tag đang dùng trong `list_tasks` của project để khỏi đẻ ra biến thể mới (`Checkout` vs `checkout`).

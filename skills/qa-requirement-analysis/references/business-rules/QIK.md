@@ -1,1 +1,0 @@
-../../../../../knowledge-work/business-rules/QIK.md

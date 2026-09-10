@@ -1,0 +1,3 @@
+[submodule "knowledge-work"]
+	path = knowledge-work
+	url = https://github.com/ownego/qa-knowledge-work.git

@@ -1,7 +1,9 @@
 # Performance — chọn theo loại feature
 
 Chỉ nêu điều có kịch bản tải cụ thể cho feature này. Nếu requirement không nêu ngưỡng,
-đề xuất ngưỡng khởi điểm và **đánh dấu rõ là đề xuất cần PO chốt** + tạo GAP tương ứng.
+được phép đề xuất một ngưỡng khởi điểm để mở thảo luận — nhưng bắt buộc gắn nhãn
+**`đề xuất — cần PO chốt`**, mở một GAP ở mục 11 và một câu hỏi ở mục 12. Không có đủ
+ba thứ đó thì không nêu con số nào.
 
 ## Câu hỏi định lượng phải hỏi trước
 

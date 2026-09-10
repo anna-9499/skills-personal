@@ -1,6 +1,6 @@
 ---
 name: gen-testcase
-description: "Sinh test case dạng bảng từ mô tả tính năng, user story, hoặc checklist kiểm thử — bao phủ 8 loại: happy path, negative, boundary, validation, edge, regression, security, performance. Dùng skill này bất cứ khi nào người dùng nhắc đến \"tạo test case\", \"viết test cho [tính năng]\", \"test plan\", \"kiểm thử [module]\", hoặc cần bao phủ một flow trong các app đang test: Custom Product Options (Tepo), Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro (email marketing, project MTRO — signup/login, team & permission, sending domain, contacts, templates, automations, campaigns, brand guideline). Luôn dùng skill này khi đầu vào là Jira issue, mô tả tính năng, hoặc yêu cầu kiểm thử — dù người dùng không nói rõ \"test case\". Output mặc định là .xlsx + JSON; riêng khi làm trong repo automation qikify-QA-mailtro thì output là Markdown trong docs/manual-testcases/ + JSON sinh bằng script của repo."
+description: "Sinh test case dạng bảng từ mô tả tính năng, user story, hoặc checklist kiểm thử — bao phủ 8 loại: happy path, negative, boundary, validation, edge, regression, security, performance. Dùng skill này bất cứ khi nào người dùng nhắc đến \"tạo test case\", \"viết test cho [tính năng]\", \"test plan\", \"kiểm thử [module]\", hoặc cần bao phủ một flow trong các app đang test: Custom Product Options (Tepo), Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro (email marketing, project MTRO — signup/login, team & permission, sending domain, contacts, templates, automations, campaigns, brand guideline). Luôn dùng skill này khi đầu vào là Jira issue, mô tả tính năng, hoặc yêu cầu kiểm thử — dù người dùng không nói rõ \"test case\". Test case được tạo thẳng trên QA Hub (Testlane) qua MCP — prefix của Test Case ID lấy theo KEY của project trên QA Hub; không còn xuất .xlsx và không import Google Sheet. Riêng khi làm trong repo automation qikify-QA-mailtro thì có thêm Markdown trong docs/manual-testcases/."
 ---
 
 ## Giới thiệu
@@ -10,27 +10,31 @@ Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng
 
 ## Mục tiêu
 
-Tạo bộ test case đầy đủ, bao gồm happy path, negative case, và edge case khi cần — kèm 1 file JSON tương ứng để push lên Google Sheets.
+Tạo bộ test case đầy đủ — happy path, negative case, và edge case khi cần — rồi **ghi thẳng lên QA Hub (Testlane)** dưới task tương ứng.
 
-**Định dạng output phụ thuộc nơi đang làm việc — xác định trước khi bắt đầu:**
+QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import vào Google Sheet nữa** — hai thứ đó đã bỏ.
+
+**Nơi đang làm việc quyết định có thêm deliverable nào không:**
 
 | Bối cảnh | Deliverable |
 | --- | --- |
-| Mặc định (4 app Shopify, hoặc Mailtro khi làm ngoài repo automation) | File `.xlsx` + file JSON — theo mục "Cấu trúc file output", "Format file Excel", "Lưu file" |
-| **Thư mục làm việc là repo `qikify-QA-mailtro`** (có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`) | Markdown trong `docs/manual-testcases/` + JSON sinh bằng script của repo. **Không sinh `.xlsx`.** Theo mục "Output khi làm trong repo `qikify-QA-mailtro`" |
+| Mặc định (mọi app) | Test case tạo trên QA Hub qua MCP `create_test_cases` — theo mục "Cấu trúc test case" và "Tạo test case trên QA Hub (Testlane)" |
+| **Thư mục làm việc là repo `qikify-QA-mailtro`** (có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`) | Thêm Markdown trong `docs/manual-testcases/` + JSON sinh bằng script của repo — theo mục "Output khi làm trong repo `qikify-QA-mailtro`". Vẫn ghi lên QA Hub như mặc định |
 
 ## Trước khi bắt đầu
 
-**1. Đọc hướng dẫn tạo file Excel** từ skill `xlsx` (để format file đúng chuẩn):
-- Trên Claude Code: gọi skill `xlsx`, hoặc đọc trực tiếp `../xlsx/SKILL.md` (skill `xlsx` nằm cùng thư mục cha với skill này).
-- Trên Claude.ai: `/mnt/skills/public/xlsx/SKILL.md`.
-- **Bỏ qua bước này** khi đang làm trong repo `qikify-QA-mailtro` — repo đó không dùng `.xlsx`.
+**1. Xác định project và task trên QA Hub** (MCP Testlane — token cá nhân cấp ở trang `/settings/ai`):
+- `list_projects` → khớp app đang test với `key` của project. **`key` này chính là prefix của Test Case ID** — QA Hub tự cấp `TC-<KEY>-<số>`, không tự đặt tay.
+- Project không khớp app nào, hoặc khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; gọi tiếp cũng chỉ nhận 403.
+- `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `qa-requirement-analysis` trước. **Skill này không tự tạo task.**
+- `get_project_context` nếu cần đối chiếu spec/business rule team đã upload lên QA Hub.
+- Chưa kết nối MCP → nói rõ, đưa bộ test case ra trong chat để người dùng tự nhập; đừng im lặng bỏ qua.
 
-**2. Đọc app reference** — `../qa-requirement-analysis/references/qikify-apps-reference.md` — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) của app liên quan trước khi sinh test case.
+**2. Đọc app reference** — `../qa-requirement-analysis/references/apps/<KEY>.md`, một file cho một app, tên file là `key` project trên QA Hub — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) trước khi sinh test case. Danh mục app + glossary + cross-app ở `../qa-requirement-analysis/references/apps/README.md`. File app chưa có nội dung → bỏ qua, đừng bịa bối cảnh.
 
-> Đây là **bản duy nhất** của file reference, đặt trong skill `qa-requirement-analysis` và dùng chung cho cả 2 skill. Không tạo bản copy trong `gen-testcase/references/` — sửa một chỗ là cả 2 skill cùng thấy.
+> Đây là **bản duy nhất** của thư mục reference, đặt trong skill `qa-requirement-analysis` và dùng chung cho cả 2 skill. Không tạo bản copy trong `gen-testcase/references/` — sửa một chỗ là cả 2 skill cùng thấy.
 
-**3. Nếu app là Mailtro (MTRO): đọc `../qa-requirement-analysis/references/mtro-auto-manual-ratio.md`** — bảng tỷ lệ auto/manual theo epic + quy ước điền 2 cột `Execution Type` / `Automation Script Ref`. File này **chỉ áp dụng cho Mailtro**, bỏ qua khi làm app khác.
+**3. Nếu app là Mailtro (MTRO): đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — bảng tỷ lệ auto/manual theo epic + quy ước điền 2 cột `Execution Type` / `Automation Script Ref`. File này **chỉ áp dụng cho Mailtro**, bỏ qua khi làm app khác.
 
 **4. Đọc business rules đã xác nhận** — `../qa-requirement-analysis/references/business-rules/<APP_PREFIX>.md` (nếu tồn tại) — để nắm các rule đã xác nhận từ các issue trước của app này. Giúp coverage đủ hơn cho Negative/Edge/Regression case dựa trên rule đã biết, kể cả khi rule đó không được nhắc lại trong issue hiện tại. Nếu file chưa tồn tại, bỏ qua bước này.
 
@@ -51,7 +55,7 @@ Nếu đã rõ từ context (ví dụ: user paste Jira issue), không cần hỏ
 - Ưu tiên chất lượng và độ bao phủ hơn số lượng — tránh case trùng lặp hoặc giá trị thấp.
 - **Không tự đặt ngưỡng hiệu năng** (thời gian tải, số bản ghi tối đa, timeout). Nếu requirement không nêu, viết Expected Result theo hành vi quan sát được và ghi `PO/DEV confirm` để chốt ngưỡng sau.
 - **Test case Security ở góc độ QA chức năng**: kiểm chứng cơ chế bảo vệ hoạt động đúng. Không viết payload tấn công thật, không mô tả cách khai thác lỗ hổng, không nhắm vào môi trường production.
-- Trước khi generate ID mới cho tab đã tồn tại trên Google Sheet, đọc ID lớn nhất hiện có của module đó và tiếp nối số thứ tự (không bắt đầu lại từ 001).
+- **Không tự đánh số Test Case ID.** QA Hub cấp id theo `key` của project (`TC-QCO-064`, `TC-QCO-065`…), theo đúng thứ tự case trong lần gọi `create_test_cases`. Trước khi ghi, gọi `list_test_cases` của task để biết case nào đã có, tránh tạo trùng.
 
 ## Loại test case cần bao phủ
 
@@ -123,32 +127,36 @@ Các nhóm case thường dùng:
 
 **Preconditions của case Performance phải ghi rõ quy mô data** — ví dụ "Shop có 5.000 sản phẩm, sản phẩm test có 100 option"; nếu chưa có seed data thì ghi rõ phải tạo tay và ước lượng thời gian chuẩn bị.
 
-## Cấu trúc file output
+## Cấu trúc test case
 
-Tên file: `test-case-[module-kebab-case]-[YYYY-MM-DD].xlsx`
-Sheet name: `Test Cases`
+Một test case trên QA Hub gồm các trường sau — đây cũng là payload của `create_test_cases`:
 
-### Các cột bắt buộc (theo đúng thứ tự)
-
-| Cột | Mô tả |
+| Trường | Nội dung |
 |-----|-------|
-| Test Case ID | Format: `TC-[PREFIX]-[số thứ tự 3 chữ số]`. Prefix viết HOA toàn bộ theo bảng bên dưới. Ví dụ: `TC-TEPO-001`. **Riêng Mailtro**: ID đặt theo màn hình — `TC-SIGNUP-001`, `TC-LOGIN-001`, `TC-INVITE-001`... (xem mục "Mailtro (MTRO)" bên dưới) |
-| Module | Tên app + module. Ví dụ: "Custom Product Options > File Upload" |
-| Test Scenario | Mô tả ngắn gọn kịch bản test (1 câu), có thể gắn nhãn loại case, ví dụ: "[Happy Path] ..." |
-| Priority | Mức độ ưu tiên: Critical / High / Medium / Low |
-| Preconditions | Điều kiện cần có trước khi thực hiện test (môi trường, theme, app version nếu liên quan) |
-| Steps | Các bước thực hiện, đánh số thứ tự |
-| Data | Để trống (điền khi chạy test) |
-| Expected Result | Kết quả mong đợi cụ thể, có thể verify được |
-| Status | Điền sẵn giá trị mặc định `Pending` cho tất cả các dòng |
-| Actual Result | Để trống (điền khi chạy test) |
-| Notes | Ghi chú thêm nếu có (ví dụ: "Shopify Plus only", "PO/DEV confirm" cho case chưa có trong requirement gốc) |
-| Execution Type | `Automated` / `Manual` / `To be automated` — xem mục "Execution Type & Automation Script Ref" bên dưới |
-| Automation Script Ref | File + test id trong Playwright suite, ví dụ `` `login.spec.ts` › TC-LOGIN-020 ``. Case `Manual` điền `—` kèm lý do |
+| `id` | **Không điền.** QA Hub sinh `TC-<KEY>-<số>` theo `key` của project, id truyền vào bị bỏ qua. Xem mục "Prefix & Test Case ID" |
+| `title` | Kịch bản test trong 1 câu, gắn nhãn loại ở đầu: `[Happy Path] ...`, `[Regression] ...`, `[Security] ...`. Đây là thứ QA đọc đầu tiên nên phải nói rõ case verify cái gì |
+| `priority` | Chỉ 3 mức: `High` / `Medium` / `Low`. Case mức Critical (block checkout, mất data, lộ dữ liệu / vượt quyền) gán `High` và ghi `Critical` ở đầu field `Notes` |
+| `steps` | Các bước thực hiện, HTML `<ol><li>…</li></ol>`. Rõ ràng, đủ để người khác tự chạy không cần hỏi thêm |
+| `expectedResult` | Kết quả mong đợi, HTML `<ul><li>…</li></ul>`. Cụ thể và verify được |
+| `status` | Bỏ trống — mặc định `not-run`. Chỉ điền khi có lý do rõ (ví dụ `blocked` cho case chưa dựng được môi trường) |
+| `actualResult` | Không điền khi tạo — QA điền lúc chạy |
+| `fields[]` | Trường phụ, mỗi cái `{name, value}` với `value` là HTML. Xem bảng dưới |
+
+**Các `fields` dùng thống nhất trong team** (đúng tên, đúng chữ hoa — sai tên là đẻ ra field mới trên UI):
+
+| `name` | Khi nào có |
+|---|---|
+| `Preconditions` | Gần như luôn có: môi trường (Development Store / Staging), theme, app version, build/PR, custom config liên quan |
+| `Test data` | Khi case cần dữ liệu cụ thể (file mẫu, giá trị biên, tài khoản test). Không có thì bỏ hẳn field |
+| `Environment` | Khi case chỉ đúng trên một môi trường/trình duyệt cụ thể (ví dụ Safari macOS thật) |
+| `Notes` | `PO/DEV confirm` cho case chưa có trong requirement gốc, `Shopify Plus only`, `Critical`, ghi chú nguồn |
+| `Execution Type` / `Automation Script Ref` | Khi app có suite automation — hiện chỉ Mailtro, xem mục bên dưới |
+
+**Không còn cột `Module`** — task trên QA Hub đã gắn với project và tag module rồi. Nếu case đụng module khác với task, nói rõ ngay trong `title`.
 
 ### Execution Type & Automation Script Ref
 
-Hai cột này để biết case nào đã auto, case nào cần automate tiếp, và trace ngược từ test case → code. Auto và manual **nằm chung một bảng/tab**, không tách file — 2 cột này chính là thứ phân biệt chúng.
+Hai `fields` này để biết case nào đã auto, case nào cần automate tiếp, và trace ngược từ test case → code. Auto và manual **nằm chung một task**, không tách — 2 field này chính là thứ phân biệt chúng.
 
 | Giá trị | Khi nào dùng | `Automation Script Ref` điền gì |
 |---|---|---|
@@ -161,16 +169,16 @@ Hai cột này để biết case nào đã auto, case nào cần automate tiếp
 - Chỉ ghi `Automated` khi thực sự xác nhận được test tồn tại (đọc repo automation, hoặc user nói rõ). Không suy đoán.
 - `Manual` **bắt buộc có lý do** trong `Automation Script Ref` — khi lý do được gỡ bỏ (ví dụ có mail API) thì chuyển sang `To be automated`. Không có lý do thì đừng gán `Manual`.
 - Vì tên test trong spec bắt đầu bằng đúng TC-ID, ref dùng được thẳng để chạy 1 case: `npx playwright test --grep "TC-LOGIN-020"`. Giữ TC-ID trong ref khớp với cột `Test Case ID`.
-- **Mailtro có tỷ lệ auto/manual gợi ý riêng theo epic** — xem mục "Mailtro (MTRO) — quy ước riêng" bên dưới. Các app khác chưa có tỷ lệ chốt, gán theo bản chất từng case như bảng trên.
+- **Mailtro có tỷ lệ auto/manual gợi ý riêng theo epic** — xem mục "Mailtro (MTRO) — quy ước riêng" bên dưới. Các app khác chưa có suite automation nên **bỏ hẳn 2 field này**, đừng điền `Manual` cho có.
 
-> Trước đây quy ước Mailtro ghi automation vào cột Notes (`Auto: ✅ tests/01-auth/signup.spec.ts`). Từ nay thông tin đó chuyển sang 2 cột riêng — Notes chỉ giữ ghi chú không thuộc 2 cột này.
+> Trước đây quy ước Mailtro ghi automation vào Notes (`Auto: ✅ tests/01-auth/signup.spec.ts`). Từ nay thông tin đó nằm ở 2 field riêng — `Notes` chỉ giữ ghi chú không thuộc 2 field này.
 
 ### Chất lượng từng test case
 
-- **Test Case ID**: nhất quán, không trùng trong cùng file (và không trùng với ID đã có trên Google Sheet nếu append)
+- **Test Case ID**: không tự đặt — QA Hub cấp. Việc của Claude là không tạo trùng nội dung với case đã có trong task (`list_test_cases` trước khi ghi)
 - **Steps**: rõ ràng, đủ để người khác tự thực hiện không cần hỏi thêm
 - **Expected Result**: cụ thể và có thể verify được — tránh viết chung chung kiểu "hiển thị đúng"; thay vào đó: "Nút Add to Cart bị disabled và hiển thị tooltip 'Please upload at least 2 files'"
-- **Preconditions**: ghi rõ môi trường (Development Store / Staging), theme đang dùng, app version nếu liên quan
+- **Preconditions**: ghi rõ môi trường (Development Store / Staging), theme đang dùng, app version / build / PR nếu liên quan
 - **Priority**: gán theo mức độ ảnh hưởng đến revenue/merchant
   - Critical: block checkout, mất data, **hoặc lộ dữ liệu / vượt quyền** (case Security thuộc nhóm phân quyền, quyền sở hữu dữ liệu, rò rỉ dữ liệu nhạy cảm mặc định là Critical)
   - High: ảnh hưởng luồng mua hàng chính; **case Performance làm chậm rõ rệt trang bán hàng hoặc thao tác hàng loạt bị timeout**
@@ -179,15 +187,18 @@ Hai cột này để biết case nào đã auto, case nào cần automate tiếp
 
 ### Cross-app scenarios
 
-Khi tính năng liên quan đến nhiều app (ví dụ: Custom Product Options + Slide Cart, hoặc Duos B2B + Checkout Customizer), bắt buộc thêm ít nhất 1 TC end-to-end. Đặt module là "Cross-app > [App1] + [App2]".
+Khi tính năng liên quan đến nhiều app (ví dụ: Custom Product Options + Slide Cart, hoặc Duos B2B + Checkout Customizer), bắt buộc thêm ít nhất 1 TC end-to-end. Gắn nhãn `[Cross-app]` ở đầu `title` và nêu rõ 2 app trong câu — ví dụ `[Cross-app] Option file upload của Tepo hiển thị đúng trong Slide Cart`. Case đó nằm trong task của app chủ đạo; nếu cả 2 app đều có task riêng thì hỏi người dùng ghi vào task nào, đừng ghi cả hai.
 
-### Bảng prefix theo app
+### Prefix & Test Case ID
 
-Prefix, Jira project key, QA component và màu tab Google Sheet đều tra trong **bảng tổng hợp app** ở đầu file `../qa-requirement-analysis/references/qikify-apps-reference.md` — đó là nguồn duy nhất, không chép lại vào đây để tránh lệch khi có app mới.
+**Prefix lấy theo `key` của project trên QA Hub** — đọc bằng `list_projects`, mục Project trên QA Hub là nơi setup key này. QA Hub tự sinh id `TC-<KEY>-<số>` theo đúng thứ tự case trong lần gọi `create_test_cases`, nên **Claude không đặt id, không đoán prefix, không tiếp nối số thứ tự bằng tay**.
 
-Hai lưu ý hay nhầm:
-- **Test Case Prefix và Jira Project Key giờ giống nhau** ở mọi app. Ngoại lệ cũ của Checkout Customizer (`QCO` vs `QCC`) đã bỏ từ 2026-08-12 — dùng `QCO` cho cả hai.
-- **Mailtro là ngoại lệ**: prefix `MTRO` chỉ dùng cho tên tab Google Sheet và field `appPrefix`; Test Case ID đặt theo màn hình (xem mục "Mailtro (MTRO)" bên dưới).
+Key đang có trên QA Hub (kiểm lại bằng `list_projects` chứ đừng tin bảng này khi thấy lệch): `TEPO` tepo product option · `QSC` qik-sticky cart · `QCO` qik-checkout · `DUOS` duos b2b · `MTRO` mailtro · `QIK` qik · `QAF` qik-affiliate · `QCF` qik-contact-form · `QVL` qik-volume · `KOIN` koin · `MYS` mysbox · `TIB` teeinblue · `IGH` imagenHub · `SHUB` oe-chatbot.
+
+- App không có project trên QA Hub → **dừng, hỏi người dùng**, đừng tự chế prefix.
+- Jira project key và key trên QA Hub hiện trùng nhau ở các app đang test, nhưng **nguồn sự thật là QA Hub** — lệch nhau thì theo QA Hub.
+- Thư mục `../qa-requirement-analysis/references/apps/` vẫn dùng để tra bối cảnh app (`<KEY>.md`) và QA component (`README.md`), nhưng **không còn là nguồn của prefix**.
+- **Mailtro là ngoại lệ đang giữ nguyên**: id trong repo automation `qikify-QA-mailtro` vẫn đặt theo màn hình (`TC-SIGNUP-001`…) — xem mục "Mailtro (MTRO)" bên dưới. Case ghi lên QA Hub vẫn nhận id `TC-MTRO-<số>` do QA Hub cấp.
 
 ## Shopify-specific notes
 
@@ -202,18 +213,18 @@ Hai lưu ý hay nhầm:
 
 Mailtro là SaaS email marketing **độc lập, không phải Shopify app**. Khi sinh test case cho Mailtro:
 
-- **Test Case ID theo màn hình, không theo app**: `TC-SIGNUP-0xx`, `TC-LOGIN-0xx`, `TC-INVITE-0xx`, `TC-CONTACT-0xx`, `TC-CAMPAIGN-0xx`... để map 1-1 với `docs/manual-testcases/` và spec Playwright trong repo automation `qikify-QA-mailtro`. Prefix `MTRO` chỉ dùng cho **tên tab Google Sheet** và field `appPrefix` trong JSON.
-- **Tên tab Google Sheet**: `[MTRO] <Nhóm> - <Màn hình>` — ví dụ `[MTRO] Auth - Signup`, `[MTRO] Auth - Login`.
-- **Cột Module**: đặt theo cây thư mục của repo automation, ví dụ `Mailtro > 01-auth > Signup > Validation từng field`.
+- **Test Case ID theo màn hình trong repo automation**: `TC-SIGNUP-0xx`, `TC-LOGIN-0xx`, `TC-INVITE-0xx`, `TC-CONTACT-0xx`, `TC-CAMPAIGN-0xx`... để map 1-1 giữa `docs/manual-testcases/` và spec Playwright của `qikify-QA-mailtro`. Quy ước này **giữ nguyên** — nó là id trong repo. Trên QA Hub, case vẫn nhận id `TC-MTRO-<số>` do QA Hub cấp; khi cần trace, ghi id repo (`TC-SIGNUP-004`) vào field `Automation Script Ref`.
+- **`sheetName` / `appPrefix` trong JSON của repo**: là contract của `scripts/testcases-to-json.mjs`, giữ nguyên `[MTRO] <Nhóm> - <Màn hình>`. Ngoài repo đó thì không còn Google Sheet.
+- **Ngữ cảnh module**: đặt theo cây thư mục của repo automation, ví dụ `Mailtro > 01-auth > Signup > Validation từng field` — trên QA Hub thì nằm ở tag của task và trong `title`.
 - **Preconditions**: ghi môi trường + URL cụ thể (`Staging https://staging-id.mailtro.ai/signup, chưa đăng nhập`). **Không** ghi theme, Shopify plan, development store. Lưu ý 2 domain khác nhau: auth ở `staging-id.mailtro.ai`, app workspace ở `<workspace-slug>.wisle.app`.
-- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/mtro-auto-manual-ratio.md`** — xem mục "Tỷ lệ auto/manual" ngay bên dưới.
+- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — xem mục "Tỷ lệ auto/manual" ngay bên dưới.
 - **Cột Notes**: chỉ giữ ghi chú không thuộc 2 cột trên. Nếu Jira có ghi priority gốc (P0/P1) thì giữ lại: `Priority gốc: P0`.
 
 ### Output khi làm trong repo `qikify-QA-mailtro`
 
-Repo automation `qikify-QA-mailtro` **không dùng `.xlsx`**. Nguồn sự thật là Markdown; JSON chỉ là output máy đọc sinh bằng script, **không sửa tay** (ADR 0009 của repo). Nhận biết bối cảnh: thư mục làm việc có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`. Khi đó áp mục này **thay cho** "Cấu trúc file output", "Format file Excel" và "Lưu file".
+Trong repo automation `qikify-QA-mailtro`, nguồn sự thật là Markdown; JSON chỉ là output máy đọc sinh bằng script, **không sửa tay** (ADR 0009 của repo). Nhận biết bối cảnh: thư mục làm việc có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`. Khi đó mục này **bổ sung thêm** 2 deliverable bên cạnh việc ghi test case lên QA Hub như mặc định.
 
-**Deliverable gồm 2 thứ, theo thứ tự:**
+**Deliverable thêm gồm 2 thứ, theo thứ tự:**
 
 1. **`docs/manual-testcases/<NN-module>/<màn-hình>.md`** — 1 file cho 1 màn hình, tên thư mục module trùng với `tests/` (`01-auth`, `02-team`, `04-contacts`, `07-campaigns`, `10-deliverability`...). Viết bằng **tiếng Việt**. Case auto và manual **nằm chung một file**, phân biệt bằng 2 cột cuối (ADR 0005 của repo).
 2. **`data-output/testcases_<module>-<màn-hình>.json`** — **không viết tay**, sinh bằng:
@@ -237,7 +248,7 @@ Repo automation `qikify-QA-mailtro` **không dùng `.xlsx`**. Nguồn sự thậ
 - `Priority` dùng **`P0` / `P1` / `P2`** — script tự map sang High / Medium / Low khi xuất JSON. **Không** ghi Critical/High/Medium/Low trong file `.md`.
 - Xuống dòng trong ô dùng `<br>`; ký tự `|` trong nội dung phải escape thành `\|`; ô rỗng ghi `—`.
 
-**Khác biệt so với format `.xlsx` 13 cột:** bảng md chỉ có 9 cột. `Test Data` chính là cột `Data`; còn `Status` (`Pending`), `Actual Result` và `Notes` do script tự điền rỗng — **không** thêm 3 cột đó vào bảng md.
+**Khác biệt so với các trường trên QA Hub:** bảng md chỉ có 9 cột và dùng Markdown chứ không phải HTML. `Status`, `Actual Result` và `Notes` do script tự điền rỗng — **không** thêm 3 cột đó vào bảng md. Nội dung case thì giống nhau: viết một lần, dùng cho cả hai nơi.
 
 **Sau khi sinh xong**, cập nhật luôn trong cùng lần làm:
 - `docs/qa-sprint-status.md` — thêm/sửa dòng của issue tương ứng.
@@ -245,7 +256,7 @@ Repo automation `qikify-QA-mailtro` **không dùng `.xlsx`**. Nguồn sự thậ
 
 ### Tỷ lệ auto/manual — chỉ áp dụng cho Mailtro
 
-File `../qa-requirement-analysis/references/mtro-auto-manual-ratio.md` là **nguồn duy nhất** của tỷ lệ này: bảng tỷ lệ cho 15 epic MTRO, nguyên tắc chung để suy ra tỷ lệ cho epic chưa có trong bảng, và quy ước điền 2 cột. Đọc file đó khi sinh test case cho MTRO; **không** áp tỷ lệ này cho TEPO/QSC/QCO/DUOS.
+File `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md` là **nguồn duy nhất** của tỷ lệ này: bảng tỷ lệ cho 15 epic MTRO, nguyên tắc chung để suy ra tỷ lệ cho epic chưa có trong bảng, và quy ước điền 2 cột. Đọc file đó khi sinh test case cho MTRO; **không** áp tỷ lệ này cho TEPO/QSC/QCO/DUOS.
 
 Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file trên):
 
@@ -267,126 +278,51 @@ Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file tr�
 - Epic chưa có trong bảng: áp bộ nguyên tắc ở mục 2 của file reference (rule ở backend / lặp lại nhiều / regression cao / kết quả nhị phân → auto; phụ thuộc thị giác / hệ thống ngoài / thời gian thực / đánh giá trải nghiệm → manual).
 - Bảng đang ở trạng thái **draft** vì phần lớn epic MTRO chưa có AC. Nếu issue đang xử lý đã có AC chi tiết và scope thật lệch rõ so với ước lượng trong bảng, báo cho user để cập nhật lại file reference (mục 4 — Quy trình cập nhật) thay vì âm thầm dùng số cũ.
 - Phần lớn feature Mailtro (phase 2–4) còn "To Do", chưa có UI/selector → kỳ vọng chi tiết thường chưa chốt, dùng `PO/DEV confirm` nhiều hơn bình thường thay vì tự suy đoán UI.
-- Đọc mục "5. Mailtro (MTRO)" trong `../qa-requirement-analysis/references/qikify-apps-reference.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability).
+- Đọc `../qa-requirement-analysis/references/apps/MTRO.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability).
 
-## Format file Excel
+## Tạo test case trên QA Hub (Testlane)
 
-### Cấu trúc màu sắc (theo chuẩn team Qikify)
+QA Hub là nơi lưu test case. Soạn xong bộ case thì ghi thẳng lên đó qua MCP — không sinh file, không import Google Sheet.
 
-- **Row 1 — Title row**: nền navy đậm (`#1F4E79`), merged toàn bộ cột, chữ trắng bold — ghi tên module/feature đang test
-- **Row 2 — Header row**: nền xanh nhạt (`#BDD7EE`), chữ đen bold
-- **Data rows**: xen kẽ trắng (`#FFFFFF`) và xanh nhạt rất nhạt (`#DEEAF1`)
+1. `list_projects` → `id` và `key` của project (`key` = prefix của Test Case ID).
+2. `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý. Không có task khớp → hỏi người dùng, đừng đoán.
+3. `list_test_cases` cho task đó → xem case nào đã có, tránh ghi trùng nội dung.
+4. `create_test_cases` — **một lần gọi cho cả bộ**, tối đa 100 case. Cả batch được validate trước khi ghi: hoặc vào hết, hoặc không case nào vào, và chỉ hiện 1 dòng activity. Đừng gọi `create_test_case` từng cái một.
+5. Báo lại: số case đã tạo, dải id QA Hub cấp (ví dụ `TC-QCO-064 → TC-QCO-089`), `taskId`, và phân bố loại case / priority.
 
-### Dropdown validation
+Bộ hơn 100 case thì chia nhiều lần gọi, giữ đúng thứ tự để id chạy liên tục.
 
-- Cột **Status**: dropdown `Pending / Assign to DEV / Ready to test / Pass / Fail / Reopen`
-  - Giá trị mặc định khi tạo file: **Pending** (điền sẵn cho tất cả data rows)
-  - Mỗi status có màu nền riêng (áp dụng bằng conditional formatting hoặc fill trực tiếp khi tạo):
+### Rich text là HTML, không phải Markdown
 
-    | Status | Màu nền | Hex |
-    |--------|---------|-----|
-    | Pending | Xám nhạt | `#F2F2F2` |
-    | Assign to DEV | Xanh dương nhạt | `#bfe1f6` |
-    | Ready to test | Cam nhạt | `#ffe5a0` |
-    | Pass | Xanh lá nhạt | `#E2EFDA` |
-    | Fail | Đỏ nhạt | `#FFDCE1` |
-    | Reopen | Tím nhạt | `#e6cff2` |
+`steps`, `expectedResult` và mọi `fields[].value` đi qua editor rich-text của QA Hub. Nhét Markdown vào thì QA đọc thấy nguyên dấu `**` và `1.`.
 
-- Cột **Priority**: dropdown `Critical / High / Medium / Low`, highlight nền cam nhạt (`#FCE4D6`)
+- Chỉ dùng thẻ Quill sinh ra được: `<p>` · `<strong>` · `<em>` · `<u>` · `<s>` · `<code>` · `<ol>` / `<ul>` / `<li>` · `<blockquote>` · `<pre>` · `<a href>` · `<br>`. Trong test case thì hầu như chỉ cần `<ol>`, `<ul>`, `<p>`, `<code>`, `<strong>`.
+- **Không dùng bảng** — Quill không có bảng, `<table>` bị bóp phẳng thành một dòng chữ dính liền. Ma trận (layout × nguồn dữ liệu, role × quyền) viết thành `<ul>`.
+- **Escape `&`, `<`, `>` trong phần nội dung** (payload, tên thẻ, test data): `<code>&lt;img src=x onerror=1&gt;</code>`. Không escape thì một chuỗi như `<script>` nuốt mất phần sau nó.
+- Xuống dòng trong một field: mỗi ý một `<li>`, hoặc `<p>` riêng — không dùng `\n`.
 
-- Cột **Execution Type**: dropdown `Automated / Manual / To be automated`, mỗi giá trị một màu nền:
+### Ví dụ một case trong payload
 
-  | Execution Type | Màu nền | Hex |
-  |---|---|---|
-  | Automated | Xanh lá nhạt | `#D9EAD3` |
-  | Manual | Vàng nhạt | `#FFF2CC` |
-  | To be automated | Xanh dương nhạt | `#D0E2F3` |
-
-### Border
-
-- Tất cả các ô trong vùng data (từ header row trở xuống): border mỏng màu xám nhạt (`#D9D9D9`) cho cả 4 cạnh (thin)
-- Title row (row 1 merged): không có border
-
-### Cài đặt khác
-
-- Freeze row 1 và row 2 (title + header) để dễ scroll
-- Độ rộng cột: auto-fit theo nội dung, tối thiểu 15px
-- Font: Arial 10pt cho data rows, Arial 11pt bold cho header
-
-## Lưu file
-
-> **Không áp dụng khi làm trong repo `qikify-QA-mailtro`** — repo đó không sinh `.xlsx`, xem mục "Output khi làm trong repo `qikify-QA-mailtro`".
-
-Nơi lưu tuỳ môi trường đang chạy:
-- **Claude Code (máy local)**: thư mục `data-output/` trong thư mục làm việc hiện tại (tạo nếu chưa có). Ví dụ: `<working dir>/data-output/`.
-- **Claude.ai**: `/mnt/user-data/outputs/`.
-
-Tên file: `test-case-[module-kebab-case]-[YYYY-MM-DD].xlsx`
-
-Ví dụ: `test-case-cpo-file-upload-2026-04-17.xlsx`
-
-## Google Sheets Integration
-
-Sau khi tạo xong file xlsx, tự động push lên **Qikify QA Master Sheet**:
-- Spreadsheet ID: `18YWqqtpJHDP3JSC2aYxgn7uLIad8gxZIVLOq_I12IEc`
-- Mỗi sheet tab = một tính năng của một app
-- Tên tab: `[APP PREFIX] [Feature]` — ví dụ: `[TEPO] File Upload`, `[MTRO] Auth - Signup` (prefix viết HOA, theo đúng bảng prefix ở trên)
-
-### Output Claude cần sinh mỗi lần tạo test case
-
-Mỗi lần chạy, Claude tạo **2 file**:
-1. **`test-case-[module]-[YYYY-MM-DD].xlsx`** — file Excel đầy đủ format để xem/dùng trực tiếp
-2. **`testcases_[ISSUE].json`** — data để import vào Google Sheet qua Apps Script (xem mục "Cách push lên Google Sheets" bên dưới)
-
-> Trong repo `qikify-QA-mailtro` thì 2 file này là **`.md` trong `docs/manual-testcases/` + `.json` trong `data-output/` sinh bằng script**, không có `.xlsx`. Phần JSON dưới đây vẫn đúng — script của repo xuất đúng contract `sheetName` / `appPrefix` / `testCases` này (kèm thêm field `source`).
-
-**QUAN TRỌNG — JSON phải là 1 object bọc ngoài**, gồm 3 field bắt buộc `sheetName`, `appPrefix`, `testCases` (KHÔNG để JSON là 1 mảng phẳng — Apps Script sẽ báo lỗi "Thiếu trường: JSON cần có: sheetName, appPrefix, testCases").
-
-- `sheetName` (bắt buộc): tên tab Google Sheet, format `"[APP PREFIX] Feature Name"` — ví dụ `"[TEPO] File Upload"`
-- `appPrefix` (bắt buộc): prefix viết HOA theo bảng prefix trong app reference — ví dụ `"TEPO"`. Script dùng field này để tô màu tab; prefix lạ sẽ ra màu xám mặc định.
-- `testCases` (bắt buộc): mảng các object test case, key = tên cột (giống hệt bảng cột ở trên)
-- `featureTitle` (tuỳ chọn): tiêu đề ghi ở title row khi tạo tab mới; bỏ trống thì script dùng `sheetName`
-
-Format file JSON đúng:
 ```json
 {
-  "sheetName": "[DUOS] Non-Plus Pricing Tiers",
-  "appPrefix": "DUOS",
-  "featureTitle": "Non-Plus Pricing Tiers",
-  "testCases": [
+  "taskId": "QCO-007",
+  "cases": [
     {
-      "Test Case ID": "TC-DUOS-001",
-      "Module": "Duos B2B > Non-Plus Pricing Tiers",
-      "Test Scenario": "...",
-      "Priority": "High",
-      "Preconditions": "...",
-      "Steps": "1. ...\n2. ...",
-      "Data": "",
-      "Expected Result": "...",
-      "Status": "Pending",
-      "Actual Result": "",
-      "Notes": "",
-      "Execution Type": "To be automated",
-      "Automation Script Ref": ""
+      "title": "[Security] Buyer tự set cart attribute chứa thẻ HTML → giá trị không được render/thực thi ở checkout",
+      "priority": "High",
+      "steps": "<ol><li>Trên storefront, set attribute bằng chuỗi có thẻ HTML: <code>qco_ao_added_items = '&lt;img src=x onerror=1&gt;'</code>.</li><li>Vào checkout với flag ON, mở console.</li><li>Kiểm tra order summary và toàn bộ vùng render của widget Add-ons.</li></ol>",
+      "expectedResult": "<ul><li>Giá trị attribute chỉ dùng để so khớp variant id, không render ra bất kỳ đâu trên checkout.</li><li>Nếu có hiển thị, phải là text thuần — không thực thi, không vỡ layout.</li><li>Console không có dấu hiệu HTML injection.</li></ul>",
+      "fields": [
+        { "name": "Preconditions", "value": "<ul><li>Staging build PR #919, <code>shouldAutoAddAddonAgain: true</code>, <code>debug: true</code>.</li><li>Chỉ chạy trên staging, KHÔNG chạy trên production.</li></ul>" },
+        { "name": "Notes", "value": "<p><strong>PO/DEV confirm</strong> — cart attribute là dữ liệu buyer ghi được qua API công khai của Shopify, nên là input không tin cậy dù requirement không nêu.</p>" }
+      ]
     }
   ]
 }
 ```
 
-> Tab đã tạo từ bản Apps Script cũ (11 cột, chưa có `Execution Type` / `Automation Script Ref`): khi import, script sẽ hỏi có bổ sung 2 cột vào cuối tab không. Chọn YES để giữ dữ liệu 2 cột mới; chọn NO thì phần đó bị bỏ qua, các cột còn lại vẫn append đúng.
+`id` và `status` không xuất hiện trong payload: id do QA Hub cấp, status mặc định `not-run`.
 
-### Cách push lên Google Sheets
+### Khi không ghi được lên QA Hub
 
-Claude **không tự push** được (môi trường chặn kết nối tới Google APIs, và Apps Script cần chạy trong chính spreadsheet). Việc của Claude là sinh đúng 2 file ở trên; việc push do user thực hiện bằng Apps Script đã cài sẵn trong Master Sheet:
-
-1. Mở **Qikify QA Master Sheet** → tab `📥 Claude Import`
-2. Paste toàn bộ nội dung file `testcases_[ISSUE].json` vào ô **B1**
-3. Menu **🧪 Qikify QA → 📋 Import Test Cases từ Claude**
-4. Script tự tạo/ghi vào đúng tab, áp dụng format, và báo số test case đã ghi
-
-Script nguồn nằm ở `scripts/app-script.gs` trong skill này — chỉ cần cài lại (Extensions → Apps Script → paste → Save) khi có thay đổi, không phải mỗi lần import.
-
-### Xử lý sheet đã tồn tại
-
-- Nếu tab **chưa có**: script tạo mới, áp dụng full format (title row, header, màu tab theo `appPrefix`)
-- Nếu tab **đã có**: append test case mới xuống dưới, không ghi đè dữ liệu cũ. Vì script **không** tự đánh lại số ID, Claude phải tự đọc Test Case ID lớn nhất đang có trong tab đó và đánh số tiếp nối trong file JSON trước khi đưa cho user.
+Chưa kết nối MCP, project chưa join (`isMember: false`), hoặc chưa có task tương ứng → **nói rõ lý do**, đưa bộ test case ra trong chat theo đúng các trường ở mục "Cấu trúc test case", và nêu bước người dùng cần làm (join project / tạo task / cấp token ở `/settings/ai`). Không tự tạo file `.xlsx` hay JSON để bù.

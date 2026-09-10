@@ -27,7 +27,7 @@ Tất cả business rule được đọc/ghi qua skill `qa-requirement-analysis`
 
 Dùng đường dẫn tương đối, **không hardcode** `/mnt/skills/user/...` — 3 skill này luôn nằm cạnh nhau trong cùng một thư mục skills, nhưng thư mục gốc đó khác nhau tuỳ môi trường (Claude Code copy skill vào thư mục session riêng, Claude.ai dùng `/mnt/skills/user/`). Nếu không chắc, xác định thư mục skill hiện tại rồi đi lên một cấp.
 
-- `<APP_PREFIX>` viết HOA, theo đúng cột `Jira Project Key` trong bảng tổng hợp app tại `../qa-requirement-analysis/references/qikify-apps-reference.md` (TEPO, QCO, DUOS, QSC, MTRO, QBK, QCF, KOIN, MYS, QIK, QSK, QSM, TIB...). Với Mailtro dùng `MTRO.md` (theo project key, không tách theo màn hình).
+- `<APP_PREFIX>` viết HOA, theo đúng `key` của project trên QA Hub (`list_projects` — cũng là prefix của Test Case ID, và cũng là tên file trong `references/apps/`): TEPO, QCO, DUOS, QSC, MTRO, QIK, QAF, QCF, QVL, KOIN, MYS, TIB... Các app đang test có key trùng với Jira Project Key; lệch nhau thì theo QA Hub. Với Mailtro dùng `MTRO.md` (theo project key, không tách theo màn hình).
 - Đây là thư mục nằm trong skill `qa-requirement-analysis` (không phải thư mục riêng của skill này), vì cả `qa-requirement-analysis` và `gen-testcase` đều đọc trực tiếp từ đường dẫn đó.
 - Nếu thư mục `references/business-rules/` hoặc file `<APP_PREFIX>.md` chưa tồn tại, tự tạo mới (đây là skill duy nhất được phép tạo file này — `qa-requirement-analysis` và `gen-testcase` chỉ đọc, không tự tạo).
 

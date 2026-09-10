@@ -1,8 +1,11 @@
 {
   "$comment": [
     "Phần bị bỏ khi mang skill này sang Worker. Xem skills/README.md.",
-    "GIỮ LẠI: vai trò, 14 mục output, AI Guardrails, hướng dẫn Security/Performance,",
-    "tiêu chí Readiness — đó là toàn bộ phần phán đoán."
+    "GIỮ LẠI: vai trò, 14 mục output, AI Guardrails, bộ phương pháp phân tích (8 trục),",
+    "hướng dẫn Security/Performance, rubric Readiness 7 tiêu chí / 14 điểm và luật ghi đè",
+    "— đó là toàn bộ phần phán đoán.",
+    "Worker không có filesystem: mọi câu dẫn tới references/method/* đều nằm trong",
+    "dropParagraphs, phần cốt lõi của chúng đã được inline sẵn trong SKILL.md."
   ],
 
   "dropSections": [
@@ -23,10 +26,15 @@
 
   "dropParagraphs": [
     "Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví dụ `TEPO-980`, `https://ownego.atlassian.net/browse/TEPO-980`), dùng công cụ Jira (`getJiraIssue`, cloudId `ownego.atlassian.net`, fields `*all` hoặc tối thiểu summary/description/project/labels/status/priority/issuetype, bao gồm cả comment nếu có để nắm các cập nhật/xác nhận mới nhất) để lấy đầy đủ nội dung issue gốc trước khi phân tích. Đọc kỹ comment — quyết định cuối cùng của PO/khách hàng thường nằm trong comment chứ không phải description gốc.",
-    "12. Tạo task tương ứng trên Testlane, đưa nguyên bản phân tích vào phần mô tả của task — xem mục \"Tạo task trên Testlane\" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira."
+    "12. Tạo task tương ứng trên Testlane, đưa nguyên bản phân tích vào phần mô tả của task — xem mục \"Tạo task trên Testlane\" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira.",
+    "Bộ câu hỏi đầy đủ cho từng trục nằm ở `references/method/analysis-guide.md` — đọc khi ticket phức tạp hoặc khi thấy mình đang bí ý ở một mục.",
+    "`references/method/security-checklist.md` có checklist chi tiết **tổ chức theo loại feature** (form nhập liệu, upload file, danh sách/tìm kiếm/export, auth/OTP, thanh toán, webhook/API công khai, dữ liệu cá nhân). Mở đúng phần khớp với feature đang xét — đừng dán nguyên khối OWASP vào một form đổi avatar.",
+    "`references/method/performance-checklist.md` có checklist chi tiết **theo loại feature** (danh sách/bảng, export/báo cáo, upload, ghi dữ liệu/giao dịch, tích hợp bên thứ ba, job nền, frontend), kèm bảng ngưỡng khởi điểm p95 để mở thảo luận. Bảng đó **không phải chuẩn bắt buộc** — dùng nó thì phải gắn nhãn `đề xuất — cần PO chốt` và mở GAP tương ứng."
   ],
 
   "replaceParagraphs": {
-    "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case dạng `.xlsx` + push lên Google Sheets.": "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case vào Testlane dưới dạng `draft` để QA duyệt."
+    "Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task Testlane (xem \"Chọn project\").": "Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ là phần bối cảnh app nạp sẵn trong prompt sẽ không nói gì về nó, nên nói rõ điều đó thay vì tự lấp.",
+
+    "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên Testlane (qa-hub) — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.": "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case vào Testlane dưới dạng `draft` để QA duyệt."
   }
 }

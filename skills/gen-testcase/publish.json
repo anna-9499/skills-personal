@@ -1,48 +1,42 @@
 {
   "$comment": [
     "Phần bị bỏ khi mang skill này sang Worker. Xem skills/README.md.",
-    "Nguyên tắc: bỏ thứ cần filesystem hoặc cần người thao tác tay.",
-    "GIỮ LẠI: guardrails, 8 loại test case, bảng Security/Performance, bảng cột,",
-    "quy tắc Priority, cross-app, quy ước Mailtro, và hình dạng JSON export."
+    "Nguyên tắc: bỏ thứ cần filesystem, cần MCP, hoặc cần người thao tác tay.",
+    "GIỮ LẠI: guardrails, 8 loại test case, bảng Security/Performance, bảng trường,",
+    "quy tắc Priority, cross-app, quy ước Mailtro, và luật rich-text HTML."
   ],
 
   "dropSections": [
     "## Trước khi bắt đầu",
-    "## Format file Excel",
-    "## Lưu file",
-    "### Cách push lên Google Sheets",
-    "### Xử lý sheet đã tồn tại"
+    "### Ví dụ một case trong payload",
+    "### Khi không ghi được lên QA Hub"
   ],
 
   "sectionNotes": {
-    "## Trước khi bắt đầu": "Đọc skill xlsx + 2 file reference qua đường dẫn tương đối. Worker không có filesystem; app reference và business rules được nạp thẳng vào prompt.",
-    "## Format file Excel": "Màu, border, freeze pane, dropdown — chỉ có nghĩa khi thật sự tạo file .xlsx.",
-    "## Lưu file": "data-output/ hoặc /mnt/user-data/outputs/ — không tồn tại trên Worker.",
-    "### Cách push lên Google Sheets": "Thao tác tay của QA trong Master Sheet.",
-    "### Xử lý sheet đã tồn tại": "Đánh số ID tiếp nối theo tab Sheet. Trong Testlane id do bảng counters cấp."
+    "## Trước khi bắt đầu": "Gọi MCP Testlane + đọc file reference qua đường dẫn tương đối. Worker không có filesystem lẫn MCP; project/task, app reference và business rules được nạp thẳng vào prompt.",
+    "### Ví dụ một case trong payload": "Payload của MCP create_test_cases. Worker trả JSON theo schema riêng của endpoint, không gọi tool.",
+    "### Khi không ghi được lên QA Hub": "Fallback khi MCP chưa kết nối — không có nghĩa trên Worker vì Worker chạy ngay trong Testlane."
   },
 
   "replaceSections": {
-    "### Tỷ lệ auto/manual — chỉ áp dụng cho Mailtro": "Bảng tỷ lệ auto/manual của MTRO **đã được nạp sẵn vào prompt này** (không đọc file). Chỉ áp cho Mailtro — không áp cho TEPO/QSC/QCO/DUOS.\n\n| Epic | Auto | Manual | | Epic | Auto | Manual |\n|---|---:|---:|---|---|---:|---:|\n| MTRO-30 Login/Signup | 75% | 25% | | MTRO-16 Analytics | 55% | 45% |\n| MTRO-20 Team & member | 70% | 30% | | MTRO-64 Bounce/Complaint | 60% | 40% |\n| MTRO-6 Account setup | 60% | 40% | | MTRO-9 Sign-up form | 60% | 40% |\n| MTRO-8 Contacts | 65% | 35% | | MTRO-17 Unsubscribe | 70% | 30% |\n| MTRO-13 Automations | 65% | 35% | | MTRO-44 MCP connectors | 50% | 50% |\n| MTRO-11 Campaigns | 55% | 45% | | MTRO-7 Dashboard/Home | 30% | 70% |\n| MTRO-15 Templates/Builder | 30% | 70% | | MTRO-47 Onboarding | 25% | 75% |\n| MTRO-18 Brand guideline | 35% | 65% | | | | |\n\n**Cách dùng:** tỷ lệ là định hướng phân bổ công sức, không phải KPI. Sinh đủ bộ case theo 8 loại trước, gán `Execution Type` theo bản chất từng case, rồi đối chiếu tỷ lệ thực tế — lệch nhiều thì rà lại xem case nào gán `Manual` mà thực ra automate được, đừng đổi nhãn cho khớp số. Nêu tỷ lệ thực tế khi trả kết quả.\n\n**Nghiêng về auto**: rule ở backend (validate, phân quyền, ràng buộc trạng thái), case lặp lại nhiều data, khu vực regression cao, kết quả nhị phân rõ ràng. **Nghiêng về manual**: phụ thuộc thị giác (layout, drag & drop, chart, branding), phụ thuộc hệ thống ngoài (mail client render, deliverability, DNS, bounce thật), yếu tố thời gian thực (scheduling, delay node), đánh giá trải nghiệm. Selector không ổn định (builder drag & drop, canvas) → hạ tỷ lệ auto.\n\nBảng đang là **draft** vì phần lớn epic MTRO chưa có AC. Epic không có trong bảng: áp bộ nguyên tắc trên, không bịa số mới.",
+    "## Tạo test case trên QA Hub (Testlane)": "Không gọi tool nào. Trả về JSON đúng schema của endpoint; Testlane ghi vào D1 với `status='draft'` để QA duyệt từng cái.\n\n**Không tự đánh số Test Case ID** — để trống. Testlane cấp id `TC-<KEY>-<số>` theo `key` của project qua bảng `counters`, nên hai request đồng thời không nhận cùng một số.\n\nLuật rich-text ở mục con bên dưới vẫn áp dụng nguyên vẹn: `steps`, `expectedResult` và `fields[].value` là HTML, không phải Markdown.",
 
-    "### Output Claude cần sinh mỗi lần tạo test case": "Trả về **một** JSON đúng schema đã cho, không tạo file.\n\nGiữ nguyên hình dạng JSON của Master Sheet để nút \"Export to Sheet\" trong Testlane sinh ra đúng thứ Apps Script đang nhận — Testlane là nguồn chính, Google Sheet là bản xuất:\n\n- `sheetName` (bắt buộc): `\"[APP PREFIX] Feature Name\"` — ví dụ `\"[TEPO] File Upload\"`\n- `appPrefix` (bắt buộc): prefix viết HOA theo bảng app — ví dụ `\"TEPO\"`\n- `testCases` (bắt buộc): mảng object, key = tên cột ở bảng trên\n- `featureTitle` (tuỳ chọn): tiêu đề title row\n\n**Không tự đánh số Test Case ID.** Để trống `\"Test Case ID\"`; Testlane cấp id qua bảng `counters` khi ghi vào D1, nên hai request đồng thời không nhận cùng một số."
+    "### Prefix & Test Case ID": "Prefix là `key` của project trên QA Hub, **đã được nạp sẵn vào prompt này** — không tra bảng app, không đoán. Testlane tự cấp id `TC-<KEY>-<số>` khi ghi vào D1, nên để trống trường id trong JSON trả về.\n\nMailtro giữ ngoại lệ cũ: id theo màn hình (`TC-SIGNUP-001`…) chỉ tồn tại trong repo automation `qikify-QA-mailtro`; case trên QA Hub vẫn là `TC-MTRO-<số>`.",
+
+    "### Tỷ lệ auto/manual — chỉ áp dụng cho Mailtro": "Bảng tỷ lệ auto/manual của MTRO **đã được nạp sẵn vào prompt này** (không đọc file). Chỉ áp cho Mailtro — không áp cho TEPO/QSC/QCO/DUOS.\n\n| Epic | Auto | Manual | | Epic | Auto | Manual |\n|---|---:|---:|---|---|---:|---:|\n| MTRO-30 Login/Signup | 75% | 25% | | MTRO-16 Analytics | 55% | 45% |\n| MTRO-20 Team & member | 70% | 30% | | MTRO-64 Bounce/Complaint | 60% | 40% |\n| MTRO-6 Account setup | 60% | 40% | | MTRO-9 Sign-up form | 60% | 40% |\n| MTRO-8 Contacts | 65% | 35% | | MTRO-17 Unsubscribe | 70% | 30% |\n| MTRO-13 Automations | 65% | 35% | | MTRO-44 MCP connectors | 50% | 50% |\n| MTRO-11 Campaigns | 55% | 45% | | MTRO-7 Dashboard/Home | 30% | 70% |\n| MTRO-15 Templates/Builder | 30% | 70% | | MTRO-47 Onboarding | 25% | 75% |\n| MTRO-18 Brand guideline | 35% | 65% | | | | |\n\n**Cách dùng:** tỷ lệ là định hướng phân bổ công sức, không phải KPI. Sinh đủ bộ case theo 8 loại trước, gán `Execution Type` theo bản chất từng case, rồi đối chiếu tỷ lệ thực tế — lệch nhiều thì rà lại xem case nào gán `Manual` mà thực ra automate được, đừng đổi nhãn cho khớp số. Nêu tỷ lệ thực tế khi trả kết quả.\n\n**Nghiêng về auto**: rule ở backend (validate, phân quyền, ràng buộc trạng thái), case lặp lại nhiều data, khu vực regression cao, kết quả nhị phân rõ ràng. **Nghiêng về manual**: phụ thuộc thị giác (layout, drag & drop, chart, branding), phụ thuộc hệ thống ngoài (mail client render, deliverability, DNS, bounce thật), yếu tố thời gian thực (scheduling, delay node), đánh giá trải nghiệm. Selector không ổn định (builder drag & drop, canvas) → hạ tỷ lệ auto.\n\nBảng đang là **draft** vì phần lớn epic MTRO chưa có AC. Epic không có trong bảng: áp bộ nguyên tắc trên, không bịa số mới."
   },
 
   "dropParagraphs": [
-    "- Trước khi generate ID mới cho tab đã tồn tại trên Google Sheet, đọc ID lớn nhất hiện có của module đó và tiếp nối số thứ tự (không bắt đầu lại từ 001).",
-    "Tên file: `test-case-[module-kebab-case]-[YYYY-MM-DD].xlsx`\nSheet name: `Test Cases`",
-    "- Đọc mục \"5. Mailtro (MTRO)\" trong `../qa-requirement-analysis/references/qikify-apps-reference.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability)."
+    "- Đọc `../qa-requirement-analysis/references/apps/MTRO.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability)."
   ],
 
   "replaceParagraphs": {
-    "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/mtro-auto-manual-ratio.md`** — xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.": "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. Tỷ lệ auto/manual gợi ý theo epic xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.",
+    "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.": "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. Tỷ lệ auto/manual gợi ý theo epic xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.",
 
-    "Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng cao, output dưới dạng file `.xlsx` theo đúng format chuẩn của team QA Qikify.": "Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng cao theo đúng chuẩn của team QA Qikify, trả về dưới dạng JSON đúng schema đã cho.",
+    "Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng cao, theo đúng format chuẩn của team QA Qikify.": "Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng cao theo đúng chuẩn của team QA Qikify, trả về dưới dạng JSON đúng schema đã cho.",
 
-    "Tạo file test case `.xlsx` đầy đủ, bao gồm happy path, negative case, và edge case khi cần — kèm 1 file JSON tương ứng để push lên Google Sheets.": "Tạo bộ test case đầy đủ — happy path, negative case, và edge case khi cần — trả về JSON. Testlane ghi vào D1 với `status='draft'` để QA duyệt từng cái, và xuất sang Google Sheet khi cần.",
+    "Tạo bộ test case đầy đủ — happy path, negative case, và edge case khi cần — rồi **ghi thẳng lên QA Hub (Testlane)** dưới task tương ứng.": "Tạo bộ test case đầy đủ — happy path, negative case, và edge case khi cần — trả về JSON. Testlane ghi vào D1 với `status='draft'` để QA duyệt từng cái.",
 
-    "Prefix, Jira project key, QA component và màu tab Google Sheet đều tra trong **bảng tổng hợp app** ở đầu file `../qa-requirement-analysis/references/qikify-apps-reference.md` — đó là nguồn duy nhất, không chép lại vào đây để tránh lệch khi có app mới.": "Prefix, Jira project key, QA component và màu tab Google Sheet lấy từ **bảng app đã được nạp sẵn vào prompt này**. Nếu app đang xử lý không có trong bảng đó, dừng lại và nói rõ — không tự đoán prefix.",
-
-    "Sau khi tạo xong file xlsx, tự động push lên **Qikify QA Master Sheet**:": "Testlane là nguồn chính của test case. Google Sheet là bản xuất, giữ nguyên quy ước cũ để nút \"Export to Sheet\" đẩy đúng chỗ — **Qikify QA Master Sheet**:"
+    "- **Không tự đánh số Test Case ID.** QA Hub cấp id theo `key` của project (`TC-QCO-064`, `TC-QCO-065`…), theo đúng thứ tự case trong lần gọi `create_test_cases`. Trước khi ghi, gọi `list_test_cases` của task để biết case nào đã có, tránh tạo trùng.": "- **Không tự đánh số Test Case ID.** Để trống — Testlane cấp id theo `key` của project qua bảng `counters` khi ghi vào D1. Danh sách case đã có của task được nạp sẵn vào prompt; đừng tạo lại case trùng nội dung."
   }
 }
