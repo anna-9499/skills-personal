@@ -14,13 +14,11 @@ skills/
   gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub (Testlane) qua MCP
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/business-rules/
   daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
-agents/
-  req-analyst.md             Subagent chạy qa-requirement-analysis song song ở chế độ chỉ đọc
 ```
 
 ## Nối vào Claude Code
 
-`~/.claude/skills/<tên>` và `~/.claude/agents/req-analyst.md` là symlink trỏ vào repo này. Sửa ở repo = sửa ở skill đang chạy.
+`~/.claude/skills/<tên>` là symlink trỏ vào repo này. Sửa ở repo = sửa ở skill đang chạy.
 
 Skill khác trong `~/.claude/skills/` (cloudflare, wrangler, sandbox-*, nodeterm…) là skill vendor, **không** thuộc repo này.
 
@@ -31,7 +29,6 @@ cd skills-personal
 for s in qa-requirement-analysis gen-testcase update-business-rules daily-recap; do
   ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s
 done
-ln -sfn "$PWD/agents/req-analyst.md" ~/.claude/agents/req-analyst.md
 ```
 
 > ⚠️ Quên `--recurse-submodules` → `knowledge-work/` rỗng → cả 3 symlink trong
@@ -117,6 +114,10 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 - `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md` → `references/method/`
 - `readiness-rubric.md`, `report-template.md` → hoà tan vào `SKILL.md`, không còn file riêng
 - yêu cầu **ngoài 5 app Qikify** vẫn phân tích được — chỉ bỏ qua `references/apps/` và bước tạo task
+
+### Lịch sử: agent req-analyst đã bị xoá
+
+`agents/req-analyst.md` từng là subagent chạy `qa-requirement-analysis` ở chế độ chỉ đọc (không tạo task Testlane, không hỏi tiếp), dành cho việc phân tích nhiều ticket song song. Nó không có phương pháp riêng — chỉ đọc lại SKILL.md — nhưng `description` trùng ~90% với skill nên khi paste 1 ticket model hay chọn nhầm agent, mất task Testlane và bước nối sang `gen-testcase`. Cùng một lỗi với `analyze-req` ở trên. Đã xoá; cần chạy song song thì spawn agent `general-purpose` và bảo nó chạy skill này ở chế độ chỉ đọc.
 
 
 ---
