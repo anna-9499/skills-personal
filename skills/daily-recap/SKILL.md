@@ -91,6 +91,6 @@ Skill chạy **local**, gọi tay mỗi sáng, hoặc:
 | Triệu chứng | Nguyên nhân | Cách xử lý |
 |---|---|---|
 | `Không tìm thấy cấu hình MCP 'testlane'` | `~/.claude.json` không có server đó | Chạy `/mcp` kiểm tra |
-| `Gọi Testlane thất bại` kèm `error 1010` | Cloudflare chặn theo TLS fingerprint | Script đã dùng `curl` để tránh. Đừng đổi sang `urllib`/`requests` — cả hai đều bị chặn. |
+| `Gọi QA Hub thất bại` kèm `error 1010` | Cloudflare chặn theo TLS fingerprint | Script đã dùng `curl` để tránh. Đừng đổi sang `urllib`/`requests` — cả hai đều bị chặn. |
 | `requires re-authorization` | OAuth Atlassian hết hạn | `/mcp` → đăng nhập lại. Vẫn xuất được phần QA Hub. |
 | Bảng rỗng | Không có task nào ở trạng thái mở | Đúng, không phải lỗi |

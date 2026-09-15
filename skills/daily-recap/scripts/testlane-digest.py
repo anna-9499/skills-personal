@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rút gọn task Testlane của chính mình xuống mức đọc được trong một màn hình.
+"""Rút gọn task QA Hub của chính mình xuống mức đọc được trong một màn hình.
 
 VÌ SAO CÓ FILE NÀY
 MCP tool `list_tasks` trả về cả field `notes` — nguyên bản phân tích requirement,
@@ -34,10 +34,10 @@ def rpc(url, token, tool, args=None):
          "--data-binary", "@-"],
         input=payload, capture_output=True, text=True, timeout=90)
     if p.returncode != 0:
-        raise SystemExit(f"Gọi Testlane thất bại ({tool}): {p.stderr.strip() or p.stdout[:300]}")
+        raise SystemExit(f"Gọi QA Hub thất bại ({tool}): {p.stderr.strip() or p.stdout[:300]}")
     body = json.loads(p.stdout)
     if "error" in body:
-        raise SystemExit(f"Testlane trả lỗi khi gọi {tool}: {body['error']}")
+        raise SystemExit(f"QA Hub trả lỗi khi gọi {tool}: {body['error']}")
     return json.loads(body["result"]["content"][0]["text"])
 
 
