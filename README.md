@@ -53,7 +53,7 @@ Thư mục thứ tư, `references/method/`, là file thật nằm trong repo nà
 
 ### Sửa knowledge thì làm ở đâu
 
-Sửa thẳng trong `knowledge-work/` — nó là bản làm việc thật, không phải bản sao. Trên đĩa chỉ có đúng một bản; `~/Downloads/AI Agent/knowledge-work` là symlink tương thích trỏ vào đây (repo automation Mailtro còn dùng đường dẫn cũ).
+Sửa thẳng trong `knowledge-work/` — nó là bản làm việc thật, không phải bản sao. Trên đĩa chỉ có đúng một bản; `~/Downloads/AI Agent/knowledge-work` là symlink tương thích trỏ vào đây, chỉ để đường dẫn cũ không gãy — không repo nào phụ thuộc (repo automation Mailtro không trỏ vào đó, kiểm 2026-09-15). Chi tiết: `knowledge-work/integrations/claude-code.md`.
 
 ```bash
 cd knowledge-work
