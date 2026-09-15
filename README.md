@@ -14,11 +14,23 @@ skills/
   gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub (Testlane) qua MCP
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/business-rules/
   daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
+hae/                         Nhóm QA manual — agent mặc định mọi session (xem mục "Hae")
+  hae.md                     Hae — agent điều phối, chạy ở main thread
+  terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task Testlane
+  ore.md                     Sub-agent: chạy trọn vẹn gen-testcase → test case trên QA Hub
+  sonder.md                  Sub-agent: chạy manual test case trên staging → status lên QA Hub
+luke/                        Nhóm Playwright automation — mở bằng `claude --agent luke` (xem mục "Luke")
+  luke.md                    Luke — agent điều phối, chạy ở main thread
+  playwright-test-planner.md    Sub-agent: khám phá app trên staging → test plan
+  playwright-test-generator.md  Sub-agent: test plan → spec Playwright
+  playwright-test-healer.md     Sub-agent: chạy spec trên staging, phân loại fail, sửa lỗi test
+  qa-automation.template.md     Template profile `.claude/qa-automation.md` cho repo automation
+  profiles.<repo>.qa-automation.md  Bản lưu profile đã dựng cho từng repo
 ```
 
 ## Nối vào Claude Code
 
-`~/.claude/skills/<tên>` là symlink trỏ vào repo này. Sửa ở repo = sửa ở skill đang chạy.
+`~/.claude/skills/<tên>`, `~/.claude/agents/Hae/*.md` và `~/.claude/agents/Luke/*.md` là symlink trỏ vào repo này. Sửa ở repo = sửa ở skill/agent đang chạy.
 
 Skill khác trong `~/.claude/skills/` (cloudflare, wrangler, sandbox-*, nodeterm…) là skill vendor, **không** thuộc repo này.
 
@@ -29,7 +41,21 @@ cd skills-personal
 for s in qa-requirement-analysis gen-testcase update-business-rules daily-recap; do
   ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s
 done
+mkdir -p ~/.claude/agents/Hae ~/.claude/agents/Luke
+for a in hae terra ore sonder; do
+  ln -sfn "$PWD/hae/$a.md" ~/.claude/agents/Hae/$a.md
+done
+# qa-automation.template.md không phải agent nhưng vẫn phải link: luke.md đọc template qua đường dẫn này
+for a in luke playwright-test-planner playwright-test-generator playwright-test-healer qa-automation.template; do
+  ln -sfn "$PWD/luke/$a.md" ~/.claude/agents/Luke/$a.md
+done
 ```
+
+Rồi đặt Hae làm agent mặc định cho mọi session — thêm vào `~/.claude/settings.json`:
+```json
+{ "agent": "hae" }
+```
+Không có dòng này thì session là Claude Code thường; vẫn gọi được Hae từng lần bằng `claude --agent hae`.
 
 > ⚠️ Quên `--recurse-submodules` → `knowledge-work/` rỗng → cả 3 symlink trong
 > `references/` chết mà Claude **không báo lỗi rõ**, chỉ im lặng phân tích thiếu
@@ -115,9 +141,68 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 - `readiness-rubric.md`, `report-template.md` → hoà tan vào `SKILL.md`, không còn file riêng
 - yêu cầu **ngoài 5 app Qikify** vẫn phân tích được — chỉ bỏ qua `references/apps/` và bước tạo task
 
+## Hae — agent điều phối
+
+Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích yêu cầu, sinh test case hay chạy manual test — giao cho 3 sub-agent, nhận kết quả, tự quyết bước tiếp, báo lại. Việc ngoài 3 mảng đó (business rule, daily recap, code, hỏi đáp) Hae làm như một session Claude Code bình thường.
+
+```
+chị ──▶ hae (main thread, settings.agent = "hae")
+          ├──▶ terra    chạy trọn vẹn qa-requirement-analysis → báo cáo 14 mục + task Testlane
+          ├──▶ ore      chạy trọn vẹn gen-testcase → test case trên QA Hub
+          └──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
+```
+
+Vì sao Hae phải là **main thread** chứ không phải sub-agent: sub-agent trong Claude Code không gọi được Agent tool, nên "agent cha" bắt buộc là session chính. Claude Code ≥ 2.1 có `--agent <tên>` và setting `agent` cho việc này.
+
+Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 4 file là `~/.claude/skills/...`, không phụ thuộc vị trí file agent.
+
+Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
+
+| Tình huống | Hae làm gì | Vì sao |
+|---|---|---|
+| Verdict Ready / Partially Ready | tự nối sang `ore`, không hỏi | đúng gợi ý sẵn trong skill qa-requirement-analysis; case chạm GAP mở đã có nhãn `PO/DEV confirm` |
+| Verdict Not Ready | dừng, đưa câu hỏi mục 12 | có GAP Blocker thì sinh case dễ sai cả hướng |
+| "Tạo test case" mà chưa có task Testlane | chạy `terra` trước, nói một câu, không hỏi | gen-testcase không tự tạo task |
+| "Chạy test" mà task chưa có test case | đi `terra` → `ore` trước; xong mới hỏi có chạy `sonder` không | bước chạy cần môi trường + tài khoản, nên **không** tự nối `ore` → `sonder` |
+| Chạy manual cho MTRO | không hỏi URL / tài khoản — `sonder` tự đọc `.env` của repo `qikify-QA-mailtro` | data test đã nằm trong repo; 4 app Shopify thì hỏi một câu gộp URL + cách đăng nhập |
+| `sonder` báo nghi vấn bug | liệt kê bug, hỏi có report lên Testlane không; chỉ gọi lại `sonder` cho đúng các case đó | `report_bug` có thể announce Slack/Jira — luôn không kèm `reportTo` |
+
+Danh sách 8 tình huống Hae **được phép hỏi** nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
+
+**Sub-agent không nói chuyện được với người dùng.** Chúng chạy hết việc được giao, điểm nào skill bảo "hỏi người dùng" thì ghi vào `Cần Hae quyết` trong khối `### HAE-SUMMARY` đầu output. Hae bóc khối đó để ra quyết định, rồi chuyển kết quả cho người dùng — **dán nguyên văn** báo cáo 14 mục của `terra` và bảng kết quả chạy của `sonder`, vì output của sub-agent không tự hiện ra.
+
+Khác với `req-analyst` đã xoá (xem bên dưới): ba sub-agent này chạy skill **đầy đủ**, có ghi lên Testlane, và chỉ có Hae gọi — nên không còn chuyện model phân vân giữa skill và agent.
+
+Tool của sub-agent được khai tường minh trong frontmatter và cố ý **thiếu** — mỗi agent chỉ ghi được đúng phần việc của mình:
+
+| Sub-agent | Ghi được lên Testlane | Cố ý không có |
+|---|---|---|
+| `terra` | `create_task` | `create_test_cases`, `update_test_case`, `report_bug` |
+| `ore` | `create_test_cases` | `create_task`, `update_test_case`, `report_bug` |
+| `sonder` | `update_test_case`, `add_test_case_image`, `report_bug` (chỉ khi Hae cho phép) | `create_task`, `create_test_cases` |
+
+Cả ba chỉ **đọc** Jira, không có tool ghi lên Jira. `sonder` mở app bằng Playwright MCP, hoặc Chrome bridge (`mcp__chrome__*`) khi cần session người dùng đã đăng nhập. Muốn mở thêm quyền thì mở ở frontmatter, có chủ đích.
+
 ### Lịch sử: agent req-analyst đã bị xoá
 
 `agents/req-analyst.md` từng là subagent chạy `qa-requirement-analysis` ở chế độ chỉ đọc (không tạo task Testlane, không hỏi tiếp), dành cho việc phân tích nhiều ticket song song. Nó không có phương pháp riêng — chỉ đọc lại SKILL.md — nhưng `description` trùng ~90% với skill nên khi paste 1 ticket model hay chọn nhầm agent, mất task Testlane và bước nối sang `gen-testcase`. Cùng một lỗi với `analyze-req` ở trên. Đã xoá; cần chạy song song thì spawn agent `general-purpose` và bảo nó chạy skill này ở chế độ chỉ đọc.
+
+## Luke — agent điều phối Playwright automation
+
+Luke **không** phải agent mặc định (`settings.agent` vẫn là `hae`). Mở riêng bằng `claude --agent luke` khi đứng trong repo automation. Hae gặp yêu cầu automation (lập test plan, sinh spec, chạy/heal suite) thì chỉ nói một câu bảo mở session Luke — Hae không gọi 3 agent `playwright-test-*`.
+
+```
+chị ──▶ luke (main thread, claude --agent luke, trong repo automation)
+          ├──▶ playwright-test-planner     khám phá app thật trên staging → specs/<TICKET>-*-test-plan.md
+          ├──▶ playwright-test-generator   test plan → spec TypeScript theo convention của repo (chỉ --list + typecheck)
+          └──▶ playwright-test-healer      chạy spec trên staging, phân loại fail A/B/C/D, sửa lỗi test ≤ 3 vòng
+```
+
+**Project profile là điều kiện tiên quyết.** Mọi thứ đặc thù của app — URL / tài khoản dưới dạng *tên biến env*, cấu trúc thư mục, quy ước id / tag, prefix data, danh sách không được đụng, rate limit — nằm trong `.claude/qa-automation.md` của repo automation. Repo chưa có thì Luke dựng nháp theo `luke/qa-automation.template.md` (đọc qua `~/.claude/agents/Luke/`, nên symlink template phải có dù nó không phải agent).
+
+`luke/profiles.<repo>.qa-automation.md` là bản lưu của profile đã dựng. Bản thật nằm và được git track trong repo automation — với Mailtro là `qikify-QA-mailtro/.claude/qa-automation.md`, đang trùng bản lưu (kiểm 2026-09-15). Sửa bên nào thì chép sang bên kia.
+
+Phân biệt với `sonder` của Hae: `sonder` đi tay từng **manual test case trên QA Hub**; `playwright-test-healer` chạy **spec Playwright** trong repo. Healer cập nhật được status test case trên QA Hub khi được đưa task, nhưng **không** report bug; generator không mở browser và không chạy staging; planner không ghi gì lên QA Hub.
 
 
 ---
