@@ -1,6 +1,6 @@
 ---
 name: gen-testcase
-description: "Sinh bộ manual test case (happy path, negative, boundary, validation, edge, regression, security, performance) và ghi thẳng lên QA Hub (Testlane) qua MCP — thêm Markdown trong docs/manual-testcases/ khi đang ở repo qikify-QA-mailtro. Dùng với MỌI đầu vào cần biến thành test case: key Jira (TEPO-, QSC-, QCO-, DUOS-, MTRO-xxx) kèm \"tạo/sinh/viết case\", user story hoặc AC (Việt hay Anh), mô tả tính năng, checklist kịch bản cần triển khai thành case đầy đủ, bản phân tích yêu cầu đã xong (\"phân tích xong, giờ sinh bộ case\"), hay yêu cầu regression sau khi dev fix (\"cần case để test lại\"). Người dùng hay nói \"bộ case\", \"viết case\", \"cover flow\", \"kiểm thử [module]\", \"cần security case\", \"test plan\" thay vì \"test case\" — vẫn dùng skill này. Apps: Tepo (Custom Product Options), Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro (MTRO). KHÔNG dùng để: đánh giá yêu cầu đã đủ để test chưa (qa-requirement-analysis), chạy test / report bug / cập nhật status, tạo Jira issue, lưu business rule (update-business-rules), sửa hay đọc file test case có sẵn, giải thích khái niệm testing."
+description: "Sinh bộ manual test case (happy path, negative, boundary, validation, edge, regression, security, performance) và ghi thẳng lên QA Hub qua MCP — thêm Markdown trong docs/manual-testcases/ khi đang ở repo qikify-QA-mailtro. Dùng với MỌI đầu vào cần biến thành test case: key Jira (TEPO-, QSC-, QCO-, DUOS-, MTRO-xxx) kèm \"tạo/sinh/viết case\", user story hoặc AC (Việt hay Anh), mô tả tính năng, checklist kịch bản cần triển khai thành case đầy đủ, bản phân tích yêu cầu đã xong (\"phân tích xong, giờ sinh bộ case\"), hay yêu cầu regression sau khi dev fix (\"cần case để test lại\"). Người dùng hay nói \"bộ case\", \"viết case\", \"cover flow\", \"kiểm thử [module]\", \"cần security case\", \"test plan\" thay vì \"test case\" — vẫn dùng skill này. Apps: Tepo (Custom Product Options), Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro (MTRO). KHÔNG dùng để: đánh giá yêu cầu đã đủ để test chưa (qa-requirement-analysis), chạy test / report bug / cập nhật status, tạo Jira issue, lưu business rule (update-business-rules), sửa hay đọc file test case có sẵn, giải thích khái niệm testing."
 ---
 
 ## Giới thiệu
@@ -10,7 +10,7 @@ Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng
 
 ## Mục tiêu
 
-Tạo bộ test case đầy đủ — happy path, negative case, và edge case khi cần — rồi **ghi thẳng lên QA Hub (Testlane)** dưới task tương ứng.
+Tạo bộ test case đầy đủ — happy path, negative case, và edge case khi cần — rồi **ghi thẳng lên QA Hub** dưới task tương ứng.
 
 QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import vào Google Sheet nữa** — hai thứ đó đã bỏ.
 
@@ -18,12 +18,12 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 
 | Bối cảnh | Deliverable |
 | --- | --- |
-| Mặc định (mọi app) | Test case tạo trên QA Hub qua MCP `create_test_cases` — theo mục "Cấu trúc test case" và "Tạo test case trên QA Hub (Testlane)" |
+| Mặc định (mọi app) | Test case tạo trên QA Hub qua MCP `create_test_cases` — theo mục "Cấu trúc test case" và "Tạo test case trên QA Hub" |
 | **Thư mục làm việc là repo `qikify-QA-mailtro`** (có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`) | Thêm Markdown trong `docs/manual-testcases/` + JSON sinh bằng script của repo — theo mục "Output khi làm trong repo `qikify-QA-mailtro`". Vẫn ghi lên QA Hub như mặc định |
 
 ## Trước khi bắt đầu
 
-**1. Xác định project và task trên QA Hub** (MCP Testlane — token cá nhân cấp ở trang `/settings/ai`):
+**1. Xác định project và task trên QA Hub** (MCP của QA Hub (server tên `testlane`, tool `mcp__testlane__*`) — token cá nhân cấp ở trang `/settings/ai`):
 - `list_projects` → khớp app đang test với `key` của project. **`key` này chính là prefix của Test Case ID** — QA Hub tự cấp `TC-<KEY>-<số>`, không tự đặt tay.
 - Project không khớp app nào, hoặc khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; gọi tiếp cũng chỉ nhận 403.
 - `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `qa-requirement-analysis` trước. **Skill này không tự tạo task.**
@@ -280,7 +280,7 @@ Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file tr�
 - Phần lớn feature Mailtro (phase 2–4) còn "To Do", chưa có UI/selector → kỳ vọng chi tiết thường chưa chốt, dùng `PO/DEV confirm` nhiều hơn bình thường thay vì tự suy đoán UI.
 - Đọc `../qa-requirement-analysis/references/apps/MTRO.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability).
 
-## Tạo test case trên QA Hub (Testlane)
+## Tạo test case trên QA Hub
 
 QA Hub là nơi lưu test case. Soạn xong bộ case thì ghi thẳng lên đó qua MCP — không sinh file, không import Google Sheet.
 

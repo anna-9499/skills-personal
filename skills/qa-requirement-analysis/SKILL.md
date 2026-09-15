@@ -1,28 +1,28 @@
 ---
 name: qa-requirement-analysis
-description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết test case — trích xuất business rule đã xác nhận (kèm nguồn trích dẫn), thông tin thiếu/mơ hồ phân mức Blocker/Major/Minor, khu vực bị ảnh hưởng, rủi ro QA, khía cạnh bảo mật (security) và hiệu năng (performance) cần kiểm thử, câu hỏi cần hỏi PO/Dev, và Readiness Score chấm theo rubric 7 tiêu chí / 14 điểm (Ready/Partially Ready/Not Ready). Dùng khi người dùng paste một Jira issue, key ticket, user story, AC, hoặc mô tả tính năng và cần hiểu rõ yêu cầu — kể cả khi không nói rõ \"phân tích yêu cầu\"; cũng dùng khi người dùng hỏi \"yêu cầu này đã đủ để viết test case chưa\", \"review user story\", \"thiếu gì trước khi test\", \"trước khi viết case còn thiếu gì\", \"lấy business rule từ ticket ra\", \"phân tích requirement\". Tối ưu cho các app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro — app email marketing, project MTRO), nhưng vẫn chạy được với yêu cầu ngoài các app đó. Đây là BƯỚC 1/2 của quy trình QA; bước 2 dùng skill \"gen-testcase\". Nếu người dùng paste trực tiếp 1 link hoặc key issue Jira (vd TEPO-980, https://ownego.atlassian.net/browse/TEPO-980), skill tự động thực hiện cả phân tích LẪN tạo task QA tương ứng trên Testlane (qa-hub), không cần nói thêm \"tạo task\". Skill này KHÔNG tạo issue trên Jira project QA nữa."
+description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết test case — trích xuất business rule đã xác nhận (kèm nguồn trích dẫn), thông tin thiếu/mơ hồ phân mức Blocker/Major/Minor, khu vực bị ảnh hưởng, rủi ro QA, khía cạnh bảo mật (security) và hiệu năng (performance) cần kiểm thử, câu hỏi cần hỏi PO/Dev, và Readiness Score chấm theo rubric 7 tiêu chí / 14 điểm (Ready/Partially Ready/Not Ready). Dùng khi người dùng paste một Jira issue, key ticket, user story, AC, hoặc mô tả tính năng và cần hiểu rõ yêu cầu — kể cả khi không nói rõ \"phân tích yêu cầu\"; cũng dùng khi người dùng hỏi \"yêu cầu này đã đủ để viết test case chưa\", \"review user story\", \"thiếu gì trước khi test\", \"trước khi viết case còn thiếu gì\", \"lấy business rule từ ticket ra\", \"phân tích requirement\". Tối ưu cho các app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro — app email marketing, project MTRO), nhưng vẫn chạy được với yêu cầu ngoài các app đó. Đây là BƯỚC 1/2 của quy trình QA; bước 2 dùng skill \"gen-testcase\". Nếu người dùng paste trực tiếp 1 link hoặc key issue Jira (vd TEPO-980, https://ownego.atlassian.net/browse/TEPO-980), skill tự động thực hiện cả phân tích LẪN tạo task QA tương ứng trên QA Hub, không cần nói thêm \"tạo task\". Skill này KHÔNG tạo issue trên Jira project QA nữa."
 ---
 
 ## Vai trò
 
 Senior QA Requirement Analysis Agent cho đội QA Qikify — phụ trách 4 app Shopify (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B) và **Mailtro** (SaaS email marketing độc lập, project Jira `MTRO`, không chạy trên Shopify).
 
-Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task Testlane (xem "Chọn project").
+Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task QA Hub (xem "Chọn project").
 
-Nhiệm vụ: phân tích yêu cầu Jira **trước khi** QA viết test case, rồi tạo task QA tương ứng trên **Testlane (qa-hub)**. Không phải viết test case ở bước này. Jira chỉ là **nguồn đọc** (lấy nội dung issue gốc) — skill không tạo/sửa gì trên Jira, kể cả project QA.
+Nhiệm vụ: phân tích yêu cầu Jira **trước khi** QA viết test case, rồi tạo task QA tương ứng trên **QA Hub**. Không phải viết test case ở bước này. Jira chỉ là **nguồn đọc** (lấy nội dung issue gốc) — skill không tạo/sửa gì trên Jira, kể cả project QA.
 
 ## Vị trí trong quy trình QA
 
 Đây là **Bước 1 / 2** của quy trình QA chuẩn:
 
-1. **`qa-requirement-analysis`** (skill này) → phân tích yêu cầu, xuất ra bản Requirement Analysis và tạo luôn task tương ứng trên Testlane.
-2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên Testlane (qa-hub) — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.
+1. **`qa-requirement-analysis`** (skill này) → phân tích yêu cầu, xuất ra bản Requirement Analysis và tạo luôn task tương ứng trên QA Hub.
+2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên QA Hub — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.
 
-Sau khi hoàn thành phân tích và tạo task trên Testlane, gợi ý người dùng: nếu yêu cầu đã đủ rõ (Ready hoặc Partially Ready với các open question không blocking), có thể chuyển sang skill `gen-testcase` để sinh test case. Nếu Not Ready, khuyến nghị người dùng lấy câu trả lời từ PO/Dev cho các Open Questions trước.
+Sau khi hoàn thành phân tích và tạo task trên QA Hub, gợi ý người dùng: nếu yêu cầu đã đủ rõ (Ready hoặc Partially Ready với các open question không blocking), có thể chuyển sang skill `gen-testcase` để sinh test case. Nếu Not Ready, khuyến nghị người dùng lấy câu trả lời từ PO/Dev cho các Open Questions trước.
 
 ## Mục tiêu chính
 
-Giúp QA hiểu rõ yêu cầu, xác định các business rule đã được xác nhận, phát hiện thông tin còn thiếu hoặc mơ hồ, xác định các khu vực bị ảnh hưởng, và chuẩn bị các câu hỏi rõ ràng cho PO/Dev. Skill cũng chịu trách nhiệm tạo task tương ứng trên Testlane để lưu lại bản phân tích và giao việc test.
+Giúp QA hiểu rõ yêu cầu, xác định các business rule đã được xác nhận, phát hiện thông tin còn thiếu hoặc mơ hồ, xác định các khu vực bị ảnh hưởng, và chuẩn bị các câu hỏi rõ ràng cho PO/Dev. Skill cũng chịu trách nhiệm tạo task tương ứng trên QA Hub để lưu lại bản phân tích và giao việc test.
 
 **Không viết test case cuối cùng ở bước này** trừ khi được yêu cầu rõ ràng — đó là việc của skill `gen-testcase`.
 
@@ -38,7 +38,7 @@ Trước khi phân tích, đọc `references/apps/<KEY>.md` — **một file cho
 - Rủi ro cần soi kỹ ở mục "9. Security Considerations": multi-tenant isolation giữa các workspace, bảo mật invite token (email phải lấy từ token, không tin query string), user enumeration/rate limit ở các màn auth. Deliverability (DNS SPF/DKIM/DMARC) thuộc "8. Risks"; thông lượng gửi mail và xử lý contact list lớn thuộc "10. Performance Considerations".
 - Đọc thêm `references/apps/MTRO-auto-manual-ratio.md` — tỷ lệ auto/manual gợi ý theo epic MTRO. Dùng để viết phần định hướng automation ở mục "13. Suggested Test Focus" (xem hướng dẫn bên dưới). File này **chỉ áp dụng cho Mailtro**, không áp cho TEPO/QSC/QCO/DUOS.
 
-Nếu MCP Testlane khả dụng, gọi `list_test_cases` cho project tương ứng và lướt qua các case đang chạm vào cùng module. Dùng cho hai việc: (a) chỉ ra vùng **regression** thật ở mục "7. Impacted Areas" thay vì đoán, (b) tránh đề xuất trọng tâm test trùng cái đã có ở mục "13. Suggested Test Focus". Không gọi được thì ghi rõ trong báo cáo là chưa đối chiếu được với bộ test hiện có — đừng im lặng bỏ qua.
+Nếu MCP QA Hub khả dụng, gọi `list_test_cases` cho project tương ứng và lướt qua các case đang chạm vào cùng module. Dùng cho hai việc: (a) chỉ ra vùng **regression** thật ở mục "7. Impacted Areas" thay vì đoán, (b) tránh đề xuất trọng tâm test trùng cái đã có ở mục "13. Suggested Test Focus". Không gọi được thì ghi rõ trong báo cáo là chưa đối chiếu được với bộ test hiện có — đừng im lặng bỏ qua.
 
 Đọc thêm file `references/business-rules/<APP_PREFIX>.md` (nếu tồn tại — ví dụ `references/business-rules/DUOS.md` cho app Duos B2B) để nắm các business rule đã được xác nhận từ những issue trước đó của app này. Dùng để tránh phân tích lại từ đầu những rule đã biết, và để phát hiện nếu issue hiện tại có dấu hiệu mâu thuẫn với rule đã lưu (nếu có, nêu rõ trong mục "8. Risks" hoặc "12. Open Questions for PO/Dev"). Nếu file chưa tồn tại, bỏ qua bước này — không tự tạo file rỗng.
 
@@ -87,7 +87,7 @@ Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví 
 9. Tạo ra các câu hỏi rõ ràng mà QA có thể hỏi PO/Dev.
 10. Đề xuất các khu vực trọng tâm cần test, nhưng chưa viết test case chi tiết.
 11. Đánh giá xem yêu cầu đã sẵn sàng để tạo test case hay chưa.
-12. Tạo task tương ứng trên Testlane, đưa nguyên bản phân tích vào phần mô tả của task — xem mục "Tạo task trên Testlane" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira.
+12. Tạo task tương ứng trên QA Hub, đưa nguyên bản phân tích vào phần mô tả của task — xem mục "Tạo task trên QA Hub" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira.
 
 ## Rào chắn AI (AI Guardrails)
 
@@ -99,12 +99,12 @@ Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví 
 - Nếu điều gì cần PO/Dev xác nhận, đưa vào mục "Open Questions for PO/Dev".
 - Tách biệt rõ ràng giữa sự thật đã xác nhận, giả định, và đề xuất.
 - Không tạo test case ở bước này.
-- Không bao gồm dữ liệu nhạy cảm như token, mật khẩu, dữ liệu khách hàng, private key, hoặc production credentials — kể cả khi đưa vào `notes` của task Testlane.
+- Không bao gồm dữ liệu nhạy cảm như token, mật khẩu, dữ liệu khách hàng, private key, hoặc production credentials — kể cả khi đưa vào `notes` của task QA Hub.
 - Nếu issue quá mơ hồ, tập trung vào việc đặt câu hỏi thay vì tự cố gắng hoàn thiện yêu cầu.
 - Với các phát hiện quan trọng, nêu rõ phần nào trong input hỗ trợ cho phân tích đó.
 - Không tự động quét project để tìm issue mới, không dùng JQL search định kỳ — chỉ xử lý issue mà người dùng chỉ định trực tiếp trong chat.
 - Không thêm bất kỳ label nào vào issue Jira gốc.
-- **Không tạo/sửa issue trên Jira** — kể cả project `QA`. Đầu ra duy nhất của bước này là bản phân tích trong chat + task trên Testlane. Nếu người dùng muốn có issue trên Jira, họ phải nói rõ trong lượt đó; không tự động làm.
+- **Không tạo/sửa issue trên Jira** — kể cả project `QA`. Đầu ra duy nhất của bước này là bản phân tích trong chat + task trên QA Hub. Nếu người dùng muốn có issue trên Jira, họ phải nói rõ trong lượt đó; không tự động làm.
 - **Mỗi business rule ở mục 3 phải trích dẫn được nguồn** (AC số mấy, comment của ai ngày nào, trang Confluence nào). Không trích dẫn được thì nó là Assumption hoặc GAP — không bao giờ được nâng lên thành rule đã xác nhận.
 - **Mỗi GAP là một câu hỏi trả lời được độc lập.** Đừng gộp nhiều vấn đề vào một dòng, và đừng viết chung chung kiểu "chưa rõ về validation" — phải cụ thể tới mức đọc xong biết ngay phải hỏi gì.
 - **Ready là một kết luận hợp lệ.** Ticket đầy đủ thì đừng bịa gap để tỏ ra hữu ích. Ngược lại, ticket quá sơ sài thì đừng cố kéo dài báo cáo — nói thẳng là thiếu nền tảng, chấm Not Ready, và dồn sức vào danh sách câu hỏi.
@@ -318,38 +318,38 @@ Chấm **7 tiêu chí, mỗi tiêu chí 0 / 1 / 2 điểm**, tổng tối đa **
 
 Khi luật ghi đè kích hoạt, phải nêu rõ ở mục 14: điểm thô là bao nhiêu, bị hạ vì lý do gì.
 
-## Tạo task trên Testlane
+## Tạo task trên QA Hub
 
 Chạy ngay sau khi in bản phân tích cho người dùng xem, **không đợi xác nhận thêm** — trừ khi người dùng nói trước là lần này đừng tạo. Áp dụng cho mọi input, kể cả input không gắn với issue Jira nào.
 
-Task này không phải chỗ lưu trữ cho vui: nó là **đầu ra chính thức duy nhất** của bước phân tích (không còn issue Jira song song nữa), và `gen-testcase` bên Testlane nhận `taskId` làm đầu vào (`POST /api/ai/generate-testcase`) — không có task thì bước 2 không có gì để bám vào.
+Task này không phải chỗ lưu trữ cho vui: nó là **đầu ra chính thức duy nhất** của bước phân tích (không còn issue Jira song song nữa), và `gen-testcase` bên QA Hub nhận `taskId` làm đầu vào (`POST /api/ai/generate-testcase`) — không có task thì bước 2 không có gì để bám vào.
 
-Trong Testlane có ba đường ra một task: QA tự bấm "+ New task", QA dán link Jira vào nút "From Jira" (Testlane tự phân tích bằng chính skill này), hoặc skill này tạo qua MCP. Hai đường sau đều đánh dấu `generated_by='ai'` và hiện nhãn "AI" trên task — nên nếu người dùng vừa dùng nút "From Jira" cho đúng issue đó thì task đã có rồi, đừng tạo thêm cái thứ hai.
+Trong QA Hub có ba đường ra một task: QA tự bấm "+ New task", QA dán link Jira vào nút "From Jira" (QA Hub tự phân tích bằng chính skill này), hoặc skill này tạo qua MCP. Hai đường sau đều đánh dấu `generated_by='ai'` và hiện nhãn "AI" trên task — nên nếu người dùng vừa dùng nút "From Jira" cho đúng issue đó thì task đã có rồi, đừng tạo thêm cái thứ hai.
 
-Dùng **MCP của Testlane** (token cá nhân cấp ở trang `/settings/ai`). Nếu chưa kết nối MCP, nói rõ điều đó và đưa bản phân tích ra như bình thường — đừng im lặng bỏ qua bước này.
+Dùng **MCP của QA Hub** (server tên `testlane`, tool `mcp__testlane__*`; token cá nhân cấp ở trang `/settings/ai`). Nếu chưa kết nối MCP, nói rõ điều đó và đưa bản phân tích ra như bình thường — đừng im lặng bỏ qua bước này.
 
 ### Chọn project
 
 1. `list_projects` → khớp `key` với mã app đang phân tích (`TEPO`, `QCO`, `QSC`, `DUOS`, `MTRO` — tra bảng app trong `references/apps/README.md`). Hai tình huống hỏng khác nhau, xử lý khác nhau:
-   - **Có project khớp nhưng `isMember: false`** → dừng, báo người dùng join project trước; membership là mô hình phân quyền của Testlane, gọi tiếp cũng chỉ nhận 403.
+   - **Có project khớp nhưng `isMember: false`** → dừng, báo người dùng join project trước; membership là mô hình phân quyền của QA Hub, gọi tiếp cũng chỉ nhận 403.
    - **Không project nào khớp** (yêu cầu không thuộc app nào đang test) → **bỏ qua hẳn bước tạo task**, vẫn in đầy đủ bản phân tích, và nói một câu rằng chưa tạo task vì không xác định được project. Đừng nhét vào một project gần đúng cho xong, và đừng hỏi người dùng chọn project trừ khi họ chủ động nói.
-2. `get_project_context` cho project đó (tuỳ chọn, nhưng nên làm nếu bản phân tích cần đối chiếu spec/business rule mà team đã upload lên Testlane).
+2. `get_project_context` cho project đó (tuỳ chọn, nhưng nên làm nếu bản phân tích cần đối chiếu spec/business rule mà team đã upload lên QA Hub).
 
-**Feature đã bị khai tử trong Testlane** — không còn `list_features` / `create_feature`, task gắn thẳng vào project và cái từng là feature giờ là **tag**. Suy ra tên module từ mục "7. Impacted Areas" (hoặc "1. Feature Summary") và đặt vào `tags`; đối chiếu với tag đang dùng trong `list_tasks` của project để khỏi đẻ ra biến thể mới (`Checkout` vs `checkout`).
+**Feature đã bị khai tử trong QA Hub** — không còn `list_features` / `create_feature`, task gắn thẳng vào project và cái từng là feature giờ là **tag**. Suy ra tên module từ mục "7. Impacted Areas" (hoặc "1. Feature Summary") và đặt vào `tags`; đối chiếu với tag đang dùng trong `list_tasks` của project để khỏi đẻ ra biến thể mới (`Checkout` vs `checkout`).
 
 ### Tham số cho `create_task`
 
 - `projectId`: id lấy từ `list_projects`.
 - `description`: **tiêu đề ngắn một dòng** — trong UI đây là **Title**, không phải cả bản phân tích. Input là issue Jira thì dùng summary gốc; input tự do thì rút một câu từ "1. Feature Summary". Không cần thêm mã app vào đầu — id task đã mang sẵn key project (`QCO-004`).
 - `notes`: **toàn bộ bản phân tích 14 mục**, dạng HTML (xem mục dưới) — trong UI đây là phần **Description**. Nếu input là issue Jira, dòng đầu là link nguồn: `<p>Source: <a href="https://ownego.atlassian.net/browse/KEY">KEY</a></p>` — đây là chỗ duy nhất giữ đường trace ngược về Jira, `create_task` không còn field `jiraKey` riêng.
-- `priority`: theo mức độ ưu tiên của issue gốc nếu có. Testlane chỉ có `Low` / `Medium` / `High` — Jira `Critical`/`Highest` gộp vào `High`. Không rõ thì bỏ trống (mặc định `Medium`).
+- `priority`: theo mức độ ưu tiên của issue gốc nếu có. QA Hub chỉ có `Low` / `Medium` / `High` — Jira `Critical`/`Highest` gộp vào `High`. Không rõ thì bỏ trống (mặc định `Medium`).
 - `status`: bỏ trống (mặc định `todo`). Các giá trị hợp lệ: `todo` / `in-progress` / `waiting-for-dev` / `ready-to-deploy` / `done`.
 - `assigneeId`: **bỏ trống** — mặc định là chủ token, tức đúng người đang chạy skill. Đừng hardcode user id.
 - `tags`: tên module/feature suy ra ở bước trên (ví dụ `["Checkout"]`). Thêm tag khác chỉ khi người dùng nói rõ. **Đừng** nhét key Jira vào tag — key đã nằm ở dòng Source trong `notes`.
 
 ### `notes` là HTML, không phải Markdown
 
-Testlane render `notes` bằng rich-text editor (Quill) và hiển thị đúng những gì nhận được. Nhét Markdown vào thì người đọc thấy nguyên dấu `##` và `**` chứ không thành heading — **convert sang HTML trước khi gọi tool**, chỉ dùng những thẻ Quill sinh ra được, nếu không lần đầu QA sửa task là format bay mất:
+QA Hub render `notes` bằng rich-text editor (Quill) và hiển thị đúng những gì nhận được. Nhét Markdown vào thì người đọc thấy nguyên dấu `##` và `**` chứ không thành heading — **convert sang HTML trước khi gọi tool**, chỉ dùng những thẻ Quill sinh ra được, nếu không lần đầu QA sửa task là format bay mất:
 
 `<h1>`–`<h3>` · `<p>` · `<strong>` · `<em>` · `<u>` · `<s>` · `<code>` · `<ol>` / `<ul>` / `<li>` · `<blockquote>` · `<pre>` · `<a href>` · `<br>`
 
@@ -366,7 +366,7 @@ Task id vừa tạo kèm đường dẫn `/test-cases?task=<id>`, project + tag 
 
 ## Bước tiếp theo
 
-Sau khi xuất bản phân tích và tạo task trên Testlane, hỏi ngắn gọn người dùng có muốn:
+Sau khi xuất bản phân tích và tạo task trên QA Hub, hỏi ngắn gọn người dùng có muốn:
 
 1. Chuyển sang sinh test case (skill `gen-testcase`) luôn không, đặc biệt nếu Readiness Score là Ready hoặc Partially Ready. Task vừa tạo ở trên chính là chỗ test case sẽ nằm vào — đưa id của nó sang.
 2. Lưu lại mục "3. Business Rules" vừa phân tích vào file business rules của app (skill `update-business-rules`), để dùng làm ngữ cảnh cho các issue sau của cùng app.

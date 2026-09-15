@@ -10,13 +10,13 @@ Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của 
 
 ```
 skills/
-  qa-requirement-analysis/   Phân tích yêu cầu Jira → báo cáo 14 mục + Readiness 14 điểm + task Testlane
-  gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub (Testlane) qua MCP
+  qa-requirement-analysis/   Phân tích yêu cầu Jira → báo cáo 14 mục + Readiness 14 điểm + task QA Hub
+  gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub qua MCP
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/business-rules/
   daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
 hae/                         Nhóm QA manual — agent mặc định mọi session (xem mục "Hae")
   hae.md                     Hae — agent điều phối, chạy ở main thread
-  terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task Testlane
+  terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task QA Hub
   ore.md                     Sub-agent: chạy trọn vẹn gen-testcase → test case trên QA Hub
   sonder.md                  Sub-agent: chạy manual test case trên staging → status lên QA Hub
 luke/                        Nhóm Playwright automation — mở bằng `claude --agent luke` (xem mục "Luke")
@@ -107,7 +107,7 @@ Quyền do org quản, sửa có audit qua git log, cả team mount cùng một 
 
 ### Bẫy: publish.json
 
-`qa-requirement-analysis`, `gen-testcase`, `update-business-rules` được port sang Cloudflare Worker để chạy trong Testlane (qa-hub). `publish.json` mô tả phần nào bị bỏ / thay khi port, và nó trỏ theo **tên section chính xác** trong SKILL.md.
+`qa-requirement-analysis`, `gen-testcase`, `update-business-rules` được port sang Cloudflare Worker để chạy trong QA Hub. `publish.json` mô tả phần nào bị bỏ / thay khi port, và nó trỏ theo **tên section chính xác** trong SKILL.md.
 
 Đổi tiêu đề một section mà quên sửa `publish.json` → trỏ trượt, không báo lỗi, bản trên Worker âm thầm sai. Sửa tiêu đề thì mở `publish.json` cùng skill sửa theo.
 
@@ -134,7 +134,7 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 
 ### Lịch sử: analyze-req đã bị gộp
 
-`analyze-req` từng là một skill riêng làm cùng việc phân tích requirement, product-agnostic, không tạo task Testlane. Hai `description` gần trùng nhau nên lúc gọi hay phân vân. Đã gộp hẳn vào `qa-requirement-analysis`:
+`analyze-req` từng là một skill riêng làm cùng việc phân tích requirement, product-agnostic, không tạo task QA Hub. Hai `description` gần trùng nhau nên lúc gọi hay phân vân. Đã gộp hẳn vào `qa-requirement-analysis`:
 
 - rubric 7 tiêu chí / 14 điểm + luật ghi đè, phân mức gap Blocker/Major/Minor, kỷ luật trích nguồn cho từng business rule, và các bảng có ID (BR/AS/GAP/RISK/SEC/PERF) → inline vào `SKILL.md`
 - `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md` → `references/method/`
@@ -147,7 +147,7 @@ Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích y�
 
 ```
 chị ──▶ hae (main thread, settings.agent = "hae")
-          ├──▶ terra    chạy trọn vẹn qa-requirement-analysis → báo cáo 14 mục + task Testlane
+          ├──▶ terra    chạy trọn vẹn qa-requirement-analysis → báo cáo 14 mục + task QA Hub
           ├──▶ ore      chạy trọn vẹn gen-testcase → test case trên QA Hub
           └──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
 ```
@@ -162,20 +162,20 @@ Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
 |---|---|---|
 | Verdict Ready / Partially Ready | tự nối sang `ore`, không hỏi | đúng gợi ý sẵn trong skill qa-requirement-analysis; case chạm GAP mở đã có nhãn `PO/DEV confirm` |
 | Verdict Not Ready | dừng, đưa câu hỏi mục 12 | có GAP Blocker thì sinh case dễ sai cả hướng |
-| "Tạo test case" mà chưa có task Testlane | chạy `terra` trước, nói một câu, không hỏi | gen-testcase không tự tạo task |
+| "Tạo test case" mà chưa có task QA Hub | chạy `terra` trước, nói một câu, không hỏi | gen-testcase không tự tạo task |
 | "Chạy test" mà task chưa có test case | đi `terra` → `ore` trước; xong mới hỏi có chạy `sonder` không | bước chạy cần môi trường + tài khoản, nên **không** tự nối `ore` → `sonder` |
 | Chạy manual cho MTRO | không hỏi URL / tài khoản — `sonder` tự đọc `.env` của repo `qikify-QA-mailtro` | data test đã nằm trong repo; 4 app Shopify thì hỏi một câu gộp URL + cách đăng nhập |
-| `sonder` báo nghi vấn bug | liệt kê bug, hỏi có report lên Testlane không; chỉ gọi lại `sonder` cho đúng các case đó | `report_bug` có thể announce Slack/Jira — luôn không kèm `reportTo` |
+| `sonder` báo nghi vấn bug | liệt kê bug, hỏi có report lên QA Hub không; chỉ gọi lại `sonder` cho đúng các case đó | `report_bug` có thể announce Slack/Jira — luôn không kèm `reportTo` |
 
 Danh sách 8 tình huống Hae **được phép hỏi** nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
 
 **Sub-agent không nói chuyện được với người dùng.** Chúng chạy hết việc được giao, điểm nào skill bảo "hỏi người dùng" thì ghi vào `Cần Hae quyết` trong khối `### HAE-SUMMARY` đầu output. Hae bóc khối đó để ra quyết định, rồi chuyển kết quả cho người dùng — **dán nguyên văn** báo cáo 14 mục của `terra` và bảng kết quả chạy của `sonder`, vì output của sub-agent không tự hiện ra.
 
-Khác với `req-analyst` đã xoá (xem bên dưới): ba sub-agent này chạy skill **đầy đủ**, có ghi lên Testlane, và chỉ có Hae gọi — nên không còn chuyện model phân vân giữa skill và agent.
+Khác với `req-analyst` đã xoá (xem bên dưới): ba sub-agent này chạy skill **đầy đủ**, có ghi lên QA Hub, và chỉ có Hae gọi — nên không còn chuyện model phân vân giữa skill và agent.
 
 Tool của sub-agent được khai tường minh trong frontmatter và cố ý **thiếu** — mỗi agent chỉ ghi được đúng phần việc của mình:
 
-| Sub-agent | Ghi được lên Testlane | Cố ý không có |
+| Sub-agent | Ghi được lên QA Hub | Cố ý không có |
 |---|---|---|
 | `terra` | `create_task` | `create_test_cases`, `update_test_case`, `report_bug` |
 | `ore` | `create_test_cases` | `create_task`, `update_test_case`, `report_bug` |
@@ -185,7 +185,7 @@ Cả ba chỉ **đọc** Jira, không có tool ghi lên Jira. `sonder` mở app 
 
 ### Lịch sử: agent req-analyst đã bị xoá
 
-`agents/req-analyst.md` từng là subagent chạy `qa-requirement-analysis` ở chế độ chỉ đọc (không tạo task Testlane, không hỏi tiếp), dành cho việc phân tích nhiều ticket song song. Nó không có phương pháp riêng — chỉ đọc lại SKILL.md — nhưng `description` trùng ~90% với skill nên khi paste 1 ticket model hay chọn nhầm agent, mất task Testlane và bước nối sang `gen-testcase`. Cùng một lỗi với `analyze-req` ở trên. Đã xoá; cần chạy song song thì spawn agent `general-purpose` và bảo nó chạy skill này ở chế độ chỉ đọc.
+`agents/req-analyst.md` từng là subagent chạy `qa-requirement-analysis` ở chế độ chỉ đọc (không tạo task QA Hub, không hỏi tiếp), dành cho việc phân tích nhiều ticket song song. Nó không có phương pháp riêng — chỉ đọc lại SKILL.md — nhưng `description` trùng ~90% với skill nên khi paste 1 ticket model hay chọn nhầm agent, mất task QA Hub và bước nối sang `gen-testcase`. Cùng một lỗi với `analyze-req` ở trên. Đã xoá; cần chạy song song thì spawn agent `general-purpose` và bảo nó chạy skill này ở chế độ chỉ đọc.
 
 ## Luke — agent điều phối Playwright automation
 
@@ -209,18 +209,18 @@ Phân biệt với `sonder` của Hae: `sonder` đi tay từng **manual test cas
 
 ## daily-recap: vì sao có `scripts/testlane-digest.py`
 
-Skill này **không** dùng MCP tool `list_tasks`, mà gọi thẳng HTTP endpoint của Testlane. Hai lý do, cả hai đều đã đo được:
+Skill này **không** dùng MCP tool `list_tasks`, mà gọi thẳng HTTP endpoint của QA Hub. Hai lý do, cả hai đều đã đo được:
 
 1. **`list_tasks` trả về cả field `notes`** — nguyên bản phân tích requirement. Một project (QCO) trả ~14K token, project MTRO 62K ký tự cho 12 task. Gọi cho cả 8 project là vỡ context. Script vứt `notes` đi trước khi in → output còn ~1.5KB.
 2. **Không dùng được `urllib`/`requests`.** QA Hub đứng sau Cloudflare, và CF chặn bằng error 1010 `browser_signature_banned` — chặn theo **TLS fingerprint**, không phải User-Agent, nên đổi UA không cứu được. `curl` thì qua. Script vì vậy shell out sang `curl`; đừng "dọn dẹp" ngược lại.
 
 Token đọc từ `~/.claude.json` lúc chạy, không hardcode, không in ra.
 
-### Testlane vs Atlassian: khác nhau ở chỗ hết hạn
+### QA Hub vs Atlassian: khác nhau ở chỗ hết hạn
 
 | | Cách xác thực | Hết hạn? |
 |---|---|---|
-| Testlane | Bearer token tĩnh trong `~/.claude.json` | Không |
+| QA Hub | Bearer token tĩnh trong `~/.claude.json` | Không |
 | Atlassian | OAuth | **Có** — gặp `requires re-authorization` thì chạy `/mcp` đăng nhập lại |
 
-Vì vậy `daily-recap` được viết để **chịu được việc Jira chết**: vẫn xuất báo cáo phần Testlane và ghi một dòng nói phần Jira bỏ trống. Đừng sửa thành fail cả bài.
+Vì vậy `daily-recap` được viết để **chịu được việc Jira chết**: vẫn xuất báo cáo phần QA Hub và ghi một dòng nói phần Jira bỏ trống. Đừng sửa thành fail cả bài.

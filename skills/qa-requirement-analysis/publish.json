@@ -9,13 +9,13 @@
   ],
 
   "dropSections": [
-    "## Tạo task trên Testlane",
+    "## Tạo task trên QA Hub",
     "## Bước tiếp theo"
   ],
 
   "sectionNotes": {
-    "## Tạo task trên Testlane": "Gọi list_projects + get_project_context + create_task qua MCP Testlane. Worker LÀ phía bên kia của MCP nên không gọi được; đường Worker tự chạy phân tích rồi tạo task là POST /api/ai/task-from-jira (Phase 9).",
-    "## Bước tiếp theo": "Hỏi người dùng có chuyển sang skill khác không. Trong Testlane việc nối bước là nút bấm trên UI, không phải câu hỏi trong chat."
+    "## Tạo task trên QA Hub": "Gọi list_projects + get_project_context + create_task qua MCP QA Hub. Worker LÀ phía bên kia của MCP nên không gọi được; đường Worker tự chạy phân tích rồi tạo task là POST /api/ai/task-from-jira (Phase 9).",
+    "## Bước tiếp theo": "Hỏi người dùng có chuyển sang skill khác không. Trong QA Hub việc nối bước là nút bấm trên UI, không phải câu hỏi trong chat."
   },
 
   "replaceSections": {
@@ -26,15 +26,15 @@
 
   "dropParagraphs": [
     "Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví dụ `TEPO-980`, `https://ownego.atlassian.net/browse/TEPO-980`), dùng công cụ Jira (`getJiraIssue`, cloudId `ownego.atlassian.net`, fields `*all` hoặc tối thiểu summary/description/project/labels/status/priority/issuetype, bao gồm cả comment nếu có để nắm các cập nhật/xác nhận mới nhất) để lấy đầy đủ nội dung issue gốc trước khi phân tích. Đọc kỹ comment — quyết định cuối cùng của PO/khách hàng thường nằm trong comment chứ không phải description gốc.",
-    "12. Tạo task tương ứng trên Testlane, đưa nguyên bản phân tích vào phần mô tả của task — xem mục \"Tạo task trên Testlane\" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira.",
+    "12. Tạo task tương ứng trên QA Hub, đưa nguyên bản phân tích vào phần mô tả của task — xem mục \"Tạo task trên QA Hub\" bên dưới. Bước này áp dụng cho mọi input, không riêng issue Jira.",
     "Bộ câu hỏi đầy đủ cho từng trục nằm ở `references/method/analysis-guide.md` — đọc khi ticket phức tạp hoặc khi thấy mình đang bí ý ở một mục.",
     "`references/method/security-checklist.md` có checklist chi tiết **tổ chức theo loại feature** (form nhập liệu, upload file, danh sách/tìm kiếm/export, auth/OTP, thanh toán, webhook/API công khai, dữ liệu cá nhân). Mở đúng phần khớp với feature đang xét — đừng dán nguyên khối OWASP vào một form đổi avatar.",
     "`references/method/performance-checklist.md` có checklist chi tiết **theo loại feature** (danh sách/bảng, export/báo cáo, upload, ghi dữ liệu/giao dịch, tích hợp bên thứ ba, job nền, frontend), kèm bảng ngưỡng khởi điểm p95 để mở thảo luận. Bảng đó **không phải chuẩn bắt buộc** — dùng nó thì phải gắn nhãn `đề xuất — cần PO chốt` và mở GAP tương ứng."
   ],
 
   "replaceParagraphs": {
-    "Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task Testlane (xem \"Chọn project\").": "Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ là phần bối cảnh app nạp sẵn trong prompt sẽ không nói gì về nó, nên nói rõ điều đó thay vì tự lấp.",
+    "Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task QA Hub (xem \"Chọn project\").": "Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ là phần bối cảnh app nạp sẵn trong prompt sẽ không nói gì về nó, nên nói rõ điều đó thay vì tự lấp.",
 
-    "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên Testlane (qa-hub) — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.": "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case vào Testlane dưới dạng `draft` để QA duyệt."
+    "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên QA Hub — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.": "2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case vào QA Hub dưới dạng `draft` để QA duyệt."
   }
 }
