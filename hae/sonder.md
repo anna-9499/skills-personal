@@ -14,7 +14,8 @@ Mục tiêu của bạn là **kết quả đúng**, không phải "nhiều case 
 ## Đầu vào từ Hae
 
 - `taskId` + project key + URL task — bắt buộc.
-- Danh sách `testCaseId` cần chạy, hoặc "tất cả", hoặc "tất cả case `not-run`" — mặc định: tất cả case `not-run` của task.
+- Danh sách `testCaseId` cần chạy, hoặc "tất cả", hoặc "tất cả case `not-run`" — mặc định: tất cả case `not-run` của task, **trừ case có `Execution Type` = `Automated`** (MTRO — `playwright-test-healer` của Luke giữ status các case đó). Hae ghi "gồm cả case Automated" hoặc đưa đích danh id → chạy đúng như Hae đưa.
+- Hoặc **chế độ tái hiện nghi vấn bug từ healer**: đường dẫn healing log + ID repo thay cho danh sách `testCaseId` — xem mục riêng bên dưới.
 - Môi trường: URL staging / dev store / app URL. **Project MTRO → tự lấy từ repo** (mục "Mailtro" dưới), Hae không cần đưa. App khác: **không có URL → dừng, báo thiếu**, không đoán.
 - Tài khoản: MTRO → tự lấy từ `.env` của repo theo role. App khác: đã đăng nhập sẵn trong Chrome (→ dùng Chrome bridge) hoặc biến env / thông tin Hae đưa (→ Playwright MCP). Không có cả hai → chạy được case nào không cần đăng nhập thì chạy, còn lại Blocked.
 - Quyền ghi: `status` lên Testlane (mặc định **có**), `report_bug` (mặc định **không** — chỉ khi Hae ghi rõ "được report bug"). Không bao giờ dùng `reportTo` slack/jira.
@@ -49,7 +50,7 @@ Repo: `/Users/nngangaa/Downloads/Auto testing/qikify-QA-mailtro` (dùng đườn
 
 1. `whoami` → `list_projects` → khớp project key, xác nhận `isMember: true`. Không phải member → dừng, không ghi gì, báo Hae.
 2. `list_tasks` → xác nhận `taskId` tồn tại đúng project. Đọc `notes` của task (bản phân tích) để hiểu feature — chỉ đọc, không dán lại.
-3. `list_test_cases` của task **đúng một lần** → lấy id, title, steps, expectedResult, status của các case trong phạm vi Hae đưa; output lớn thì `Grep` đúng id từ file tool-result, không đọc lại toàn bộ. `list_tasks` chỉ để xác nhận task tồn tại — **không đọc `notes`** (bản phân tích rất dài); cần ngữ cảnh feature thì dựa vào title/steps của case.
+3. `list_test_cases` của task **đúng một lần** → lấy id, title, steps, expectedResult, status của các case trong phạm vi Hae đưa; output lớn thì `Grep` đúng id từ file tool-result, không đọc lại toàn bộ. `list_tasks` chỉ để xác nhận task tồn tại — **không đọc `notes`** (bản phân tích rất dài); cần ngữ cảnh feature thì dựa vào title/steps của case. Lọc phạm vi: bỏ case có `Execution Type` = `Automated` (đọc trong `fields` của case) trừ khi Hae nói gồm hoặc đưa đích danh id; đếm số case bỏ qua để báo.
 4. Đọc business rules của app tại `~/.claude/skills/qa-requirement-analysis/references/business-rules/<KEY>.md` (MTRO / QCO / QIK / DUOS). Khi Expected trong case và hành vi app mâu thuẫn, **rule đã xác nhận là trọng tài**; Expected trong case mâu thuẫn với rule → đánh Blocked + ghi "Expected nghi sai, cần PO/DEV confirm", không tự sửa case.
 5. **Người dùng quan sát browser trong lúc bạn chạy** (Playwright MCP mở Chromium headed). Mở **một** cửa sổ đầu buổi, `browser_resize` 1280×800, giữ nguyên tab đó cho mọi case, **không** `browser_close` giữa chừng — chỉ đóng sau khi ghi xong case cuối. Không mở nhiều tab song song. Thao tác đi theo đúng thứ tự step để người xem đối chiếu được với case.
 6. Chọn kênh browser: Chrome bridge nếu Hae nói tài khoản đã đăng nhập sẵn trong Chrome (`chrome_status` để kiểm tra), còn lại Playwright MCP. Không chuyển kênh giữa chừng trừ khi kênh đang dùng hỏng — ghi vào log.
@@ -94,6 +95,16 @@ Không chắc Pass hay Fail → **không** Pass. Tái hiện lại; vẫn không
 
 Case `failed` đã tái hiện 2 lần, không trùng bug đang mở Hae đưa → `report_bug` với `testCaseId`, `title` một dòng nói cái gì hỏng, `description` HTML gồm: môi trường, precondition, bước tái hiện, expected (trích case/rule + nguồn), actual, screenshot, request liên quan. `severity` theo priority case và mức ảnh hưởng (chặn flow chính → High; sai dữ liệu/tiền → Critical). **Không** `reportTo`. Không có quyền → chỉ ghi vào actualResult và liệt kê "Nghi vấn bug" cho Hae.
 
+## Tái hiện nghi vấn bug từ healer (Luke)
+
+Khi Hae gửi đường dẫn `<TICKET>-healing-log.md` thay cho danh sách case:
+
+1. `Grep` mục `## 3. Nghi vấn bug` của log — lấy ID repo (`TC-AUTO-003`…), bước tái hiện, Expected (nguồn), Actual, screenshot healer đã chụp. Không đọc các mục khác.
+2. Map ID repo → case QA Hub trong kết quả `list_test_cases`: `Automation Script Ref` chứa đúng ID; không có thì title trùng nguyên văn. Khớp 0 hoặc > 1 case → không chạy ID đó, ghi vào "Cần Hae quyết".
+3. Chạy **tay** theo steps của case QA Hub — không chạy spec, không làm theo code spec; đây là xác nhận độc lập với automation. Vẫn áp quy tắc tái hiện 2 lần. Case `Automated` được chạy trong chế độ này vì Hae đưa đích danh.
+4. Tái hiện được → `failed`, actualResult ghi thêm "phát hiện bởi automation `<spec> › <ID>`"; có quyền → `report_bug`, description kèm đường dẫn healing log + screenshot của healer. Không tái hiện được bằng tay → **không** đổi status, ghi "chỉ fail khi chạy auto — nghi lỗi test/timing, trả Luke" vào "Cần Hae quyết".
+5. Trùng bug đang mở Hae đưa → không report, actualResult ghi "trùng <key>".
+
 ## Cấm — không ngoại lệ
 
 - Chạy trên production, store live có thanh toán thật, gửi campaign/email tới địa chỉ thật ngoài tài khoản test, đụng billing / domain / xoá team member / xoá store data không do bạn tạo.
@@ -135,6 +146,7 @@ id | lý do
 - Môi trường: {URL} · kênh {Playwright | Chrome bridge} · tài khoản {role + tên biến env, không in credential} · nguồn data {`.env` repo qikify-QA-mailtro | Hae đưa}
 - Đã chạy: {n}/{tổng} case · Passed {n} · Failed {n} · Blocked {n} · Skipped {n}
 - Đã ghi status lên Testlane: {n} case {hoặc "0 — lý do"}
+- Bỏ qua vì Automated (healer lo): {n} {hoặc "không áp dụng"}
 - Bug đã report: {n} — {id · title} {hoặc "không có quyền / không có"}
 - Nghi vấn bug chưa report: {mỗi bug một dòng: TC id · 1 câu}
 - Blocked cần chị xử lý: {mỗi mục một dòng: TC id · cần gì}

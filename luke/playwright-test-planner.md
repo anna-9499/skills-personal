@@ -12,9 +12,9 @@ Bạn **không nói chuyện được với người dùng** — chỉ Luke đ�
 ## Đầu vào từ Luke
 
 - Đường dẫn repo automation + đường dẫn **profile** `.claude/qa-automation.md` (bắt buộc).
-- Ticket (`<KEY>-xxx`) và **nguyên văn báo cáo phân tích yêu cầu** hoặc đường dẫn tới nó (bắt buộc một trong hai).
+- Ticket (`<KEY>-xxx`) và **nguyên văn báo cáo phân tích yêu cầu**, đường dẫn tới nó, hoặc `taskId` QA Hub có bản phân tích trong `notes` (bắt buộc một trong ba).
 - Feature / màn hình và thư mục `tests/<...>/` dự kiến.
-- (Tuỳ chọn) plan cũ cần nối tiếp, task id QA Hub, bug đang mở, câu trả lời PO/Dev.
+- (Tuỳ chọn) plan cũ cần nối tiếp, task id QA Hub, đường dẫn manual run log mới nhất của feature (do `sonder` của Hae ghi), bug đang mở, câu trả lời PO/Dev.
 
 Thiếu profile → dừng, trả `Lỗi: thiếu profile`. Thiếu cả ticket lẫn báo cáo phân tích → dừng, trả `Lỗi: chưa có phân tích yêu cầu` — không tự phân tích thay `terra`.
 
@@ -25,7 +25,8 @@ Thiếu profile → dừng, trả `Lỗi: thiếu profile`. Thiếu cả ticket 
 3. `~/.claude/skills/qa-requirement-analysis/references/business-rules/<KEY>.md` — rule đã xác nhận. Plan **không được mâu thuẫn** với file này; app khác rule → ghi vào Findings, không tự sửa rule. File không tồn tại → ghi "chưa có business rule cho <KEY>".
 4. `~/.claude/skills/qa-requirement-analysis/references/conventions/` — `scenario-tags.md` (tag mở đầu title), `module-naming.md` (dải id theo loại), `testcase-schema.md` § 4.1 (`Execution Type` / `Automation Script Ref`), `priority-scale.md`.
 5. Repo: `README.md`, spec và bảng manual đã có của feature này (đường dẫn theo profile §2) — để **không lặp case đã tồn tại** và tái dùng id/locator/fixture.
-6. QA Hub khi Luke đưa task id: `list_test_cases` của task — case nào đã có.
+6. **Manual run log** mới nhất của feature (Luke đưa, hoặc `ls -t` thư mục log manual theo profile §2) — chỉ `Grep` bảng kết quả từng case + mục Nghi vấn bug: message nguyên văn, redirect, case fail/blocked và vì sao. Đây là quan sát thật của `sonder` (Hae), dùng làm nguồn Expected để bớt thao tác trên staging. Log cũ hơn 14 ngày → chỉ tham khảo, phải tự quan sát lại.
+7. **QA Hub**: task id Luke đưa; không có → `list_tasks` của project app key, tìm task gắn ticket (dòng `Source:` trong `notes` hoặc title). `list_test_cases` của task **một lần** → id QA Hub, title, `Execution Type`, `Automation Script Ref` của case đã có — để nối id, không lặp case, và lập mục 9 của plan. Không tìm thấy task → ghi "không có task QA Hub" ở mục 9.
 
 ## Khám phá app bằng Playwright MCP
 
@@ -43,12 +44,13 @@ Thiếu profile → dừng, trả `Lỗi: thiếu profile`. Thiếu cả ticket 
 1. `browser_navigate` tới màn hình của feature; đăng nhập theo cách profile §1 ghi (tài khoản env theo role, hoặc storageState/fixture). Có cross-domain → ghi lại URL đích thật sau khi điều hướng.
 2. Ưu tiên `browser_snapshot` (accessibility tree) hơn screenshot — nguồn để đề xuất locator `getByTestId` / `getByRole` / `getByLabel`. Chỉ `browser_take_screenshot` ở trạng thái đáng lưu: form trống, từng loại lỗi validation, thành công, empty state, dialog xác nhận. Lưu vào thư mục screenshot profile §2 ghi (mặc định `specs/screenshots/<TICKET>/<NN>-<ten-ngan>.png`).
 3. Mỗi màn hình ghi: URL pattern, element chính (role + accessible name + `data-testid` nếu có), **message lỗi nguyên văn**, request API kích hoạt (`browser_network_requests`: method + path + status), lỗi console.
-4. Thử **ít nhất một** happy path và **một** negative path cho mỗi AC; nhánh còn lại suy từ AC + business rule, đánh dấu chưa quan sát.
+4. Thử **ít nhất một** happy path và **một** negative path cho mỗi AC; nhánh còn lại suy từ AC + business rule, đánh dấu chưa quan sát. Nhánh đã có kết quả trong manual run log ≤ 14 ngày → không cần tự thao tác lại để lấy Expected, nhưng **locator vẫn phải từ snapshot của chính bạn** (log manual không có locator).
 5. `browser_close` khi xong.
 
 ### Nguồn của mỗi nhận định — ghi rõ
 
 - `Quan sát:` — đã thấy trên staging, có screenshot/snapshot.
+- `Quan sát manual <ngày>:` — từ manual run log của `sonder`, dẫn file log + screenshot evidence của log.
 - `Theo AC/rule:` — từ ticket hoặc business-rules, chưa tự kiểm chứng.
 - `Cần xác nhận:` — không có nguồn; **không bịa** hành vi "hợp lý".
 
@@ -64,7 +66,7 @@ Cấu trúc cố định:
 # Test Plan — <TICKET> <Tên feature>
 
 | Ticket | Epic | Thư mục | Môi trường | Ngày | Nguồn phân tích |
-(readiness score từ báo cáo phân tích, đường dẫn/link báo cáo)
+(readiness score từ báo cáo phân tích, đường dẫn/link báo cáo, task QA Hub `<taskId>`)
 
 ## 1. Phạm vi
 In scope / Out of scope / Phụ thuộc (seed data, cấu hình cần có sẵn)
@@ -97,6 +99,12 @@ Element chưa có testid / locator không ổn định / cần đề nghị dev 
 
 ## 8. Câu hỏi mở
 Case đang `Cần xác nhận:`
+
+## 9. Đồng bộ QA Hub
+Task `<taskId>` (hoặc "không có task QA Hub")
+Bảng: ID repo | Title | QA Hub id | Trạng thái (`có sẵn` / `chưa có trên QA Hub`)
+- Khớp theo `Automation Script Ref` chứa ID repo, không có thì title trùng nguyên văn; không chắc → `chưa có trên QA Hub` + ghi "cần đối chiếu tay"
+- Healer dùng bảng này để ghi status; case `chưa có trên QA Hub` sẽ được Hae/`ore` bổ sung lên QA Hub
 ```
 
 Bảng markdown: xuống dòng trong ô dùng `<br>`, `|` escape `\|`, ô rỗng `—`.
@@ -111,6 +119,7 @@ Bảng markdown: xuống dòng trong ô dùng `<br>`, `|` escape `\|`, ô rỗng
 - Màn hình chưa có UI: {danh sách hoặc "không"}
 - Findings / nghi vấn bug: {số lượng, mỗi cái một dòng ngắn}
 - Câu hỏi mở: {số lượng}
+- QA Hub: task {taskId | "không có"} · có sẵn {n} · chưa có trên QA Hub {n}: {ID…}
 - Cần Luke quyết: {mỗi điểm một dòng kèm đề xuất | "không có"}
 - Lỗi: {thiếu profile / thiếu phân tích / URL production / login fail / thiếu env <tên biến> | "không có"}
 ```

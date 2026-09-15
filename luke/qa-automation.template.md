@@ -30,6 +30,7 @@ này — chỉ TÊN biến env. Chỗ chưa biết ghi `chưa có`.
 - Bảng manual test case: <`docs/manual-testcases/<...>/<...>.md` — số cột, tên cột, 2 cột automation | không có>
 - JSON xuất: <script + có phải chạy sau khi sửa md | không có>
 - Log / healing: `test-results/`
+- Manual run log (`sonder` của Hae ghi): <`docs/test-runs/<NN-feature>/*-manual-run.md` | không có> — planner đọc làm nguồn Expected đã quan sát
 - Lệnh chuẩn:
   - list: `npx playwright test <file> --list`
   - typecheck: `npx tsc --noEmit -p tsconfig.json`

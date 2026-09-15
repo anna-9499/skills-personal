@@ -13,7 +13,7 @@ Bạn **không nói chuyện được với người dùng**. Không hỏi ngư�
 
 - Đường dẫn repo + **profile** `.claude/qa-automation.md` (bắt buộc).
 - Target: file spec hoặc thư mục (bắt buộc).
-- (Tuỳ chọn) ticket để đặt tên log; test plan để đối chiếu Expected; task id QA Hub để đồng bộ status; bug đang mở (key) để nhận diện loại D; "chỉ chạy lại target đã fail".
+- (Tuỳ chọn) ticket để đặt tên log; test plan để đối chiếu Expected; task id QA Hub để đồng bộ status + 2 field automation (không đưa → lấy ở header / mục 9 của plan nếu có); bug đang mở (key) để nhận diện loại D; "chỉ chạy lại target đã fail".
 
 Cwd không phải repo automation → dừng. `.env` thiếu biến profile §1 khai báo (kiểm bằng `grep -c '^TÊN='`, không `cat`) → dừng ngay, trả `Lỗi: thiếu env <tên biến>`; không đoán URL, không tạo tài khoản.
 
@@ -75,9 +75,17 @@ Chạy lại **toàn bộ target** một lần `--retries=0`. Pass vòng lẻ, f
 - Chạy trên URL khớp dấu hiệu production trong profile; mọi hành động trong profile §5.
 - In credential ra log hay câu trả lời.
 
-## Đồng bộ QA Hub (chỉ khi Luke đưa task id)
+## Đồng bộ QA Hub (chỉ khi có task id — Luke đưa, hoặc ghi ở header / mục 9 của plan)
 
-`list_test_cases` của task → khớp theo `Automation Script Ref` chứa `<ID>` → `update_test_case` **chỉ** `status` (`passed` / `failed` / `blocked` khi loại B) và `actualResult` (1–2 câu, kèm đường dẫn screenshot nếu fail). Không đổi title/steps/expected, không tạo case, không đụng case ngoài lần chạy này. Không có task id → bỏ qua, ghi rõ trong log.
+Healer **chỉ** giữ status của case `Automated`. Case `Manual` / `To be automated` do `sonder` của Hae chạy tay — không đụng status của chúng.
+
+1. `list_test_cases` của task **một lần**. Khớp ID repo ↔ case QA Hub theo thứ tự: (a) bảng mục 9 "Đồng bộ QA Hub" của plan nếu có; (b) `Automation Script Ref` chứa đúng `<ID>`; (c) title QA Hub trùng nguyên văn title trong plan / bảng manual. Khớp 0 hoặc > 1 case → không ghi, liệt kê "không khớp".
+2. Mỗi test **đã chạy** trong lần này → **một** `update_test_case`:
+   - `status`: `passed` / `failed` (loại C, D) / `blocked` (loại B). Loại A chưa heal được → **không đổi status**, chỉ ghi `actualResult` "automation chưa heal được <ngày> — trạng thái app chưa xác định".
+   - `actualResult`: 1–2 câu, kèm đường dẫn screenshot nếu fail.
+   - `fields`: `Execution Type` = `Automated` + `Automation Script Ref` = `` `<file>.spec.ts` › <ID> `` (+ `— test.fail() (bug <KEY>-xxx đang mở)` / `— chạy riêng <BIẾN>=1`) theo `testcase-schema.md` § 4.1. Dùng đúng tên field đang có trên case; case chưa có thì thêm đúng tên đó. Đây là cách QA Hub biết case đã automate — `sonder` sẽ tự bỏ qua case `Automated`.
+3. Test `test.fixme` (không chạy) → không đổi status; chỉ ghi `fields`: `To be automated` + `` `<file>.spec.ts` › <ID> — đang `test.fixme` ``.
+4. Không đổi title/steps/expected/priority, không tạo case, không đụng case ngoài lần chạy này. Không có task id → bỏ qua, ghi rõ trong log.
 
 ## Đầu ra
 
@@ -107,7 +115,7 @@ ID | bước tái hiện | Expected (nguồn) | Actual | screenshot | request/co
 - Chưa heal được: {ID — giả thuyết | "không"}
 - Lỗi môi trường: {gì hỏng, cần ai | "không"}
 - File đã sửa: {spec / page object / fixture; page object dùng chung đã chạy lại: có/không}
-- QA Hub: {task · số case cập nhật · case không khớp Ref | "không đồng bộ (không có task id)"}
+- QA Hub: {task · số case cập nhật status · số case cập nhật Execution Type/Ref · case không khớp | "không đồng bộ (không có task id)"}
 - Cần Luke quyết: {… | "không có"}
 ```
 
