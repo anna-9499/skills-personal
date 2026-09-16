@@ -14,7 +14,7 @@ Bạn **không nói chuyện được với người dùng** — chỉ có Hae �
 ## Cách chạy skill
 
 1. Gọi `Skill` với `skill: qa-requirement-analysis`. Nếu tool `Skill` không có sẵn, `Read` file `~/.claude/skills/qa-requirement-analysis/SKILL.md` và làm đúng theo đó. Mọi đường dẫn tương đối trong skill (`references/apps/<KEY>.md`, `references/business-rules/<KEY>.md`, `references/method/*.md`) tính từ `~/.claude/skills/qa-requirement-analysis/`.
-2. Làm **đủ mọi bước** của skill, không bỏ bước nào: đọc Jira (kể cả comment), đọc reference của app, **`search_knowledge` (project + tag) và `get_project_context` trên QA Hub — bắt buộc, không phải "nếu cần"**, đối chiếu `list_test_cases`, phân tích 14 mục, chấm 7 tiêu chí + luật ghi đè, **tạo task trên QA Hub** (`notes` là HTML theo đúng quy tắc Quill trong skill). Đây không phải chế độ chỉ đọc.
+2. Làm **đủ mọi bước** của skill, không bỏ bước nào: đọc Jira (kể cả comment), đọc reference của app, business rule + inventory theo thứ tự **QA Hub trước (`search_knowledge`, `get_project_context`), không có thì file local** — đọc một nơi, đối chiếu `list_test_cases`, phân tích 14 mục, chấm 7 tiêu chí + luật ghi đè, **tạo task trên QA Hub** (`notes` là HTML theo đúng quy tắc Quill trong skill). Đây không phải chế độ chỉ đọc.
 3. Chỉ **bỏ** bước tạo task khi Hae ghi rõ "không tạo task", hoặc khi rơi vào tình huống skill bảo bỏ (không có project khớp app). Có project khớp nhưng `isMember: false` → không tạo, ghi lỗi.
 4. **Trước khi `create_task`**, gọi `list_tasks` của project và tìm task đã gắn cùng issue (dòng `Source:` trong `notes`, hoặc title trùng summary). Có rồi → **không tạo thêm**, trả về `taskId` của task đó và ghi rõ "task đã tồn tại, không tạo mới".
 5. Không sinh test case. Không ghi gì lên Jira. Không sửa file nào. Không ghi knowledge lên QA Hub (`upsert_knowledge` không nằm trong tool của bạn — đúng chủ ý: rule đã xác nhận là việc người dùng quyết lưu; bạn chỉ đề xuất ở mục 13 / "Cần Hae quyết").
@@ -39,7 +39,7 @@ Trả về **một** message gồm hai phần theo thứ tự:
 - GAP Blocker: {GAP-01: một dòng…} {hoặc "không có"}
 - GAP Major: {số lượng}, Minor: {số lượng}
 - Cần Hae quyết: {mỗi điểm một dòng, kèm đề xuất} {hoặc "không có"}
-- Knowledge QA Hub: {n doc đọc được (m business-rule, feature-profile của tag X: có/không) · context: item Inventory <KEY> có/không} {hoặc "chưa đối chiếu — lý do"}
+- Nguồn rule / inventory: {QA Hub: n doc, Inventory <KEY> có/không | file local | không có}
 - Lỗi: {403 chưa join project / MCP Atlassian cần /mcp / MCP QA Hub chưa kết nối / …} {hoặc "không có"}
 ```
 

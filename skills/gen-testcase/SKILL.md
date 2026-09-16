@@ -27,10 +27,10 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 - `list_projects` → khớp app đang test với `key` của project. **`key` này chính là prefix của Test Case ID** — QA Hub tự cấp `TC-<KEY>-<số>`, không tự đặt tay.
 - Project không khớp app nào, hoặc khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; gọi tiếp cũng chỉ nhận 403.
 - `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `qa-requirement-analysis` trước. **Skill này không tự tạo task.**
-- **`search_knowledge` — bắt buộc**, hai lần: `{ projectId }` lấy mọi doc `active` (business-rule, known-issue, env, qa-process), và `{ projectId, tag }` với tag của task để lấy `feature-profile`. Rule ở đây là rule **đã được người bảo chứng** — mỗi rule là ít nhất một case Negative/Edge/Regression, kể cả khi bản phân tích không nhắc lại; `known-issue` là case Regression đánh sẵn `PO/DEV confirm` nếu chưa fix; `env` cho biết tài khoản / URL để điền Preconditions bằng tên biến env, không phải giá trị.
-- **`get_project_context` — bắt buộc**, `includeFileText: false` trước; đọc text của item tên `Inventory <KEY>` (nếu có) để Steps dùng **đúng tên màn hình, setting, nút** trên hệ thống thật, và item nào tên chạm feature của task.
-- Lệch giữa knowledge QA Hub và file local `references/business-rules/<KEY>.md` → theo QA Hub, ghi nguồn vào `Notes` của case; lệch giữa knowledge và bản phân tích → case đánh `PO/DEV confirm`.
-- Chưa kết nối MCP → nói rõ, đưa bộ test case ra trong chat để người dùng tự nhập; đừng im lặng bỏ qua. Không có MCP thì cũng không có knowledge — ghi rõ bộ case chưa đối chiếu với rule trên QA Hub.
+- **Business rule + inventory: QA Hub trước, file local sau** — đọc một nơi, không cả hai:
+  - `search_knowledge { projectId }` (+ `{ projectId, tag }` cho `feature-profile`) → có doc `active` thì đó là bộ rule; **không có** (hoặc MCP lỗi) → đọc `../qa-requirement-analysis/references/business-rules/<KEY>.md` ở bước 4 dưới. Mỗi rule là ít nhất một case Negative/Edge/Regression; `known-issue` chưa fix → case Regression đánh `PO/DEV confirm`; `env` cho tên biến env để điền Preconditions.
+  - `get_project_context { projectId, includeFileText: false }` → có item `Inventory <KEY>` thì đọc text để Steps dùng **đúng tên màn hình, setting, nút**; không có → `../../knowledge-work/inventory/<KEY>.md` local; cũng không có → bỏ qua.
+- Chưa kết nối MCP → nói rõ, đưa bộ test case ra trong chat để người dùng tự nhập; đừng im lặng bỏ qua.
 
 **2. Đọc app reference** — `../qa-requirement-analysis/references/apps/<KEY>.md`, một file cho một app, tên file là `key` project trên QA Hub — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) trước khi sinh test case. Danh mục app + glossary + cross-app ở `../qa-requirement-analysis/references/apps/README.md`. File app chưa có nội dung → bỏ qua, đừng bịa bối cảnh.
 
@@ -38,7 +38,7 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 
 **3. Nếu app là Mailtro (MTRO): đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — bảng tỷ lệ auto/manual theo epic + quy ước điền 2 cột `Execution Type` / `Automation Script Ref`. File này **chỉ áp dụng cho Mailtro**, bỏ qua khi làm app khác.
 
-**4. Đọc business rules đã xác nhận** — `../qa-requirement-analysis/references/business-rules/<APP_PREFIX>.md` (nếu tồn tại) — để nắm các rule đã xác nhận từ các issue trước của app này. Giúp coverage đủ hơn cho Negative/Edge/Regression case dựa trên rule đã biết, kể cả khi rule đó không được nhắc lại trong issue hiện tại. Nếu file chưa tồn tại, bỏ qua bước này.
+**4. Đọc business rules đã xác nhận** — chỉ khi QA Hub không có (bước 1) — `../qa-requirement-analysis/references/business-rules/<APP_PREFIX>.md` (nếu tồn tại) — để nắm các rule đã xác nhận từ các issue trước của app này. Giúp coverage đủ hơn cho Negative/Edge/Regression case dựa trên rule đã biết, kể cả khi rule đó không được nhắc lại trong issue hiện tại. Nếu file chưa tồn tại, bỏ qua bước này.
 
 ## Thông tin cần thu thập
 
