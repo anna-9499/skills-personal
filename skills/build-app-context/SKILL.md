@@ -39,7 +39,9 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 **Code > Staging > Confluence.** Lệch nhau thì ghi theo nguồn cao hơn và đưa chênh lệch vào § 5.
 
 1. **Code** (nếu có clone): router → bảng route § 1; schema setting (ví dụ QCO: `src/apps/checkout/schemas/*.ts`) → bảng Setting § 2 với đúng label i18n; `config('…')` / `window.*Config` → § 3 flag. Ghi `branch` + `commit` (`git rev-parse --short HEAD`).
-2. **Staging** (Playwright MCP, headed): đi từng mục sidebar, chụp screenshot mỗi màn, chép label đúng chuỗi, thử mở route "không tồn tại" của lần build trước. Ghi trạng thái ✅/🟡/❌ từng feature. Với app Shopify, đi cả storefront/checkout của dev store để xác nhận widget hiện ở đâu. Không tạo dữ liệu thật, không đặt đơn có thanh toán thật, không đổi setting đang có — chỉ đọc; cần bật để xem thì bật rồi tắt lại.
+2. **Staging** (Playwright MCP, headed — **kênh chính**): đi từng mục sidebar, chụp screenshot mỗi màn, chép label đúng chuỗi, mở form Edit của **một** item có sẵn mỗi widget để lấy label setting, thử mở route "không tồn tại" của lần build trước. Ghi trạng thái ✅/🟡/❌ từng feature. Với app Shopify, đi cả storefront/checkout của dev store để xác nhận widget hiện ở đâu — **chỉ khi cart đã có sẵn sản phẩm; không tự thêm vào cart**, không có thì ghi § 0 "checkout không đi được". Không tạo dữ liệu thật, không đặt đơn có thanh toán thật, không đổi setting đang có — chỉ đọc; cần bật để xem thì bật rồi tắt lại.
+   - **App Shopify embedded** (nằm trong iframe của `admin.shopify.com`): **bắt buộc Playwright MCP** — `browser_snapshot` gom cả nội dung iframe, click xuyên frame được. **Chrome bridge không vào được iframe** (chỉ inject top frame, không click/scroll trong app) → chỉ dùng để xác nhận sidebar/route khi Playwright không login được, và phải ghi § 0 là inventory thiếu form Edit. Bài học pilot QCO 2026-09-16.
+   - Login admin Shopify qua Playwright: tài khoản từ biến env repo automation (`SHOPIFY_EMAIL`/`SHOPIFY_PASSWORD` của `shopify-app`); gặp 2FA → `browser_wait_for` tối đa 4 phút để người dùng nhập mã tay vào cửa sổ headed, không đoán, không đọc mail, không login lại nhiều lần.
 3. **Confluence** (MCP Atlassian): chỉ để điền chỗ code/staging không nói (điều kiện plan, giới hạn theo gói). Ghi rõ ngày trang được sửa lần cuối; trang cũ hơn 12 tháng thì ghi kèm ⚠️.
 
 ## Các bước
@@ -59,6 +61,7 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 - Không ghi file nào ngoài `inventory/<KEY>.md`. Muốn sửa reference → đề xuất diff ở § 5 và trong tóm tắt.
 - Không suy diễn hành vi từ UI thành rule. "Nút Save disabled khi thiếu field" là quan sát (ghi được ở § 2 kèm nguồn staging); "hệ thống bắt buộc field X" là rule (→ § 5, đề xuất `update-business-rules`).
 - Không credential, token, store domain merchant thật, dữ liệu khách hàng. Tài khoản chỉ ghi tên biến env.
+- Không thêm sản phẩm vào cart, không tạo item trong app, không Test connection / gửi thật (digest, webhook). Muốn xem form thì mở Edit của item có sẵn rồi Discard.
 - Chỉ staging / dev store. Được đưa URL production → dừng, hỏi lại.
 - Không tóm tắt bằng cách bỏ mục: feature không đi được (cần plan Plus, cần scope) thì ghi ❌/🟡 kèm lý do, không im lặng bỏ.
 - Nguồn nào không đọc được (403, không có clone, MCP hết hạn) → ghi § 0 "Nguồn không đọc được", không đoán để lấp.

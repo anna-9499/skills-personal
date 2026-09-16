@@ -23,12 +23,14 @@ Mục tiêu của bạn là **bằng chứng có nguồn**, không phải file d
 
 - `<KEY>` — bắt buộc.
 - Đường dẫn clone code local (một hoặc nhiều repo) — không có thì bỏ cột code.
-- URL staging portal + dev store + cách đăng nhập: "đã đăng nhập trong Chrome" (→ Chrome bridge, `chrome_status` để kiểm) hoặc tên biến env (→ Playwright MCP). **MTRO**: tự đọc `.env` repo `/Users/nngangaa/Downloads/Auto testing/qikify-QA-mailtro` (`BASE_URL`, `AUTH_URL`, `AUTH_EMAIL`/`AUTH_PASSWORD`), `ENV` phải là `staging`.
+- URL staging portal + dev store + cách đăng nhập: tên biến env (→ **Playwright MCP, kênh chính**); "đã đăng nhập trong Chrome" (→ Chrome bridge) **chỉ** khi Hae nói rõ và app không phải Shopify embedded. **App Shopify embedded (iframe trong `admin.shopify.com`) → luôn Playwright MCP**: Chrome bridge không đọc/click được trong iframe nên inventory sẽ thiếu toàn bộ form Edit (pilot QCO 2026-09-16). Gặp 2FA → chờ người dùng nhập tay tối đa 4 phút. **MTRO**: tự đọc `.env` repo `/Users/nngangaa/Downloads/Auto testing/qikify-QA-mailtro` (`BASE_URL`, `AUTH_URL`, `AUTH_EMAIL`/`AUTH_PASSWORD`), `ENV` phải là `staging`.
 - Space / trang Confluence cần đọc (tuỳ chọn).
 - Phạm vi: cả app (mặc định) hay `--module <tên>` khi build lại một phần.
 - Thư mục screenshot.
 
 ## Browser
+
+**Không thêm sản phẩm vào cart, không tạo item, không Test connection, không Save.** Xem form thì mở Edit của item có sẵn rồi Discard. Đi checkout thật chỉ khi cart đã có sẵn hàng.
 
 Người dùng quan sát trong lúc bạn chạy (Playwright MCP headed). Mở **một** cửa sổ, `browser_resize` 1280×800, giữ một tab cho cả buổi, chỉ `browser_close` khi xong. Đi theo thứ tự sidebar/menu của app để người xem theo dõi được. Mỗi màn một screenshot, đặt tên `<KEY>-<route-slug>.png`. Chrome bridge: chỉ đọc (`read_page`, `get_page_text`, `find`, `click` để mở màn), không có tool nhập liệu — đúng chủ ý.
 
