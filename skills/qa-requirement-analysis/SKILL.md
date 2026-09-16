@@ -42,6 +42,20 @@ Nếu MCP QA Hub khả dụng, gọi `list_test_cases` cho project tương ứng
 
 Đọc thêm file `references/business-rules/<APP_PREFIX>.md` (nếu tồn tại — ví dụ `references/business-rules/DUOS.md` cho app Duos B2B) để nắm các business rule đã được xác nhận từ những issue trước đó của app này. Dùng để tránh phân tích lại từ đầu những rule đã biết, và để phát hiện nếu issue hiện tại có dấu hiệu mâu thuẫn với rule đã lưu (nếu có, nêu rõ trong mục "8. Risks" hoặc "12. Open Questions for PO/Dev"). Nếu file chưa tồn tại, bỏ qua bước này — không tự tạo file rỗng.
 
+### Knowledge và Context trên QA Hub — bước bắt buộc khi MCP khả dụng
+
+QA Hub giữ hai kho về app, cả team cùng thấy và cùng sửa — khác với thư mục `references/` chỉ nằm trên máy mình. Đọc **cả hai**, ngay sau khi `list_projects` khớp được `projectId` (xem "Chọn project"), trước khi viết mục 3:
+
+1. **`search_knowledge`** — tri thức đã chắt lọc và **được người bảo chứng** (`kb_docs`). Gọi hai lần:
+   - `{ projectId }` — lấy toàn bộ doc `active` của app: `business-rule`, `product`, `qa-process`, `known-issue`, `env`. Đây là đầu vào của mục 3 (rule đã có, trích nguồn `sourceUrl`), mục 7 (known-issue chạm module nào), mục 8 (rủi ro đã biết).
+   - `{ projectId, tag: "<module>" }` khi đã đoán được module từ ticket — lấy `feature-profile` của tag đó, là bản mô tả feature đã có setting/flag/rủi ro. Không có profile → ghi một dòng ở mục 13 đề xuất viết profile sau khi phân tích xong.
+   - Doc `status: draft` cũng trả về; dùng được nhưng ghi rõ "(draft, chưa xác nhận)" khi trích. Không gọi `status: archived`.
+2. **`get_project_context`** — nguyên liệu thô người upload (spec, inventory do `build-app-context` nộp, ghi chú). Gọi `{ projectId, includeFileText: false }` trước để xem danh sách; chỉ đọc text (`includeFileText: true`) khi có item **tên chạm module / feature của ticket** hoặc item tên `Inventory <KEY>` — inventory là bản chụp hệ thống thật, dùng để mục 7 nêu đúng tên màn hình / setting và để không đẻ GAP giả về thứ đã tồn tại.
+
+Luật ưu tiên khi hai nguồn nói khác nhau: **knowledge trên QA Hub (`active`, có `sourceUrl`) > `references/business-rules/<KEY>.md` local > `references/apps/<KEY>.md` > context thô**. Lệch giữa hai nguồn đầu → nêu ở mục 8 hoặc 12, không tự chọn một bên rồi im lặng.
+
+Không gọi được MCP QA Hub → ghi rõ trong báo cáo là "chưa đối chiếu knowledge/context trên QA Hub", như với `list_test_cases`. Không bỏ qua trong im lặng, và không coi file local là đủ.
+
 ## Bộ phương pháp phân tích
 
 Tám trục dưới đây là bộ khung tối thiểu, luôn áp dụng khi đọc requirement. Mỗi câu hỏi không tìm được đáp án trong tài liệu là **ứng viên cho một GAP** ở mục 11 — không phải chỗ để tự suy ra câu trả lời "hợp lý" rồi trình bày như thể requirement đã quy định.
@@ -333,7 +347,7 @@ Dùng **MCP của QA Hub** (server tên `testlane`, tool `mcp__testlane__*`; tok
 1. `list_projects` → khớp `key` với mã app đang phân tích (`TEPO`, `QCO`, `QSC`, `DUOS`, `MTRO` — tra bảng app trong `references/apps/README.md`). Hai tình huống hỏng khác nhau, xử lý khác nhau:
    - **Có project khớp nhưng `isMember: false`** → dừng, báo người dùng join project trước; membership là mô hình phân quyền của QA Hub, gọi tiếp cũng chỉ nhận 403.
    - **Không project nào khớp** (yêu cầu không thuộc app nào đang test) → **bỏ qua hẳn bước tạo task**, vẫn in đầy đủ bản phân tích, và nói một câu rằng chưa tạo task vì không xác định được project. Đừng nhét vào một project gần đúng cho xong, và đừng hỏi người dùng chọn project trừ khi họ chủ động nói.
-2. `get_project_context` cho project đó (tuỳ chọn, nhưng nên làm nếu bản phân tích cần đối chiếu spec/business rule mà team đã upload lên QA Hub).
+2. `search_knowledge` + `get_project_context` cho project đó — **bắt buộc**, theo đúng mục "Knowledge và Context trên QA Hub" ở trên. Làm ngay tại đây, vì `projectId` vừa có và bản phân tích chưa viết.
 
 **Feature đã bị khai tử trong QA Hub** — không còn `list_features` / `create_feature`, task gắn thẳng vào project và cái từng là feature giờ là **tag**. Suy ra tên module từ mục "7. Impacted Areas" (hoặc "1. Feature Summary") và đặt vào `tags`; đối chiếu với tag đang dùng trong `list_tasks` của project để khỏi đẻ ra biến thể mới (`Checkout` vs `checkout`).
 
@@ -369,6 +383,10 @@ Task id vừa tạo kèm đường dẫn `/test-cases?task=<id>`, project + tag 
 Sau khi xuất bản phân tích và tạo task trên QA Hub, hỏi ngắn gọn người dùng có muốn:
 
 1. Chuyển sang sinh test case (skill `gen-testcase`) luôn không, đặc biệt nếu Readiness Score là Ready hoặc Partially Ready. Task vừa tạo ở trên chính là chỗ test case sẽ nằm vào — đưa id của nó sang.
-2. Lưu lại mục "3. Business Rules" vừa phân tích vào file business rules của app (skill `update-business-rules`), để dùng làm ngữ cảnh cho các issue sau của cùng app.
+2. Lưu lại mục "3. Business Rules" vừa phân tích — hai đích, chọn theo chỗ team đang đọc:
+   - **QA Hub** (`upsert_knowledge`, `kind: business-rule`, `sourceUrl` = link issue, `status: draft` nếu PO chưa xác nhận) — cả team và mọi session sau cùng thấy. Ưu tiên đích này.
+   - File local `references/business-rules/<KEY>.md` (skill `update-business-rules`) — khi đang làm offline hoặc team chưa dùng tab Knowledge.
+
+   Skill này **không tự ghi** — chỉ hỏi. Ghi rule là việc không đảo ngược với người khác đọc sau.
 
 Có thể làm cả 2, không nhất thiết theo thứ tự cố định.

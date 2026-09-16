@@ -27,8 +27,10 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 - `list_projects` → khớp app đang test với `key` của project. **`key` này chính là prefix của Test Case ID** — QA Hub tự cấp `TC-<KEY>-<số>`, không tự đặt tay.
 - Project không khớp app nào, hoặc khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; gọi tiếp cũng chỉ nhận 403.
 - `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `qa-requirement-analysis` trước. **Skill này không tự tạo task.**
-- `get_project_context` nếu cần đối chiếu spec/business rule team đã upload lên QA Hub.
-- Chưa kết nối MCP → nói rõ, đưa bộ test case ra trong chat để người dùng tự nhập; đừng im lặng bỏ qua.
+- **`search_knowledge` — bắt buộc**, hai lần: `{ projectId }` lấy mọi doc `active` (business-rule, known-issue, env, qa-process), và `{ projectId, tag }` với tag của task để lấy `feature-profile`. Rule ở đây là rule **đã được người bảo chứng** — mỗi rule là ít nhất một case Negative/Edge/Regression, kể cả khi bản phân tích không nhắc lại; `known-issue` là case Regression đánh sẵn `PO/DEV confirm` nếu chưa fix; `env` cho biết tài khoản / URL để điền Preconditions bằng tên biến env, không phải giá trị.
+- **`get_project_context` — bắt buộc**, `includeFileText: false` trước; đọc text của item tên `Inventory <KEY>` (nếu có) để Steps dùng **đúng tên màn hình, setting, nút** trên hệ thống thật, và item nào tên chạm feature của task.
+- Lệch giữa knowledge QA Hub và file local `references/business-rules/<KEY>.md` → theo QA Hub, ghi nguồn vào `Notes` của case; lệch giữa knowledge và bản phân tích → case đánh `PO/DEV confirm`.
+- Chưa kết nối MCP → nói rõ, đưa bộ test case ra trong chat để người dùng tự nhập; đừng im lặng bỏ qua. Không có MCP thì cũng không có knowledge — ghi rõ bộ case chưa đối chiếu với rule trên QA Hub.
 
 **2. Đọc app reference** — `../qa-requirement-analysis/references/apps/<KEY>.md`, một file cho một app, tên file là `key` project trên QA Hub — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) trước khi sinh test case. Danh mục app + glossary + cross-app ở `../qa-requirement-analysis/references/apps/README.md`. File app chưa có nội dung → bỏ qua, đừng bịa bối cảnh.
 
