@@ -53,6 +53,8 @@ Hai thứ này có ở **hai nơi** — QA Hub (cả team thấy) và file local
 
 "Không có" nghĩa là: project chưa có doc nào / chưa có item `Inventory <KEY>`, **hoặc** MCP QA Hub không gọi được. Cả hai trường hợp đều rơi về file local, im lặng. Doc `draft` trên QA Hub dùng được, trích thì ghi "(draft)".
 
+**Rule đang lệch theo inventory.** Có inventory thì đọc § 5 "Phát hiện lệch", cột **BR bị ảnh hưởng**. Rule nào có tên ở đó là rule mà hệ thống thật đang làm khác — **không** xếp vào "3. Business Rules" như đã xác nhận. Nếu ticket chạm rule đó: vẫn trích rule nhưng ghi kèm *"(đang lệch theo inventory ngày YYYY-MM-DD, § 5 #n)"*, đưa chênh lệch vào "8. Risks" và một câu vào "12. Open Questions for PO/Dev" (rule sai hay hệ thống sai), và chấm Readiness như với một điểm chưa chốt.
+
 `references/apps/<KEY>.md` (bối cảnh app) **vẫn đọc như cũ** — không có bản QA Hub tương đương. Item context khác trên QA Hub (spec, ghi chú) chỉ đọc khi tên item chạm module của ticket.
 
 ## Bộ phương pháp phân tích

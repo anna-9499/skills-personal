@@ -40,7 +40,7 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 **Code > Staging > Confluence.** Lệch nhau thì ghi theo nguồn cao hơn và đưa chênh lệch vào § 5.
 
 1. **Code** (nếu có clone): router → bảng route § 1; schema setting (ví dụ QCO: `src/apps/checkout/schemas/*.ts`) → bảng Setting § 2 với đúng label i18n; `config('…')` / `window.*Config` → § 3 flag. Ghi `branch` + `commit` (`git rev-parse --short HEAD`).
-2. **Staging** (Playwright MCP, headed — **kênh chính**): đi từng mục sidebar, chụp screenshot mỗi màn, chép label đúng chuỗi, mở form Edit của **một** item có sẵn mỗi widget để lấy label setting, thử mở route "không tồn tại" của lần build trước. Ghi trạng thái ✅/🟡/❌ từng feature. Với app Shopify, đi cả storefront/checkout của dev store để xác nhận widget hiện ở đâu — **chỉ khi cart đã có sẵn sản phẩm; không tự thêm vào cart**, không có thì ghi § 0 "checkout không đi được". Không tạo dữ liệu thật, không đặt đơn có thanh toán thật, không đổi setting đang có — chỉ đọc; cần bật để xem thì bật rồi tắt lại.
+2. **Staging** (Playwright MCP, headed — **kênh chính**): đi từng mục sidebar, chụp screenshot mỗi màn, chép label đúng chuỗi, mở form Edit của **một** item có sẵn mỗi widget để lấy label setting, thử mở route "không tồn tại" của lần build trước. Ghi trạng thái ✅/🟡/❌ từng feature. Không có clone code → ghi § 0 "Phiên bản hệ thống lúc build" bằng mốc QA tự kiểm được: giờ đi staging + ticket Dev giao QA gần nhất (tra `list_tasks` / Jira nếu Hae đưa) + Fix Version nếu thấy, `hash: không rõ`. Với app Shopify, đi cả storefront/checkout của dev store để xác nhận widget hiện ở đâu — **chỉ khi cart đã có sẵn sản phẩm; không tự thêm vào cart**, không có thì ghi § 0 "checkout không đi được". Không tạo dữ liệu thật, không đặt đơn có thanh toán thật, không đổi setting đang có — chỉ đọc; cần bật để xem thì bật rồi tắt lại.
    - **App Shopify embedded** (nằm trong iframe của `admin.shopify.com`): **bắt buộc Playwright MCP** — `browser_snapshot` gom cả nội dung iframe, click xuyên frame được. **Chrome bridge không vào được iframe** (chỉ inject top frame, không click/scroll trong app) → chỉ dùng để xác nhận sidebar/route khi Playwright không login được, và phải ghi § 0 là inventory thiếu form Edit. Bài học pilot QCO 2026-09-16.
    - Login admin Shopify qua Playwright: tài khoản từ biến env repo automation (`SHOPIFY_EMAIL`/`SHOPIFY_PASSWORD` của `shopify-app`); gặp 2FA → `browser_wait_for` tối đa 4 phút để người dùng nhập mã tay vào cửa sổ headed, không đoán, không đọc mail, không login lại nhiều lần.
 3. **Confluence** (MCP Atlassian): chỉ để điền chỗ code/staging không nói (điều kiện plan, giới hạn theo gói). Ghi rõ ngày trang được sửa lần cuối; trang cũ hơn 12 tháng thì ghi kèm ⚠️.
@@ -49,12 +49,12 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 
 1. `list_projects` → khớp `<KEY>`, lấy `projectId`. `list_tasks` → gom tag đang dùng, để điền dòng `Tag QA Hub` ở § 2.
 2. Đọc `references/apps/<KEY>.md`, `business-rules/<KEY>.md`, `open-questions/<KEY>.md` **và** `search_knowledge { projectId }` trên QA Hub (mọi doc `active`: business-rule, feature-profile, known-issue, env) — gộp thành danh sách feature *kỳ vọng* để đối chiếu ở § 5. Rule trên QA Hub có `sourceUrl` → ghi nguồn đó khi đối chiếu. `get_project_context { projectId, includeFileText: false }` → biết item `Inventory <KEY>` đã có chưa (cho bước 9).
-3. Đọc `inventory/<KEY>.md` cũ nếu có → biết route "không tồn tại" lần trước, và giữ ghi chú sửa tay (xem commit message).
+3. Đọc `inventory/<KEY>.md` cũ nếu có → biết route "không tồn tại" lần trước, giữ ghi chú sửa tay (xem commit message), và **ghi lại số mục § 2 + số dòng § 5 của bản cũ** (dùng ở bước 8). Không có bản local mà QA Hub có item `Inventory <KEY>` → đọc bản trên QA Hub làm bản cũ.
 4. Đọc code theo thứ tự ở trên.
 5. Đi staging. Screenshot lưu vào thư mục scratchpad của session (không commit ảnh vào repo).
 6. Đọc Confluence cho chỗ còn trống.
-7. Viết file theo template, đủ 6 mục. § 5 bắt buộc có nội dung.
-8. Rà checklist cuối template. Ghi đè file. **Không commit** — người dùng xem diff rồi tự commit (hoặc bảo commit).
+7. Viết file theo template, đủ 6 mục. § 5 bắt buộc có nội dung. Dòng § 5 nào chạm một business rule đã đọc ở bước 2 (hệ thống làm khác rule, rule nhắc feature không còn) → điền cột **BR bị ảnh hưởng** đúng heading rule / title doc QA Hub. Dòng lệch của build trước còn đúng → giữ, cập nhật ngày.
+8. Rà checklist cuối template. **Không để mất nội dung**: số mục § 2 và số dòng § 5 không được ít hơn bản cũ (bước 3), trừ những gì đã ghi ở § 0 "Đã gỡ so với build trước" kèm lý do. Hụt mà không giải thích được → không ghi đè, đưa vào "Cần Hae quyết". `--module` càng phải kiểm: mục ngoài module giữ nguyên từng chữ. Ghi đè file. **Không commit** — người dùng xem diff rồi tự commit (hoặc bảo commit).
 9. **Nộp lên QA Hub** — xem mục dưới. Đây không phải bước tuỳ chọn: file trong repo chỉ máy này có, item trên QA Hub là thứ `terra`/`ore` và người khác đọc.
 10. Trả về tóm tắt (khuôn dưới).
 
@@ -89,8 +89,10 @@ HAE-SUMMARY
 - Nguồn đã đọc: code <repo@sha> · staging <URL> (<M> màn) · Confluence <K> trang · QA Hub knowledge <N> doc
 - Nguồn không đọc được: <…> hoặc "không"
 - QA Hub: <"đã nộp — item Inventory <KEY> (mới tạo | cập nhật), file <KEY>-inventory.md" | "chưa nộp — lý do">
-- Feature: <N> mục — ✅ <a> · 🟡 <b> · ❌ <c>
-- Phát hiện lệch (§ 5): <N> dòng — <2–3 dòng đáng chú ý nhất>
+- Phiên bản lúc build: <repo@sha | staging @ ngày giờ — sau <DEV-KEY>; hash: không rõ>
+- Feature: <N> mục (lần trước <N0>) — ✅ <a> · 🟡 <b> · ❌ <c>
+- Phát hiện lệch (§ 5): <N> dòng (lần trước <M0>) · <K> dòng chạm business rule — <2–3 dòng đáng chú ý nhất>
+- Đã gỡ so với build trước: <… | "không">
 - Đề xuất cho người dùng: sửa reference § … · hỏi Dev … · chạy update-business-rules cho …
 - Cần Hae quyết: <…> hoặc "không"
 ```

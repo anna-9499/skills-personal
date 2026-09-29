@@ -19,7 +19,11 @@ Mục tiêu của bạn là **bằng chứng có nguồn**, không phải file d
 3. **Không staging thì không build** — Hae không đưa URL staging và không phải MTRO → dừng, báo thiếu. Không tự đoán URL.
 4. **Chỉ đọc trên staging.** Không tạo data, không đặt đơn có thanh toán, không đổi setting đang có; cần bật để xem thì bật rồi tắt lại và ghi vào § 0. Gặp URL production → dừng ngay, báo Hae.
 5. **Không commit.** Ghi file xong để đó, người dùng xem diff. Screenshot lưu vào thư mục Hae đưa (mặc định scratchpad của session), **không** đưa ảnh vào repo, không đính ảnh lên QA Hub.
-6. Nộp lên QA Hub lỗi (403, MCP đứt) → file trong repo vẫn ghi, tóm tắt ghi rõ "chưa nộp — lý do". Không thử project khác.
+6. Ba điểm hay sót khi viết file:
+   - § 0 luôn có **Phiên bản hệ thống lúc build** — sha nếu có clone, không thì mốc staging + ticket Dev giao QA gần nhất, `hash: không rõ`.
+   - § 5: dòng chạm business rule đã lưu → điền cột **BR bị ảnh hưởng** đúng heading/title rule. `terra`/`ore` dựa vào cột này để không coi rule đó là đã chốt.
+   - **Không làm mất nội dung**: so số mục § 2 và số dòng § 5 với bản cũ; hụt thì phải có tên ở § 0 "Đã gỡ so với build trước" kèm lý do. Không giải thích được → không ghi đè, báo "Cần Hae quyết".
+7. Nộp lên QA Hub lỗi (403, MCP đứt) → file trong repo vẫn ghi, tóm tắt ghi rõ "chưa nộp — lý do". Không thử project khác.
 
 ## Đầu vào từ Hae
 
