@@ -149,9 +149,13 @@ Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích y�
 ```
 chị ──▶ hae (main thread, settings.agent = "hae")
           ├──▶ terra    chạy trọn vẹn qa-requirement-analysis → báo cáo 14 mục + task QA Hub
+          │               + chế độ cập nhật: gộp câu trả lời PO/Dev → đóng GAP, chấm lại Verdict, ghi đè notes
           ├──▶ ore      chạy trọn vẹn gen-testcase → test case trên QA Hub
           ├──▶ flint    review độc lập: sau terra (RA) và sau ore (TC) → BLOCK/WARN/PASS, thiếu case → ore bổ sung
-          └──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
+          │               + chế độ MISS: bug production → case nào lẽ ra bắt được / ứng viên thiếu case
+          ├──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
+          │               + case cần mắt nhìn: chụp ảnh từng bước, để not-run · chế độ retest bug: Passed / To Do
+          └──  (tự làm) báo cáo gửi Dev/PO cho một task — chỉ trong chat
 ```
 
 Vì sao Hae phải là **main thread** chứ không phải sub-agent: sub-agent trong Claude Code không gọi được Agent tool, nên "agent cha" bắt buộc là session chính. Claude Code ≥ 2.1 có `--agent <tên>` và setting `agent` cho việc này.
@@ -168,8 +172,10 @@ Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
 | "Chạy test" mà task chưa có test case | đi `terra` → `ore` trước; xong mới hỏi có chạy `sonder` không | bước chạy cần môi trường + tài khoản, nên **không** tự nối `ore` → `sonder` |
 | Chạy manual cho MTRO | không hỏi URL / tài khoản — `sonder` tự đọc `.env` của repo `qikify-QA-mailtro` | data test đã nằm trong repo; 4 app Shopify thì hỏi một câu gộp URL + cách đăng nhập |
 | `sonder` báo nghi vấn bug | liệt kê bug, hỏi có report lên QA Hub không; chỉ gọi lại `sonder` cho đúng các case đó | `report_bug` có thể announce Slack/Jira — luôn không kèm `reportTo` |
+| Retest bug sau khi Dev fix | `sonder` retest, không hỏi quyền `update_bug`; bug trên Jira → không đổi status | Jira giữ status bug (webhook ghi đè); đóng bug là việc của chị |
+| `flint` MISS trả ứng viên thiếu case | hỏi chị chọn dòng rồi mới gọi `ore` | ứng viên chưa phải kết luận |
 
-Danh sách 8 tình huống Hae **được phép hỏi** nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
+Danh sách 9 tình huống Hae **được phép hỏi** nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
 
 **Sub-agent không nói chuyện được với người dùng.** Chúng chạy hết việc được giao, điểm nào skill bảo "hỏi người dùng" thì ghi vào `Cần Hae quyết` trong khối `### HAE-SUMMARY` đầu output. Hae bóc khối đó để ra quyết định, rồi chuyển kết quả cho người dùng — **dán nguyên văn** báo cáo 14 mục của `terra` và bảng kết quả chạy của `sonder`, vì output của sub-agent không tự hiện ra.
 
@@ -179,9 +185,9 @@ Tool của sub-agent được khai tường minh trong frontmatter và cố ý *
 
 | Sub-agent | Ghi được lên QA Hub | Cố ý không có |
 |---|---|---|
-| `terra` | `create_task` | `create_test_cases`, `update_test_case`, `report_bug` |
+| `terra` | `create_task`, `update_task` (chỉ `notes`, chế độ cập nhật) | `create_test_cases`, `update_test_case`, `report_bug` |
 | `ore` | `create_test_cases` | `create_task`, `update_test_case`, `report_bug` |
-| `sonder` | `update_test_case`, `add_test_case_image`, `report_bug` (chỉ khi Hae cho phép) | `create_task`, `create_test_cases` |
+| `sonder` | `update_test_case`, `report_bug` (chỉ khi Hae cho phép), `update_bug` (chỉ chế độ retest, chỉ `status` `Passed` / `To Do` — không đóng bug) | `create_task`, `create_test_cases`, `add_test_case_image` (bị treo — ảnh lưu local) |
 
 Cả ba chỉ **đọc** Jira, không có tool ghi lên Jira. `sonder` mở app bằng Playwright MCP, hoặc Chrome bridge (`mcp__chrome__*`) khi cần session người dùng đã đăng nhập. Muốn mở thêm quyền thì mở ở frontmatter, có chủ đích.
 

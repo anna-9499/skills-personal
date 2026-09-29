@@ -379,6 +379,17 @@ Task id vừa tạo kèm đường dẫn `/test-cases?task=<id>`, project + tag 
 
 **Nếu `create_task` lỗi** (403 vì chưa join project, project không tồn tại, assignee không tồn tại): báo lỗi ngắn gọn kèm việc cần làm, đừng bỏ qua âm thầm và đừng thử tạo lại ở project khác cho xong.
 
+## Cập nhật bản phân tích sau khi PO/Dev trả lời
+
+Dùng khi task QA Hub **đã có** bản phân tích trong `notes`, và người dùng dán câu trả lời của PO/Dev cho các câu hỏi mục 12. Không phân tích lại từ đầu, không tạo task mới.
+
+- **Đầu vào:** `taskId`, nguyên văn câu trả lời, ai trả lời, ngày.
+- **Khớp:** mỗi ý trong câu trả lời gắn với đúng một `GAP-xx` / câu hỏi mục 12. Ý không khớp GAP nào, khớp hai GAP, hoặc mâu thuẫn với rule đã có → không gộp, đưa lại cho người dùng quyết. Không tự suy câu trả lời cho GAP chưa được trả lời.
+- **Gộp:** ý khớp thành rule mới ở mục 3, nguồn ghi *"{tên}, {ngày} — qua {người dán}"*; đóng GAP ở mục 11 (giữ dòng, đánh `✅ → BR-xx`), đánh `✅` câu hỏi mục 12; chỉ sửa đúng câu bị ảnh hưởng ở mục 5 / 8 / 13, mục khác giữ nguyên chữ.
+- **Chấm lại** mục 14 theo rubric + luật ghi đè với GAP còn mở; ghi *"Verdict cũ → mới"*.
+- **Lịch sử cập nhật:** một dòng mỗi lượt ở cuối bản — ngày · người trả lời · GAP đã đóng · Verdict cũ → mới.
+- **Ghi:** `update_task` chỉ với `taskId` + `notes` = toàn bộ bản mới (HTML Quill như khi tạo task). `notes` bị thay cả trường nên bản gửi phải đủ 14 mục. Không đổi status / title / tags.
+
 ## Bước tiếp theo
 
 Sau khi xuất bản phân tích và tạo task trên QA Hub, hỏi ngắn gọn người dùng có muốn:

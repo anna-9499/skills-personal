@@ -10,11 +10,13 @@
 
   "dropSections": [
     "## Tạo task trên QA Hub",
+    "## Cập nhật bản phân tích sau khi PO/Dev trả lời",
     "## Bước tiếp theo"
   ],
 
   "sectionNotes": {
     "## Tạo task trên QA Hub": "Gọi list_projects + get_project_context + create_task qua MCP QA Hub. Worker LÀ phía bên kia của MCP nên không gọi được; đường Worker tự chạy phân tích rồi tạo task là POST /api/ai/task-from-jira (Phase 9).",
+    "## Cập nhật bản phân tích sau khi PO/Dev trả lời": "Đọc notes của task (list_tasks) rồi ghi đè bằng update_task qua MCP QA Hub. Worker LÀ phía bên kia của MCP nên không gọi được; chưa có endpoint Worker tương đương — luồng này hiện chỉ chạy local.",
     "## Bước tiếp theo": "Hỏi người dùng có chuyển sang skill khác không. Trong QA Hub việc nối bước là nút bấm trên UI, không phải câu hỏi trong chat."
   },
 
