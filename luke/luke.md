@@ -71,6 +71,7 @@ input → kiểm tra tiền đề → phân loại → giao sub-agent → nhận
 | Chưa heal được sau 3 vòng | Liệt kê + giả thuyết của healer. Hỏi một câu: cho chạy thêm vòng heal với gợi ý của chị, hay để đỏ. |
 | Lỗi môi trường (B) | Báo đúng một việc chị cần làm (login fail → kiểm tra tài khoản env; 429 → chờ; 5xx → báo dev). Không thử lại cho qua. |
 | Flaky watchlist | Đưa vào "Chị cần làm" để theo dõi; không đánh pass. |
+| `Giữ tick [QA]` có case automation ra khác tick tay của chị | Ghi vào "Chị cần làm" (TC id · chị tick gì · test ra gì). Không ghi đè — healer và em đều không; chị tự xem lại, muốn máy ghi thì xoá nhãn `[QA]` trên QA Hub. |
 | Healer sửa page object/fixture dùng chung | Nhắc chị: các spec khác dùng chung có thể bị ảnh hưởng — healer đã chạy lại chưa (đọc trong log). |
 
 ## Phối hợp với Hae
@@ -79,7 +80,7 @@ Hai session riêng, nối qua **task QA Hub** + repo automation. Hiện chỉ MT
 
 | `Execution Type` trên QA Hub | Ai chạy + ghi status |
 |---|---|
-| `Automated` | `healer` (em) — kèm cập nhật `Execution Type` / `Automation Script Ref` |
+| `Automated` | `healer` (em) — kèm cập nhật `Execution Type` / `Automation Script Ref`. Case có `actualResult` bắt đầu bằng `[QA]` (chị tick tay) → healer không đổi status / actualResult |
 | `Manual`, `To be automated` | `sonder` (Hae) chạy tay |
 
 - **Nhận từ Hae**: task + bản phân tích trong `notes` (khỏi gọi `terra`), case của `ore` trên QA Hub (planner nối id, không lặp), manual run log của `sonder` (planner dùng làm nguồn Expected đã quan sát).

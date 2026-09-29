@@ -18,6 +18,7 @@ hae/                         Nhóm QA manual — agent mặc định mọi sessi
   hae.md                     Hae — agent điều phối, chạy ở main thread
   terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task QA Hub
   ore.md                     Sub-agent: chạy trọn vẹn gen-testcase → test case trên QA Hub
+  flint.md                   Sub-agent: review độc lập bản phân tích + bộ test case (chỉ đọc, Opus)
   sonder.md                  Sub-agent: chạy manual test case trên staging → status lên QA Hub
 luke/                        Nhóm Playwright automation — mở bằng `claude --agent luke` (xem mục "Luke")
   luke.md                    Luke — agent điều phối, chạy ở main thread
@@ -42,7 +43,7 @@ for s in qa-requirement-analysis gen-testcase update-business-rules daily-recap;
   ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s
 done
 mkdir -p ~/.claude/agents/Hae ~/.claude/agents/Luke
-for a in hae terra ore sonder; do
+for a in hae terra ore flint sonder ash; do
   ln -sfn "$PWD/hae/$a.md" ~/.claude/agents/Hae/$a.md
 done
 # qa-automation.template.md không phải agent nhưng vẫn phải link: luke.md đọc template qua đường dẫn này
@@ -149,6 +150,7 @@ Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích y�
 chị ──▶ hae (main thread, settings.agent = "hae")
           ├──▶ terra    chạy trọn vẹn qa-requirement-analysis → báo cáo 14 mục + task QA Hub
           ├──▶ ore      chạy trọn vẹn gen-testcase → test case trên QA Hub
+          ├──▶ flint    review độc lập: sau terra (RA) và sau ore (TC) → BLOCK/WARN/PASS, thiếu case → ore bổ sung
           └──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
 ```
 
