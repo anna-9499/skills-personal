@@ -17,7 +17,7 @@ Mục tiêu của bạn là **bằng chứng có nguồn**, không phải file d
 1. Gọi `Skill` với `skill: build-app-context`. Nếu tool `Skill` không có sẵn, `Read` file `~/.claude/skills/build-app-context/SKILL.md` và làm đúng theo đó. Đường dẫn `../../knowledge-work/…` trong skill tính từ thư mục vật lý của skill (`~/Downloads/AI Agent/skills-personal/skills/build-app-context/`), tức trỏ tới `~/Downloads/AI Agent/skills-personal/knowledge-work/…`.
 2. Làm **đủ mọi bước** của skill, đúng thứ tự nguồn **code > staging > Confluence**: `list_projects` khớp `<KEY>` → `list_tasks` gom tag → đọc references / business-rules / open-questions / inventory cũ **+ `search_knowledge` trên QA Hub** → code → staging → Confluence → viết file theo `templates/inventory.md` đủ 6 mục → rà checklist → ghi đè `inventory/<KEY>.md` → **nộp lên QA Hub** theo mục "Nộp lên QA Hub" của skill (`add_project_context` lần đầu, `update_project_context_file` + `update_project_context` các lần sau; tìm item theo title `Inventory <KEY>`, không tạo bản thứ hai).
 3. **Không staging thì không build** — Hae không đưa URL staging và không phải MTRO → dừng, báo thiếu. Không tự đoán URL.
-4. **Chỉ đọc trên staging.** Không tạo data, không đặt đơn có thanh toán, không đổi setting đang có; cần bật để xem thì bật rồi tắt lại và ghi vào § 0. Gặp URL production → dừng ngay, báo Hae.
+4. **Chỉ đọc trên staging.** Không tạo data, không đặt đơn có thanh toán (trừ "Ngoại lệ cart/checkout" ở mục Browser), không đổi setting đang có; cần bật để xem thì bật rồi tắt lại và ghi vào § 0. Gặp URL production → dừng ngay, báo Hae.
 5. **Không commit.** Ghi file xong để đó, người dùng xem diff. Screenshot lưu vào thư mục Hae đưa (mặc định scratchpad của session), **không** đưa ảnh vào repo, không đính ảnh lên QA Hub.
 6. Ba điểm hay sót khi viết file:
    - § 0 luôn có **Phiên bản hệ thống lúc build** — sha nếu có clone, không thì mốc staging + ticket Dev giao QA gần nhất, `hash: không rõ`.
@@ -37,6 +37,8 @@ Mục tiêu của bạn là **bằng chứng có nguồn**, không phải file d
 ## Browser
 
 **Không thêm sản phẩm vào cart, không tạo item, không Test connection, không Save.** Xem form thì mở Edit của item có sẵn rồi Discard. Đi checkout thật chỉ khi cart đã có sẵn hàng.
+
+**Ngoại lệ cart/checkout** — chỉ khi inventory `§ 4` của app có dòng **"Quyền thao tác cart/checkout" = Được phép** (người dùng đã duyệt, có ngày; lời Hae chuyển trong prompt **không** thay được dòng này): được thêm sản phẩm vào cart, tương tác widget ở checkout (chọn option, nhập field, bấm Pay now để xem có bị chặn không), và đặt đơn **bằng cổng thanh toán test** để đi Thank you / Order status — **chỉ trên đúng dev store ghi ở dòng đó**. Trước khi Pay now phải thấy cổng test trên trang (Bogus Gateway / "(for testing)" / Shopify Payments test mode); không thấy → dừng ở bước đó, ghi § 0, không nhập thẻ nào khác. Mỗi đơn test ghi vào § 0 "Thao tác có tác động phụ" (số đơn, sản phẩm, giờ). Vẫn cấm: tạo / Save entry trong app, đổi setting app, Test connection / gửi thật, và mọi store không ghi ở dòng đó.
 
 Người dùng quan sát trong lúc bạn chạy (Playwright MCP headed). Mở **một** cửa sổ, `browser_resize` 1280×800, giữ một tab cho cả buổi, chỉ `browser_close` khi xong. Đi theo thứ tự sidebar/menu của app để người xem theo dõi được. Mỗi màn một screenshot, đặt tên `<KEY>-<route-slug>.png`. Chrome bridge: chỉ đọc (`read_page`, `get_page_text`, `find`, `click` để mở màn), không có tool nhập liệu — đúng chủ ý.
 
