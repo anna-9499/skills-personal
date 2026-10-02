@@ -19,7 +19,7 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 | Bối cảnh | Deliverable |
 | --- | --- |
 | Mặc định (mọi app) | Test case tạo trên QA Hub qua MCP `create_test_cases` — theo mục "Cấu trúc test case" và "Tạo test case trên QA Hub" |
-| **Thư mục làm việc là repo `qikify-QA-mailtro`** (có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`) | Thêm Markdown trong `docs/manual-testcases/` + JSON sinh bằng script của repo — theo mục "Output khi làm trong repo `qikify-QA-mailtro`". Vẫn ghi lên QA Hub như mặc định |
+| **Thư mục làm việc là repo `qikify-QA-mailtro`** (có `docs/manual-testcases/`) | Thêm Markdown trong `docs/manual-testcases/` — theo mục "Output khi làm trong repo `qikify-QA-mailtro`". Vẫn ghi lên QA Hub như mặc định. **Không sinh JSON** (`npm run testcases:json`) — đã bỏ Google Sheet từ 02/10 |
 
 ## Trước khi bắt đầu
 
@@ -217,7 +217,6 @@ Key đang có trên QA Hub (kiểm lại bằng `list_projects` chứ đừng ti
 Mailtro là SaaS email marketing **độc lập, không phải Shopify app**. Khi sinh test case cho Mailtro:
 
 - **Test Case ID theo màn hình trong repo automation**: `TC-SIGNUP-0xx`, `TC-LOGIN-0xx`, `TC-INVITE-0xx`, `TC-CONTACT-0xx`, `TC-CAMPAIGN-0xx`... để map 1-1 giữa `docs/manual-testcases/` và spec Playwright của `qikify-QA-mailtro`. Quy ước này **giữ nguyên** — nó là id trong repo. Trên QA Hub, case vẫn nhận id `TC-MTRO-<số>` do QA Hub cấp; khi cần trace, ghi id repo (`TC-SIGNUP-004`) vào field `Automation Script Ref`.
-- **`sheetName` / `appPrefix` trong JSON của repo**: là contract của `scripts/testcases-to-json.mjs`, giữ nguyên `[MTRO] <Nhóm> - <Màn hình>`. Ngoài repo đó thì không còn Google Sheet.
 - **Ngữ cảnh module**: đặt theo cây thư mục của repo automation, ví dụ `Mailtro > 01-auth > Signup > Validation từng field` — trên QA Hub thì nằm ở tag của task và trong `title`.
 - **Preconditions**: ghi môi trường + URL cụ thể (`Staging https://staging-id.mailtro.ai/signup, chưa đăng nhập`). **Không** ghi theme, Shopify plan, development store. Lưu ý 2 domain khác nhau: auth ở `staging-id.mailtro.ai`, app workspace ở `<workspace-slug>.wisle.app`.
 - **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — xem mục "Tỷ lệ auto/manual" ngay bên dưới.
@@ -225,20 +224,12 @@ Mailtro là SaaS email marketing **độc lập, không phải Shopify app**. Kh
 
 ### Output khi làm trong repo `qikify-QA-mailtro`
 
-Trong repo automation `qikify-QA-mailtro`, nguồn sự thật là Markdown; JSON chỉ là output máy đọc sinh bằng script, **không sửa tay** (ADR 0009 của repo). Nhận biết bối cảnh: thư mục làm việc có `docs/manual-testcases/` và `scripts/testcases-to-json.mjs`. Khi đó mục này **bổ sung thêm** 2 deliverable bên cạnh việc ghi test case lên QA Hub như mặc định.
+Trong repo automation `qikify-QA-mailtro`, nguồn sự thật là Markdown. Nhận biết bối cảnh: thư mục làm việc có `docs/manual-testcases/`. Khi đó mục này **bổ sung thêm** 1 deliverable bên cạnh việc ghi test case lên QA Hub như mặc định. **Không sinh file JSON trong `data-output/`** (`npm run testcases:json`) — Google Sheet đã bỏ từ 02/10/2026.
 
-**Deliverable thêm gồm 2 thứ, theo thứ tự:**
+**Deliverable thêm:**
 
 1. **`docs/manual-testcases/<NN-module>/<màn-hình>.md`** — 1 file cho 1 màn hình, tên thư mục module trùng với `tests/` (`01-auth`, `02-team`, `04-contacts`, `07-campaigns`, `10-deliverability`...). Viết bằng **tiếng Việt**. Case auto và manual **nằm chung một file**, phân biệt bằng 2 cột cuối (ADR 0005 của repo).
-2. **`data-output/testcases_<module>-<màn-hình>.json`** — **không viết tay**, sinh bằng:
-
-   ```bash
-   npm run testcases:json -- docs/manual-testcases/<NN-module>/<màn-hình>.md
-   ```
-
-   Script tự suy ra `screen` / `sheetName` / `slug` / đường dẫn output, và tự tách `.part1.json` / `.part2.json` khi vượt trần **50.000 ký tự của 1 ô Google Sheet**. Ghi đè bằng `--screen` / `--sheet` / `--out` khi cần.
-
-**Cấu trúc file `.md` bắt buộc** — script parse đúng theo cấu trúc này, sai là mất case:
+**Cấu trúc file `.md` bắt buộc** — giữ đúng cấu trúc để đồng bộ với các file đang có (script cũ `testcases-to-json.mjs` vẫn parse được nếu cần):
 
 - Dòng đầu: `# Manual Test Cases — <Tên màn hình>`.
 - Bảng thông tin đầu file dạng `| Thông tin | Chi tiết |`. Hai hàng **bắt buộc** vì script đọc: `| Module | 10-deliverability |` và `| Epic / Story | ... |` (dùng làm `featureTitle`). Các hàng còn lại (Tầng test, URL, Môi trường, Ngày viết, Người viết, Spec auto tương ứng, Nguồn dữ liệu, Lần chạy gần nhất) giữ theo mẫu các file đang có trong repo.
@@ -248,10 +239,10 @@ Trong repo automation `qikify-QA-mailtro`, nguồn sự thật là Markdown; JSO
   | ID | Title | Precondition | Steps | Test Data | Expected Result | Priority | Execution Type | Automation Script Ref |
 
 - `ID` khớp `TC-[A-Z]+-\d+` (ví dụ `TC-SUPP-001`). Dòng không bắt đầu bằng `| TC-` bị bỏ qua hoàn toàn.
-- `Priority` dùng **`P0` / `P1` / `P2`** — script tự map sang High / Medium / Low khi xuất JSON. **Không** ghi Critical/High/Medium/Low trong file `.md`.
+- `Priority` dùng **`P0` / `P1` / `P2`** (trên QA Hub map sang High / Medium / Low). **Không** ghi Critical/High/Medium/Low trong file `.md`.
 - Xuống dòng trong ô dùng `<br>`; ký tự `|` trong nội dung phải escape thành `\|`; ô rỗng ghi `—`.
 
-**Khác biệt so với các trường trên QA Hub:** bảng md chỉ có 9 cột và dùng Markdown chứ không phải HTML. `Status`, `Actual Result` và `Notes` do script tự điền rỗng — **không** thêm 3 cột đó vào bảng md. Nội dung case thì giống nhau: viết một lần, dùng cho cả hai nơi.
+**Khác biệt so với các trường trên QA Hub:** bảng md chỉ có 9 cột và dùng Markdown chứ không phải HTML. `Status`, `Actual Result` và `Notes` chỉ có trên QA Hub — **không** thêm 3 cột đó vào bảng md. Nội dung case thì giống nhau: viết một lần, dùng cho cả hai nơi.
 
 **Sau khi sinh xong**, cập nhật luôn trong cùng lần làm:
 - `docs/qa-sprint-status.md` — thêm/sửa dòng của issue tương ứng.
