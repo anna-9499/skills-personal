@@ -20,7 +20,7 @@ Tính từ thư mục skill này: `../../knowledge-work/` là submodule repo [`o
 - Ghi: `../../knowledge-work/inventory/<KEY>.md`
 - Đọc để đối chiếu: `../../knowledge-work/references/apps/<KEY>.md`, `business-rules/<KEY>.md`, `open-questions/<KEY>.md`
 - `<KEY>` = key project trên QA Hub (`list_projects`), viết HOA. Không có project khớp → dừng, hỏi.
-- Trên QA Hub: item context tên **`Inventory <KEY>`**, một file **`<KEY>-inventory.md`** — đúng tên này, vì `qa-requirement-analysis` và `gen-testcase` tìm theo tên.
+- Trên QA Hub: file ≤ 40.000 ký tự → một item **`Inventory <KEY>`**, một file **`<KEY>-inventory.md`**. File lớn hơn → **tách** thành nhiều item tên **`Inventory <KEY> · NN <Module>`** (`00 Tổng quan` + từng module), mỗi item một file `<KEY>-NN-<slug>.md` — xem "Nộp lên QA Hub". `qa-requirement-analysis`, `gen-testcase` và các agent tìm theo tiền tố `Inventory <KEY>`.
 
 ## Input
 
@@ -60,20 +60,27 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 
 ## Nộp lên QA Hub
 
-Cùng nội dung file vừa ghi, đưa vào tab Context của project:
+Cùng nội dung file vừa ghi, đưa vào tab Context của project. Tool QA Hub nhận **toàn bộ nội dung file trong một lần gọi** — agent không chép nguyên văn được file quá ~40.000 ký tự (sự cố MTRO 03/10/2026: lượt sinh bị dừng giữa chừng, item bị ghi đè bằng bản cụt 11k byte). Vì vậy:
 
-- `get_project_context { projectId, includeFileText: false }` → tìm item **title đúng bằng `Inventory <KEY>`**.
-  - **Đã có** → `update_project_context_file { projectId, contextId, fileId: <file .md của item>, content: <toàn bộ file> }`. Rồi `update_project_context { projectId, contextId, note: "<note mới>" }`. Giữ id item — `updated_at` đổi, người xem tab Context thấy nó nhảy lên, và không mọc bản thứ hai cạnh bản cũ.
-  - **Chưa có** → `add_project_context { projectId, title: "Inventory <KEY>", note, files: [{ filename: "<KEY>-inventory.md", content }] }`.
+**Bước A — chọn kiểu nộp.** `python3 -c "print(len(open('<file>').read()))"` trên `inventory/<KEY>.md`.
+- ≤ 40.000 ký tự → **một file**: nộp nguyên `inventory/<KEY>.md` vào item `Inventory <KEY>` (file `<KEY>-inventory.md`).
+- > 40.000 ký tự → **tách**: `python3 ../../knowledge-work/scripts/split-inventory.py <KEY> --out <scratchpad>/inventory-split/<KEY>`. Script in ra danh sách file + số ký tự và tự kiểm không mất dòng (báo `LỖI` → dừng, ghi tóm tắt, không nộp). Mỗi file con → một item: `<KEY>-00-overview.md` → item **`Inventory <KEY> · 00 Tổng quan`**; `<KEY>-NN-<slug>.md` → item **`Inventory <KEY> · NN <tên module>`** (tên module = dòng `# <KEY> — Inventory · <tên>` đầu file con). Nhóm module của MTRO cố định trong `MAPS` của script; app khác script tự gộp các mục 2.x theo cỡ — muốn nhóm cố định thì thêm vào `MAPS` (đề xuất trong tóm tắt, không tự sửa script).
+
+**Bước B — ghi từng file** (một file một lần gọi, tuần tự, nội dung **nguyên văn** — không cắt, không sửa, không tóm tắt):
+- `get_project_context { projectId, includeFileText: false }` → tìm item có **title đúng** như trên.
+  - **Đã có** → `update_project_context_file { projectId, contextId, fileId: <file .md của item>, content }`. Rồi `update_project_context { projectId, contextId, note }`. Giữ id item, không mọc bản thứ hai.
+  - **Chưa có** → `add_project_context { projectId, title, note, files: [{ filename, content }] }`.
   - Có **nhiều** item cùng tên → không đoán; cập nhật cái mới nhất (`updatedAt` lớn nhất) và ghi vào tóm tắt để người dùng dọn.
-- `note` là 3–5 dòng plain text: ngày build · nguồn đã đọc (repo@sha, staging URL, số màn) · số feature ✅/🟡/❌ · "chi tiết ở file đính kèm; § 5 Phát hiện lệch có N dòng". Không dán § 5 vào note — người đọc mở file.
-- `--module` → vẫn nộp **cả file** (file đã gộp module mới vào mục cũ), không nộp riêng một mảnh.
-- File > 1MB → `update_project_context_file` từ chối (413). Inventory Markdown không tới mức đó; tới thì file đang chứa thứ không phải inventory (log, dump) — cắt ở phía file, không chia nhỏ trên QA Hub.
+- **Kiểm sau mỗi lần ghi**: `sizeBytes` trên QA Hub phải bằng số byte UTF-8 của file local (`wc -c`). Lệch → **không ghi lại** (lần ghi thứ hai có thể cụt tiếp), dừng các file còn lại, ghi tóm tắt "nộp cụt — <item>, <byte QA Hub>/<byte local>" để người dùng dán tay qua nút Edit của tab Context.
+- Chuyển từ một file sang tách (lần đầu file vượt 40k): item cũ `Inventory <KEY>` được **dùng lại làm `00 Tổng quan`** — `update_project_context_file` bằng file overview, rồi `update_project_context` đổi `title` thành `Inventory <KEY> · 00 Tổng quan`. Không xoá item.
+- Module biến mất ở lần build sau (item `Inventory <KEY> · NN …` không còn file con tương ứng) → không xoá; ghi vào tóm tắt để người dùng dọn.
+- `note` mỗi item 3–5 dòng plain text: ngày build · nguồn đã đọc (repo@sha, staging URL, số màn) · số feature ✅/🟡/❌ · "chi tiết ở file đính kèm; § 5 Phát hiện lệch có N dòng". Item module: thêm một dòng "phần module của inventory <KEY> — tổng quan ở item `Inventory <KEY> · 00 Tổng quan`". Không dán § 5 vào note.
+- `--module` → vẫn chạy lại tách cho **cả file** và nộp mọi file con có thay đổi (so `sizeBytes`); không tự chế mảnh riêng.
 - Nộp lỗi (403 chưa join, MCP mất kết nối) → ghi vào tóm tắt "Chưa nộp lên QA Hub — lý do", **không** thử project khác, không bỏ qua im lặng. File trong repo vẫn ghi bình thường.
 
 ## Rào chắn
 
-- Không ghi file nào ngoài `inventory/<KEY>.md`, và trên QA Hub chỉ đụng item `Inventory <KEY>` — không tạo/sửa item khác, không `upsert_knowledge`, không `delete_project_context`. Muốn sửa reference hay lưu rule → đề xuất ở § 5 và trong tóm tắt.
+- Không ghi file nào ngoài `inventory/<KEY>.md` (file tách nằm ở scratchpad, không commit), và trên QA Hub chỉ đụng item `Inventory <KEY>` / `Inventory <KEY> · …` — không tạo/sửa item khác, không `upsert_knowledge`, không `delete_project_context`. Muốn sửa reference hay lưu rule → đề xuất ở § 5 và trong tóm tắt.
 - Không suy diễn hành vi từ UI thành rule. "Nút Save disabled khi thiếu field" là quan sát (ghi được ở § 2 kèm nguồn staging); "hệ thống bắt buộc field X" là rule (→ § 5, đề xuất `update-business-rules`).
 - Không credential, token, store domain merchant thật, dữ liệu khách hàng. Tài khoản chỉ ghi tên biến env.
 - Không thêm sản phẩm vào cart, không tạo item trong app, không Test connection / gửi thật (digest, webhook). Muốn xem form thì mở Edit của item có sẵn rồi Discard.
@@ -89,7 +96,7 @@ HAE-SUMMARY
 - App: <KEY> · file: inventory/<KEY>.md · <N> dòng · build YYYY-MM-DD
 - Nguồn đã đọc: code <repo@sha> · staging <URL> (<M> màn) · Confluence <K> trang · QA Hub knowledge <N> doc
 - Nguồn không đọc được: <…> hoặc "không"
-- QA Hub: <"đã nộp — item Inventory <KEY> (mới tạo | cập nhật), file <KEY>-inventory.md" | "chưa nộp — lý do">
+- QA Hub: <"đã nộp — item Inventory <KEY> (mới tạo | cập nhật), file <KEY>-inventory.md" | "đã nộp tách N item — Inventory <KEY> · 00…NN (mới tạo a / cập nhật b), byte khớp" | "nộp cụt — <item> <byte>/<byte>" | "chưa nộp — lý do">
 - Phiên bản lúc build: <repo@sha | staging @ ngày giờ — sau <DEV-KEY>; hash: không rõ>
 - Feature: <N> mục (lần trước <N0>) — ✅ <a> · 🟡 <b> · ❌ <c>
 - Phát hiện lệch (§ 5): <N> dòng (lần trước <M0>) · <K> dòng chạm business rule — <2–3 dòng đáng chú ý nhất>

@@ -49,9 +49,9 @@ Hai thứ này có ở **hai nơi** — QA Hub (cả team thấy) và file local
 | Cần gì | Trên QA Hub (thử trước) | Không có → file local |
 |---|---|---|
 | Business rule đã xác nhận | `search_knowledge { projectId }` → doc `active` kind `business-rule` / `known-issue` / `env`; thêm `{ projectId, tag }` để lấy `feature-profile` của module | `references/business-rules/<KEY>.md` |
-| Inventory — hệ thống thật đang có gì (route, tên màn hình, setting) | `get_project_context { projectId, includeFileText: false }` → item tên `Inventory <KEY>` → đọc text file của nó | `../../knowledge-work/inventory/<KEY>.md` (không có thì bỏ qua) |
+| Inventory — hệ thống thật đang có gì (route, tên màn hình, setting) | `get_project_context { projectId, includeFileText: false }` → item tên `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → đọc text file của nó | `../../knowledge-work/inventory/<KEY>.md` (không có thì bỏ qua) |
 
-"Không có" nghĩa là: project chưa có doc nào / chưa có item `Inventory <KEY>`, **hoặc** MCP QA Hub không gọi được. Cả hai trường hợp đều rơi về file local, im lặng. Doc `draft` trên QA Hub dùng được, trích thì ghi "(draft)".
+"Không có" nghĩa là: project chưa có doc nào / chưa có item `Inventory <KEY>` / `Inventory <KEY> · …`, **hoặc** MCP QA Hub không gọi được. Cả hai trường hợp đều rơi về file local, im lặng. Doc `draft` trên QA Hub dùng được, trích thì ghi "(draft)".
 
 **Rule đang lệch theo inventory.** Có inventory thì đọc § 5 "Phát hiện lệch", cột **BR bị ảnh hưởng**. Rule nào có tên ở đó là rule mà hệ thống thật đang làm khác — **không** xếp vào "3. Business Rules" như đã xác nhận. Nếu ticket chạm rule đó: vẫn trích rule nhưng ghi kèm *"(đang lệch theo inventory ngày YYYY-MM-DD, § 5 #n)"*, đưa chênh lệch vào "8. Risks" và một câu vào "12. Open Questions for PO/Dev" (rule sai hay hệ thống sai), và chấm Readiness như với một điểm chưa chốt.
 
