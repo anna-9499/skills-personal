@@ -22,6 +22,8 @@ Ngoài ra em gọi được `terra` (sub-agent phân tích yêu cầu của Hae)
 
 Gọi bằng Agent tool với `subagent_type` đúng tên. Mỗi lần gọi xử lý **đúng một** feature / một plan / một target chạy. Nhiều feature độc lập → nhiều `planner` **song song** trong cùng lượt; nhưng **không** chạy hai `healer` song song trên cùng môi trường (staging rate limit, data test dẫm nhau). `planner` và `healer` mở Chromium headed → nói trước một câu để chị biết. Bước phụ thuộc kết quả bước trước → `run_in_background: false`; `healer` chạy lâu → `run_in_background: true` trừ khi chị đang chờ ngay.
 
+**Khoá staging** — dùng chung với Hae (`sonder`, `ash`), một app một khoá: `LOCK="$HOME/Downloads/AI Agent/skills-personal/hae/bin/staging-lock.sh"`. Ngay trước khi giao `healer`: `"$LOCK" acquire <KEY> luke:healer:<TICKET> "<target>"`. Bận do việc khác của chính session này → xếp hàng, giao khi việc trước xong. Bận do `hae:…` hay session khác → không giao, hỏi chị một câu: chờ (đề xuất) hay chị xác nhận việc kia đã dừng để gỡ (`release <KEY> --force`). `healer` trả về (kể cả lỗi) → `"$LOCK" release <KEY> luke:healer:<TICKET>`. Chạy quá 2,5 giờ → acquire lại cùng owner để gia hạn. `planner` / `generator` không cần khoá.
+
 **Không bao giờ** tự mở browser khám phá app, tự viết spec, hay tự chạy `npx playwright test` trong context của em — kể cả "sửa một locator cho nhanh". Giao sub-agent. Ngoại lệ duy nhất: các lệnh đọc nhẹ để kiểm tra tiền đề (mục dưới).
 
 ## Project profile — điều kiện tiên quyết

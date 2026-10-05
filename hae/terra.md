@@ -33,11 +33,12 @@ Hae ghi rõ **"chế độ cập nhật"** và gửi: `taskId` + project key, **
 2. Tách câu trả lời thành từng ý; khớp mỗi ý với **đúng một** GAP ở mục 11 / câu hỏi ở mục 12 (theo `GAP-xx` nếu người trả lời có ghi, không thì theo nội dung câu hỏi). Ý khớp hai GAP, không khớp GAP nào, hoặc **mâu thuẫn** với business rule / inventory / rule đã có ở mục 3 → **không gộp**, ghi vào "Cần Hae quyết" (nguyên văn ý đó + mâu thuẫn với gì). Không tự suy câu trả lời cho GAP chưa được trả lời.
 3. Ý khớp → rule mới ở bảng mục 3 (ID tiếp nối `BR-xx`), cột Nguồn: *"{tên người} ({PO | Dev}), {ngày} — qua chị"*. Ý xác nhận / bác một giả định `AS-xx` → chuyển thành BR (xác nhận) hoặc bỏ AS và ghi lý do (bác). Đóng GAP ở mục 11 (giữ dòng, thêm `✅ Đã trả lời {ngày} → BR-xx`), câu hỏi mục 12 đánh `✅`. Mục chịu ảnh hưởng trực tiếp (5 Data / Validation, 8 Risks, 13 Test Focus) sửa đúng câu liên quan; mục khác **giữ nguyên chữ**.
 4. Chấm lại mục 14 (điểm từng tiêu chí + luật ghi đè theo GAP còn mở), ghi *"Verdict cũ → mới"* ngay dưới bảng điểm.
+4b. Lập danh sách **"Thay đổi so với bản cũ"** — chỉ những thay đổi làm đổi kỳ vọng khi test, mỗi dòng: `{BR-xx mới | AS-xx bị bác | BR-xx đổi nghĩa | mục 5 đổi giới hạn / validation} · {REQ / màn hình / điều kiện chịu ảnh hưởng} · {trước → sau, một câu}`. GAP đóng mà chỉ xác nhận đúng giả định cũ (kỳ vọng không đổi) → ghi `AS-xx xác nhận — kỳ vọng không đổi`. Danh sách này dùng để flint xác định case đã chạy nào phải chạy lại — không suy đoán case, không nêu TC id.
 5. Thêm (hoặc nối vào) mục **"Lịch sử cập nhật"** cuối bản phân tích — một dòng mỗi lượt: `{ngày} · {người trả lời} · đóng GAP-xx, GAP-yy · Verdict {cũ} → {mới}`.
 6. `update_task` với `taskId` + `notes` = **toàn bộ** bản mới (HTML Quill theo skill, dòng `Source:` đầu giữ nguyên). **Chỉ** truyền `notes` — không `description`, `status`, `tags`, `priority`, `assigneeId`. `notes` bị thay cả trường, nên bản gửi phải đủ 14 mục + mọi phần không đổi.
 7. Không ý nào khớp được GAP → **không gọi `update_task`**, trả về với "Cần Hae quyết".
 
-Khuôn trả về giữ nguyên hai phần (khối tóm tắt + nguyên văn báo cáo **bản mới**), khối tóm tắt thêm ba dòng "(chế độ cập nhật)" ở mục "Đầu ra". Dòng `Task QA Hub` ghi `"đã cập nhật notes"` hoặc `"không cập nhật — lý do"`.
+Khuôn trả về giữ nguyên hai phần (khối tóm tắt + nguyên văn báo cáo **bản mới**), khối tóm tắt thêm bốn dòng "(chế độ cập nhật)" ở mục "Đầu ra". Dòng `Task QA Hub` ghi `"đã cập nhật notes"` hoặc `"không cập nhật — lý do"`.
 
 ## Đầu ra — bắt buộc đúng khuôn
 
@@ -59,6 +60,7 @@ Trả về **một** message gồm hai phần theo thứ tự:
 - Lỗi: {403 chưa join project / MCP Atlassian cần /mcp / MCP QA Hub chưa kết nối / …} {hoặc "không có"}
 - (chế độ cập nhật) Verdict cũ → mới: {Not Ready 7/14 → Partially Ready 10/14}
 - (chế độ cập nhật) GAP đã đóng: {GAP-01, GAP-03} · còn mở: {GAP-02 (Major), …} {hoặc "không còn"}
+- (chế độ cập nhật) Thay đổi so với bản cũ: {mỗi dòng theo bước 4b} {hoặc "không đổi kỳ vọng"}
 - (chế độ cập nhật) Ý không khớp / mâu thuẫn: {n — chi tiết ở "Cần Hae quyết"} {hoặc "không có"}
 ```
 
