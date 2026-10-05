@@ -62,12 +62,13 @@ Repo: `/Users/nngangaa/Downloads/Auto testing/qikify-QA-mailtro` (dùng đườn
 ## Trước khi chạy
 
 1. `whoami` → `list_projects` → khớp project key, xác nhận `isMember: true`. Không phải member → dừng, không ghi gì, báo Hae.
-2. `list_tasks` → xác nhận `taskId` tồn tại đúng project. Đọc `notes` của task (bản phân tích) để hiểu feature — chỉ đọc, không dán lại.
+2. `list_tasks` → xác nhận `taskId` tồn tại đúng project (không đọc `notes` — xem bước 3).
 3. `list_test_cases` của task **đúng một lần** → lấy id, title, steps, expectedResult, status của các case trong phạm vi Hae đưa; output lớn thì `Grep` đúng id từ file tool-result, không đọc lại toàn bộ. `list_tasks` chỉ để xác nhận task tồn tại — **không đọc `notes`** (bản phân tích rất dài); cần ngữ cảnh feature thì dựa vào title/steps của case. Lọc phạm vi: bỏ case có `Execution Type` = `Automated` (đọc trong `fields` của case) trừ khi Hae nói gồm hoặc đưa đích danh id; **bỏ case có `actualResult` bắt đầu bằng `[QA]`** (xem mục "Nhãn `[AI]` / `[QA]`"); đếm số case bỏ qua theo từng lý do để báo.
 4. Đọc business rules của app tại `~/.claude/skills/qa-requirement-analysis/references/business-rules/<KEY>.md` (MTRO / QCO / QIK / DUOS). Khi Expected trong case và hành vi app mâu thuẫn, **rule đã xác nhận là trọng tài**; Expected trong case mâu thuẫn với rule → đánh Blocked + ghi "Expected nghi sai, cần PO/DEV confirm", không tự sửa case.
 5. **Người dùng quan sát browser trong lúc bạn chạy** (Playwright MCP mở Chromium headed). Mở **một** cửa sổ đầu buổi, `browser_resize` 1280×800, giữ nguyên tab đó cho mọi case, **không** `browser_close` giữa chừng — chỉ đóng sau khi ghi xong case cuối. Không mở nhiều tab song song. Thao tác đi theo đúng thứ tự step để người xem đối chiếu được với case.
 6. Chọn kênh browser: Chrome bridge nếu Hae nói tài khoản đã đăng nhập sẵn trong Chrome (`chrome_status` để kiểm tra), còn lại Playwright MCP. Không chuyển kênh giữa chừng trừ khi kênh đang dùng hỏng — ghi vào log.
 7. Sắp thứ tự chạy: case có precondition phụ thuộc case khác (tạo data trước rồi mới sửa/xoá) chạy theo đúng thứ tự; case huỷ hoại data (xoá, reset) chạy **cuối**.
+8. **Pre-flight trên browser (bước 0 — bắt buộc trước case đầu tiên)**, tối đa ~8 tool call: mở app → đăng nhập bằng tài khoản Hae chỉ định → xác nhận vào được màn hình chính của feature; không có captcha / bot-check chặn; store / workspace đúng môi trường (staging / dev store) và có trạng thái chung mà phần lớn case cần (app đã cài, feature bật, có data nền). Mọi thứ ổn → ghi một dòng "Pre-flight OK" vào log, chạy case. Một mục **hỏng** → **dừng ngay**: không chạy case nào, **không `update_test_case`** (case giữ `not-run`, không đánh hàng loạt `blocked`), trả `HAE-SUMMARY` với dòng `PREFLIGHT FAIL: {mục hỏng · thấy gì · cần chị làm gì}` + screenshot. Captcha / bot-check: không tìm cách vượt — đó là `PREFLIGHT FAIL`.
 
 ## Ngân sách thời gian — bắt buộc
 
@@ -80,6 +81,9 @@ Mục tiêu **≤ 4 phút / ≤ 12 tool call cho một case UI thông thường*
 - Không thử cách khác khi một lệnh bị chặn hoặc lỗi lần hai — ghi vào "Lỗi" và đi tiếp.
 - `update_test_case` **một lần** cho mỗi case (status + actualResult gộp). Không gọi lại chỉ để sửa câu chữ.
 - Vượt ngân sách một case → ghi kết quả tới đâu hay tới đó với status trung thực (`blocked` nếu chưa đủ bằng chứng), chuyển case tiếp. Ghi vào "Lỗi": "TC-xxx vượt ngân sách vì …" để Hae biết chỗ nào chậm.
+- **Lô tối đa 15 case** — Hae chia sẵn. Hae đưa nhiều hơn 15 → chạy 15 case đầu theo thứ tự đã sắp, phần còn lại để `not-run`, báo "còn {n} case chưa chạy: {id…}".
+- **Ngắt mạch**: **3 case liên tiếp** `blocked` cùng một nguyên nhân (không vào được iframe admin, thiếu quyền, data nền mất, session hết hạn…) → dừng lô ngay sau case thứ 3, case sau giữ `not-run`. Trả `CIRCUIT-BREAK: {nguyên nhân · 3 TC id · cần gì để gỡ}`. Không thử tiếp bằng cách khác.
+- **Gần trần `maxTurns`**: đã dùng khoảng **200 tool call** → không mở case mới; ghi xong case đang chạy (một `update_test_case`), đóng browser, viết log, trả về với dòng "còn {n} case chưa chạy: {id…}". Không bao giờ để một case dở dang chưa ghi status.
 
 ## Chạy từng case
 
@@ -201,6 +205,8 @@ bug id | case gắn bug | VERIFIED / REOPENED / INCONCLUSIVE | lý do / bước 
 ```
 ### HAE-SUMMARY
 - Task: {taskId} · {URL}
+- Pre-flight: {OK | PREFLIGHT FAIL: mục hỏng · thấy gì · cần chị làm gì · screenshot}
+- Dừng sớm: {không | CIRCUIT-BREAK: nguyên nhân · 3 TC id · cần gì | còn {n} case chưa chạy: id…}
 - Môi trường: {URL} · kênh {Playwright | Chrome bridge} · tài khoản {role + tên biến env, không in credential} · nguồn data {`.env` repo qikify-QA-mailtro | Hae đưa}
 - Đã chạy: {n}/{tổng} case · Passed {n} · Failed {n} · Blocked {n} · Skipped {n}
 - Đã ghi status lên QA Hub: {n} case {hoặc "0 — lý do"}
