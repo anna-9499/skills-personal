@@ -208,7 +208,7 @@ chị ──▶ luke (main thread, claude --agent luke, trong repo automation)
 
 **Project profile là điều kiện tiên quyết.** Mọi thứ đặc thù của app — URL / tài khoản dưới dạng *tên biến env*, cấu trúc thư mục, quy ước id / tag, prefix data, danh sách không được đụng, rate limit — nằm trong `.claude/qa-automation.md` của repo automation. Repo chưa có thì Luke dựng nháp theo `luke/qa-automation.template.md` (đọc qua `~/.claude/agents/Luke/`, nên symlink template phải có dù nó không phải agent).
 
-`luke/profiles.<repo>.qa-automation.md` là bản lưu của profile đã dựng. Bản thật nằm và được git track trong repo automation — với Mailtro là `qikify-QA-mailtro/.claude/qa-automation.md`, đang trùng bản lưu (kiểm 2026-09-15). Sửa bên nào thì chép sang bên kia.
+`luke/profiles.<repo>.qa-automation.md` là bản lưu của profile đã dựng. Bản thật nằm và được git track trong repo automation — với Mailtro là `qikify-QA-mailtro/.claude/qa-automation.md`, đang trùng bản lưu (kiểm 2026-10-05, sau ADR 0010 sắp lại thư mục module). Sửa bên nào thì chép sang bên kia.
 
 Phân biệt với `sonder` của Hae: `sonder` đi tay từng **manual test case trên QA Hub**; `playwright-test-healer` chạy **spec Playwright** trong repo. Healer cập nhật được status test case trên QA Hub khi được đưa task, nhưng **không** report bug; generator không mở browser và không chạy staging; planner không ghi gì lên QA Hub.
 
