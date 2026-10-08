@@ -3,7 +3,8 @@
 #
 #   preflight.sh <KEY> [URL staging]
 #     KEY: MTRO | QCO | QSC | TEPO | DUOS | QIK …
-#     URL: bắt buộc với 4 app Shopify nếu muốn kiểm staging; MTRO tự lấy BASE_URL trong .env.
+#     URL: bắt buộc với 4 app Shopify nếu muốn kiểm staging; MTRO tự lấy BASE_URL trong .env;
+#          DUOS bỏ qua URL truyền vào, luôn kiểm staging-admin.getduos.io/admin/login (host DUOS trả 400 ở "/").
 #
 # Mỗi dòng: OK | WARN | FAIL  <mục>  <chi tiết>   (FAIL/WARN có thêm dòng "  FIX: …")
 # Exit: 0 = không có FAIL · 1 = có FAIL (Hae không giao) · 2 = sai cú pháp.
@@ -59,6 +60,11 @@ else
 fi
 
 # 4. Staging trả lời
+# App mà trang gốc không phải trang sống → kiểm một URL health cố định.
+# DUOS: mọi host *.getduos.io trả 400 ở "/" (embedded / API cần session Shopify) → kiểm trang login Filament.
+case "$key" in
+  DUOS) url="https://staging-admin.getduos.io/admin/login" ;;
+esac
 if [[ -n "$url" ]]; then
   host="$(printf '%s' "$url" | sed -E 's#^https?://([^/]+).*#\1#')"
   code="$(curl -s -o /dev/null -m 15 -w '%{http_code}' -L --max-redirs 3 "$url" 2>/dev/null || echo 000)"
