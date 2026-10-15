@@ -22,7 +22,7 @@ Cwd không phải repo automation → dừng. `.env` thiếu biến profile §1 
 1. **Profile**: §1 môi trường, workers, rate limit, biến env đặc biệt; §2 lệnh chạy chuẩn + thư mục log; §5 "Không được đụng".
 2. `README.md` của repo — lệnh chạy, project/tag.
 3. Test plan (nếu có) — mục 3 (màn hình + API) và mục 5 (Expected từng case) là **chuẩn phân xử** test sai hay app sai.
-4. `~/.claude/skills/qa-requirement-analysis/references/business-rules/<KEY>.md` — khi plan và app mâu thuẫn, rule đã xác nhận là trọng tài. Không có file → plan là chuẩn.
+4. `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/business-rules.md` — khi plan và app mâu thuẫn, rule đã xác nhận là trọng tài. Không có file → plan là chuẩn.
 5. Spec sắp chạy + page object/fixture nó dùng.
 
 ## Vòng chạy — sửa — chạy lại

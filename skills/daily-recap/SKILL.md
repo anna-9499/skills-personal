@@ -59,7 +59,7 @@ Viết bằng **tiếng Việt**, ngắn, xếp theo thứ tự việc cần là
 
 **1. Cần xử lý trước** — task có `failed` > 0 hoặc `Bug` > 0. Đây là chỗ có thứ đang hỏng thật. Xếp theo số bug giảm dần.
 
-**2. Đang chặn** — task có `blocked` cao. Nói rõ blocked vì thiếu thông tin (→ đối chiếu `open-questions/` trong knowledge-work nếu đọc được) hay vì môi trường.
+**2. Đang chặn** — task có `blocked` cao. Nói rõ blocked vì thiếu thông tin (→ đối chiếu `apps/<KEY>/open-questions.md` trong knowledge-work nếu đọc được) hay vì môi trường.
 
 **3. Chờ người khác** — task `waiting-for-dev`. Kèm số ngày chờ. Quá 3 ngày thì gợi ý ping.
 

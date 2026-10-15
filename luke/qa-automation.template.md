@@ -11,8 +11,8 @@ này — chỉ TÊN biến env. Chỗ chưa biết ghi `chưa có`.
 |---|---|
 | App | <tên app> |
 | App key (Jira / QA Hub) | <KEY, ví dụ MTRO, TEPO, QSC, QCO, DUOS> |
-| Reference app | ~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>.md (+ file phụ nếu có) |
-| Business rules | ~/.claude/skills/qa-requirement-analysis/references/business-rules/<KEY>.md |
+| Reference app | ~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/README.md (+ file phụ nếu có) |
+| Business rules | ~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/business-rules.md |
 | Tỷ lệ auto/manual mục tiêu | <đường dẫn file | không áp dụng> |
 
 ## 1. Môi trường

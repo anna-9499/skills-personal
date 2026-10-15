@@ -7,7 +7,7 @@ description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết
 
 Senior QA Requirement Analysis Agent cho đội QA Qikify — phụ trách 4 app Shopify (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B) và **Mailtro** (SaaS email marketing độc lập, project Jira `MTRO`, không chạy trên Shopify).
 
-Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/` và bước tạo task QA Hub (xem "Chọn project").
+Phần lớn công việc nằm ở 5 app trên, nhưng phương pháp phân tích không phụ thuộc sản phẩm: yêu cầu **ngoài 5 app** đó vẫn phân tích bình thường — chỉ bỏ qua bước đọc `references/apps/<KEY>/` và bước tạo task QA Hub (xem "Chọn project").
 
 Nhiệm vụ: phân tích yêu cầu Jira **trước khi** QA viết test case, rồi tạo task QA tương ứng trên **QA Hub**. Không phải viết test case ở bước này. Jira chỉ là **nguồn đọc** (lấy nội dung issue gốc) — skill không tạo/sửa gì trên Jira, kể cả project QA.
 
@@ -28,19 +28,19 @@ Giúp QA hiểu rõ yêu cầu, xác định các business rule đã được x�
 
 ## Tài liệu tham khảo dùng chung
 
-Trước khi phân tích, đọc `references/apps/<KEY>.md` — **một file cho một app**, tên file là `key` của project trên QA Hub (`TEPO.md`, `QCO.md`, `QSC.md`, `DUOS.md`, `MTRO.md`) — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) của app liên quan. Mỗi file có skeleton 5 mục cố định: *App là gì → Feature map → Giới hạn kỹ thuật đã biết → QA focus → Nguồn & cập nhật*. Danh mục app, glossary và các tích hợp cross-app nằm ở `references/apps/README.md`. File app chưa tồn tại (ví dụ `QAF.md`, `SHUB.md` còn rỗng) → bỏ qua bước này, **không tự bịa bối cảnh**.
+Trước khi phân tích, đọc `references/apps/<KEY>/README.md` — **một thư mục cho một app**, tên thư mục là `key` của project trên QA Hub (`TEPO`, `QCO`, `QSC`, `DUOS`, `MTRO`) — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) của app liên quan. Mỗi file có skeleton 5 mục cố định: *App là gì → Feature map → Giới hạn kỹ thuật đã biết → QA focus → Nguồn & cập nhật*. Danh mục app, glossary và các tích hợp cross-app nằm ở `references/apps/README.md`. File app chưa tồn tại hoặc còn rỗng (ví dụ `QAF`, `SHUB`, `QIK` chưa có `README.md`) → bỏ qua bước này, **không tự bịa bối cảnh**.
 
-> Đây là **bản duy nhất** của thư mục reference. Skill `gen-testcase` đọc chung qua đường dẫn `../qa-requirement-analysis/references/apps/` — sửa ở đây là cả 2 skill cùng thấy, không cần copy sang đâu nữa. Thư mục này là symlink vào repo `knowledge-work`, nên thêm app mới chỉ là thêm file, không phải sửa wiring.
+> Đây là **bản duy nhất** của thư mục reference. Skill `gen-testcase` đọc chung qua đường dẫn `../qa-requirement-analysis/references/apps/` — sửa ở đây là cả 2 skill cùng thấy, không cần copy sang đâu nữa. Thư mục này là symlink vào repo `knowledge-work`, nên thêm app mới chỉ là thêm thư mục `apps/<KEY>/`, không phải sửa wiring.
 
-**Nếu issue thuộc project `MTRO` (Mailtro):** đọc kỹ `references/apps/MTRO.md` trước khi phân tích, và lưu ý:
+**Nếu issue thuộc project `MTRO` (Mailtro):** đọc kỹ `references/apps/MTRO/README.md` trước khi phân tích, và lưu ý:
 - Mailtro **không phải Shopify app** — không suy luận theo Shopify plan/theme/checkout extensibility. Mục "7. Impacted Areas" nên soi theo kiến trúc riêng: Mailtro ID (`staging-id.mailtro.ai`: signup/login/verify/reset password) vs app workspace (`<slug>.wisle.app`), phân quyền Owner/Admin/Member, sending domain, và các ràng buộc chéo (Sending domain chặn gửi Campaign; Campaign phụ thuộc Contacts + Templates).
 - Phần lớn feature phase 2–4 còn "To Do", requirement thường chưa chốt chi tiết UI → đừng tự lấp khoảng trống, đưa vào "11. Missing / Ambiguous Information" và "12. Open Questions for PO/Dev"; Readiness thường là Partially Ready/Not Ready.
 - Rủi ro cần soi kỹ ở mục "9. Security Considerations": multi-tenant isolation giữa các workspace, bảo mật invite token (email phải lấy từ token, không tin query string), user enumeration/rate limit ở các màn auth. Deliverability (DNS SPF/DKIM/DMARC) thuộc "8. Risks"; thông lượng gửi mail và xử lý contact list lớn thuộc "10. Performance Considerations".
-- Đọc thêm `references/apps/MTRO-auto-manual-ratio.md` — tỷ lệ auto/manual gợi ý theo epic MTRO. Dùng để viết phần định hướng automation ở mục "13. Suggested Test Focus" (xem hướng dẫn bên dưới). File này **chỉ áp dụng cho Mailtro**, không áp cho TEPO/QSC/QCO/DUOS.
+- Đọc thêm `references/apps/MTRO/auto-manual-ratio.md` — tỷ lệ auto/manual gợi ý theo epic MTRO. Dùng để viết phần định hướng automation ở mục "13. Suggested Test Focus" (xem hướng dẫn bên dưới). File này **chỉ áp dụng cho Mailtro**, không áp cho TEPO/QSC/QCO/DUOS.
 
 Nếu MCP QA Hub khả dụng, gọi `list_test_cases` cho project tương ứng và lướt qua các case đang chạm vào cùng module. Dùng cho hai việc: (a) chỉ ra vùng **regression** thật ở mục "7. Impacted Areas" thay vì đoán, (b) tránh đề xuất trọng tâm test trùng cái đã có ở mục "13. Suggested Test Focus". Không gọi được thì ghi rõ trong báo cáo là chưa đối chiếu được với bộ test hiện có — đừng im lặng bỏ qua.
 
-Đọc thêm file `references/business-rules/<APP_PREFIX>.md` (nếu tồn tại — ví dụ `references/business-rules/DUOS.md` cho app Duos B2B) để nắm các business rule đã được xác nhận từ những issue trước đó của app này. Dùng để tránh phân tích lại từ đầu những rule đã biết, và để phát hiện nếu issue hiện tại có dấu hiệu mâu thuẫn với rule đã lưu (nếu có, nêu rõ trong mục "8. Risks" hoặc "12. Open Questions for PO/Dev"). Nếu file chưa tồn tại, bỏ qua bước này — không tự tạo file rỗng.
+Đọc thêm `references/platform/business-rules.md` (rule nền tảng chung mọi app: Security Checker, auth, metafield app-owned — Jira `QIK`; `Grep` theo feature khi ticket chạm upload / HTML config / auth / metafield) và file `references/apps/<APP_PREFIX>/business-rules.md` (nếu tồn tại — ví dụ `references/apps/DUOS/business-rules.md` cho app Duos B2B) để nắm các business rule đã được xác nhận từ những issue trước đó của app này. Dùng để tránh phân tích lại từ đầu những rule đã biết, và để phát hiện nếu issue hiện tại có dấu hiệu mâu thuẫn với rule đã lưu (nếu có, nêu rõ trong mục "8. Risks" hoặc "12. Open Questions for PO/Dev"). Nếu file chưa tồn tại, bỏ qua bước này — không tự tạo file rỗng.
 
 ### Business rule và inventory: QA Hub trước, file local sau
 
@@ -48,14 +48,14 @@ Hai thứ này có ở **hai nơi** — QA Hub (cả team thấy) và file local
 
 | Cần gì | Trên QA Hub (thử trước) | Không có → file local |
 |---|---|---|
-| Business rule đã xác nhận | `search_knowledge { projectId }` → doc `active` kind `business-rule` / `known-issue` / `env`; thêm `{ projectId, tag }` để lấy `feature-profile` của module | `references/business-rules/<KEY>.md` |
-| Inventory — hệ thống thật đang có gì (route, tên màn hình, setting) | `get_project_context { projectId, includeFileText: false }` → item tên `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → đọc text file của nó | `../../knowledge-work/inventory/<KEY>.md` (không có thì bỏ qua) |
+| Business rule đã xác nhận | `search_knowledge { projectId }` → doc `active` kind `business-rule` / `known-issue` / `env`; thêm `{ projectId, tag }` để lấy `feature-profile` của module | `references/apps/<KEY>/business-rules.md` |
+| Inventory — hệ thống thật đang có gì (route, tên màn hình, setting) | `get_project_context { projectId, includeFileText: false }` → item tên `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → đọc text file của nó | `../../knowledge-work/apps/<KEY>/inventory.md` (không có thì bỏ qua) |
 
 "Không có" nghĩa là: project chưa có doc nào / chưa có item `Inventory <KEY>` / `Inventory <KEY> · …`, **hoặc** MCP QA Hub không gọi được. Cả hai trường hợp đều rơi về file local, im lặng. Doc `draft` trên QA Hub dùng được, trích thì ghi "(draft)".
 
 **Rule đang lệch theo inventory.** Có inventory thì đọc § 5 "Phát hiện lệch", cột **BR bị ảnh hưởng**. Rule nào có tên ở đó là rule mà hệ thống thật đang làm khác — **không** xếp vào "3. Business Rules" như đã xác nhận. Nếu ticket chạm rule đó: vẫn trích rule nhưng ghi kèm *"(đang lệch theo inventory ngày YYYY-MM-DD, § 5 #n)"*, đưa chênh lệch vào "8. Risks" và một câu vào "12. Open Questions for PO/Dev" (rule sai hay hệ thống sai), và chấm Readiness như với một điểm chưa chốt.
 
-`references/apps/<KEY>.md` (bối cảnh app) **vẫn đọc như cũ** — không có bản QA Hub tương đương. Item context khác trên QA Hub (spec, ghi chú) chỉ đọc khi tên item chạm module của ticket.
+`references/apps/<KEY>/README.md` (bối cảnh app) **vẫn đọc như cũ** — không có bản QA Hub tương đương. Item context khác trên QA Hub (spec, ghi chú) chỉ đọc khi tên item chạm module của ticket.
 
 ## Bộ phương pháp phân tích
 
@@ -291,7 +291,7 @@ Tương tự, chỉ nêu mục thực sự liên quan. Điểm mấu chốt: **n
 
 Chỉ làm bước này khi issue thuộc project `MTRO`. Với 4 app Shopify, bỏ qua — chưa có tỷ lệ chốt cho các app đó.
 
-Đọc `references/apps/MTRO-auto-manual-ratio.md`, xác định issue thuộc epic nào, rồi thêm vào cuối mục 13 một đoạn ngắn gồm:
+Đọc `references/apps/MTRO/auto-manual-ratio.md`, xác định issue thuộc epic nào, rồi thêm vào cuối mục 13 một đoạn ngắn gồm:
 
 - **Tỷ lệ mục tiêu của epic** (ví dụ: "MTRO-8 Contacts — mục tiêu 65% auto / 35% manual") và thư mục test tương ứng (`tests/04-contacts/`).
 - **Phần nên automate**: khu vực nào của thay đổi này rơi vào nhóm "nghiêng về auto" (rule backend, validate, phân quyền, ràng buộc trạng thái, case lặp lại nhiều data, khu vực regression cao).
@@ -397,7 +397,7 @@ Sau khi xuất bản phân tích và tạo task trên QA Hub, hỏi ngắn gọn
 1. Chuyển sang sinh test case (skill `gen-testcase`) luôn không, đặc biệt nếu Readiness Score là Ready hoặc Partially Ready. Task vừa tạo ở trên chính là chỗ test case sẽ nằm vào — đưa id của nó sang.
 2. Lưu lại mục "3. Business Rules" vừa phân tích — hai đích, chọn theo chỗ team đang đọc:
    - **QA Hub** (`upsert_knowledge`, `kind: business-rule`, `sourceUrl` = link issue, `status: draft` nếu PO chưa xác nhận) — cả team và mọi session sau cùng thấy. Ưu tiên đích này.
-   - File local `references/business-rules/<KEY>.md` (skill `update-business-rules`) — khi đang làm offline hoặc team chưa dùng tab Knowledge.
+   - File local `references/apps/<KEY>/business-rules.md` (skill `update-business-rules`) — khi đang làm offline hoặc team chưa dùng tab Knowledge.
 
    Skill này **không tự ghi** — chỉ hỏi. Ghi rule là việc không đảo ngược với người khác đọc sau.
 

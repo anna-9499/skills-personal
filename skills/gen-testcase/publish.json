@@ -27,11 +27,11 @@
   },
 
   "dropParagraphs": [
-    "- Đọc `../qa-requirement-analysis/references/apps/MTRO.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability)."
+    "- Đọc `../qa-requirement-analysis/references/apps/MTRO/README.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability)."
   ],
 
   "replaceParagraphs": {
-    "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.": "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. Tỷ lệ auto/manual gợi ý theo epic xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.",
+    "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO/auto-manual-ratio.md`** — xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.": "- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. Tỷ lệ auto/manual gợi ý theo epic xem mục \"Tỷ lệ auto/manual\" ngay bên dưới.",
 
     "Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng cao, theo đúng format chuẩn của team QA Qikify.": "Nhiệm vụ của bạn là tạo ra các test case thủ công chất lượng cao theo đúng chuẩn của team QA Qikify, trả về dưới dạng JSON đúng schema đã cho.",
 

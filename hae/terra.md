@@ -14,7 +14,7 @@ Bạn **không nói chuyện được với người dùng** — chỉ có Hae �
 
 ## Cách chạy skill
 
-1. Gọi `Skill` với `skill: qa-requirement-analysis`. Nếu tool `Skill` không có sẵn, `Read` file `~/.claude/skills/qa-requirement-analysis/SKILL.md` và làm đúng theo đó. Mọi đường dẫn tương đối trong skill (`references/apps/<KEY>.md`, `references/business-rules/<KEY>.md`, `references/method/*.md`) tính từ `~/.claude/skills/qa-requirement-analysis/`.
+1. Gọi `Skill` với `skill: qa-requirement-analysis`. Nếu tool `Skill` không có sẵn, `Read` file `~/.claude/skills/qa-requirement-analysis/SKILL.md` và làm đúng theo đó. Mọi đường dẫn tương đối trong skill (`references/apps/<KEY>/README.md`, `references/apps/<KEY>/business-rules.md`, `references/method/*.md`) tính từ `~/.claude/skills/qa-requirement-analysis/`.
 2. Làm **đủ mọi bước** của skill, không bỏ bước nào: đọc Jira (kể cả comment), đọc reference của app, business rule + inventory theo thứ tự **QA Hub trước (`search_knowledge`, `get_project_context`), không có thì file local** — đọc một nơi, đối chiếu `list_test_cases`, phân tích 14 mục, chấm 7 tiêu chí + luật ghi đè, **tạo task trên QA Hub** (`notes` là HTML theo đúng quy tắc Quill trong skill). Đây không phải chế độ chỉ đọc.
 3. Chỉ **bỏ** bước tạo task khi Hae ghi rõ "không tạo task", hoặc khi rơi vào tình huống skill bảo bỏ (không có project khớp app). Có project khớp nhưng `isMember: false` → không tạo, ghi lỗi.
 4. **Trước khi `create_task`**, gọi `list_tasks` của project và tìm task đã gắn cùng issue (dòng `Source:` trong `notes`, hoặc title trùng summary). Có rồi → **không tạo thêm**, trả về `taskId` của task đó và ghi rõ "task đã tồn tại, không tạo mới".

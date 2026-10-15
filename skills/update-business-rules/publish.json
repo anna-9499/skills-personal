@@ -11,7 +11,7 @@
   ],
 
   "sectionNotes": {
-    "## Vị trí file lưu trữ": "Đường dẫn tương đối tới ../qa-requirement-analysis/references/business-rules/. Trên Worker business rules nằm trong KV key business-rules:<JIRA_PROJECT_KEY>.",
+    "## Vị trí file lưu trữ": "Đường dẫn tương đối tới ../qa-requirement-analysis/references/apps/<KEY>/business-rules.md. Trên Worker business rules nằm trong KV key business-rules:<JIRA_PROJECT_KEY>.",
     "## Bước tiếp theo": "Gợi ý chuyển skill trong chat; trên QA Hub là nút bấm."
   },
 

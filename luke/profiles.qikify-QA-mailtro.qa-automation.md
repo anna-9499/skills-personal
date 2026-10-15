@@ -4,8 +4,8 @@
 |---|---|
 | App | Mailtro — SaaS email marketing multi-tenant (workspace-based), **không phải Shopify app** (ADR 0008) |
 | App key (Jira / QA Hub) | MTRO |
-| Reference app | ~/.claude/skills/qa-requirement-analysis/references/apps/MTRO.md (+ MTRO-auto-manual-ratio.md) |
-| Business rules | ~/.claude/skills/qa-requirement-analysis/references/business-rules/MTRO.md (bản sao y hệt trong repo: `docs/business-rules/MTRO.md`) |
+| Reference app | ~/.claude/skills/qa-requirement-analysis/references/apps/MTRO/README.md (+ MTRO-auto-manual-ratio.md) |
+| Business rules | ~/.claude/skills/qa-requirement-analysis/references/apps/MTRO/business-rules.md (bản sao y hệt trong repo: `docs/business-rules/MTRO.md`) |
 | Tỷ lệ auto/manual mục tiêu | `docs/auto-manual-ratio.md` (bản sống, cập nhật 2026-09-11) — bản trong skill `MTRO-auto-manual-ratio.md` là draft 2026-08-13, số cũ hơn |
 
 ## 1. Môi trường

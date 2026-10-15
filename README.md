@@ -12,7 +12,7 @@ Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của 
 skills/
   qa-requirement-analysis/   Phân tích yêu cầu Jira → báo cáo 14 mục + Readiness 14 điểm + task QA Hub
   gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub qua MCP
-  update-business-rules/     Merge rule đã xác nhận vào knowledge-work/business-rules/
+  update-business-rules/     Merge rule đã xác nhận vào knowledge-work/apps/<KEY>/business-rules.md
   daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
 hae/                         Nhóm QA manual — agent mặc định mọi session (xem mục "Hae")
   hae.md                     Hae — agent điều phối, chạy ở main thread
@@ -69,8 +69,8 @@ Không có dòng này thì session là Claude Code thường; vẫn gọi đư�
 `skills/qa-requirement-analysis/references/` có 3 thư mục là symlink **thư mục** vào submodule đó — symlink thư mục nên thêm app hay convention mới không phải sửa wiring:
 
 ```
-references/apps/            → ../../../knowledge-work/references/apps/
-references/business-rules/  → ../../../knowledge-work/business-rules/
+references/apps/            → ../../../knowledge-work/apps/         (apps/<KEY>/README.md, business-rules.md, open-questions.md, inventory.md, kb/)
+references/platform/        → ../../../knowledge-work/platform/     (rule nền tảng chung mọi app)
 references/conventions/     → ../../../knowledge-work/conventions/
 ```
 
@@ -140,7 +140,7 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 - rubric 7 tiêu chí / 14 điểm + luật ghi đè, phân mức gap Blocker/Major/Minor, kỷ luật trích nguồn cho từng business rule, và các bảng có ID (BR/AS/GAP/RISK/SEC/PERF) → inline vào `SKILL.md`
 - `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md` → `references/method/`
 - `readiness-rubric.md`, `report-template.md` → hoà tan vào `SKILL.md`, không còn file riêng
-- yêu cầu **ngoài 5 app Qikify** vẫn phân tích được — chỉ bỏ qua `references/apps/` và bước tạo task
+- yêu cầu **ngoài 5 app Qikify** vẫn phân tích được — chỉ bỏ qua `references/apps/<KEY>/` và bước tạo task
 
 ## Hae — agent điều phối
 

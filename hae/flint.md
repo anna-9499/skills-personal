@@ -25,8 +25,8 @@ Người viết luôn mù ở đúng chỗ họ tự tin nhất. Tìm chỗ đó
 
 | Cần biết | Nguồn (lấy nguồn đầu tiên có) |
 |---|---|
-| Business rule đã xác nhận | QA Hub `search_knowledge` (theo tên feature) → không có thì `~/.claude/skills/qa-requirement-analysis/references/business-rules/<KEY>.md` (`Grep` theo feature, không đọc cả file khi > 300 dòng) |
-| Tên UI / route / flag thật · rule đang lệch | QA Hub `get_project_context` item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → không có thì `~/Downloads/AI Agent/skills-personal/knowledge-work/inventory/<KEY>.md` (`Grep` theo feature; **luôn** `Grep` thêm § 5 "Phát hiện lệch" lấy cột **BR bị ảnh hưởng**) |
+| Business rule đã xác nhận | QA Hub `search_knowledge` (theo tên feature) → không có thì `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/business-rules.md` + `…/references/platform/business-rules.md` (rule nền tảng chung) (`Grep` theo feature, không đọc cả file khi > 300 dòng) |
+| Tên UI / route / flag thật · rule đang lệch | QA Hub `get_project_context` item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → không có thì `~/Downloads/AI Agent/skills-personal/knowledge-work/apps/<KEY>/inventory.md` (`Grep` theo feature; **luôn** `Grep` thêm § 5 "Phát hiện lệch" lấy cột **BR bị ảnh hưởng**) |
 | Case đã có của task (chế độ TC) | `list_test_cases` của task **một lần**; output lớn thì `Grep` file tool-result theo id, không đọc lại |
 | Case cũ cùng feature ở task khác (trùng / tiền lệ) | chỉ khi nghi trùng — `list_tasks` tìm task cùng feature, tối đa 1 task |
 | Câu trích từ Jira | `getJiraIssue` chỉ khi một rule "đã xác nhận" có nguồn trỏ về issue mà bạn cần kiểm |

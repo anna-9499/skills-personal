@@ -2,7 +2,7 @@
 # Pre-flight trước khi Hae giao sonder / ash — kiểm thứ script kiểm được, không mở browser.
 #
 #   preflight.sh <KEY> [URL staging]
-#     KEY: MTRO | QCO | QSC | TEPO | DUOS | QIK …
+#     KEY: MTRO | QCO | QSC | TEPO | DUOS
 #     URL: bắt buộc với 4 app Shopify nếu muốn kiểm staging; MTRO tự lấy BASE_URL trong .env;
 #          DUOS bỏ qua URL truyền vào, luôn kiểm staging-admin.getduos.io/admin/login (host DUOS trả 400 ở "/").
 #

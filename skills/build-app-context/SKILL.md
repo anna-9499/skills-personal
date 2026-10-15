@@ -1,13 +1,13 @@
 ---
 name: build-app-context
-description: "Build hoặc build lại file `inventory/<KEY>.md` trong repo knowledge-work cho một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) — đọc nguồn thật (code local, staging qua Playwright MCP, Confluence) rồi ghi ra route, màn hình, setting đúng tên UI, custom config flag, môi trường test, và mục 'phát hiện lệch' so với references/business-rules. Dùng khi người dùng nói 'build context cho app X', 'inventory QCO', 'staging đang có gì', 'cập nhật context app', 'reference cũ rồi build lại', hoặc khi terra/sonder báo reference không khớp hệ thống thật. KHÔNG dùng để: lưu business rule (update-business-rules), phân tích ticket (qa-requirement-analysis), sinh test case (gen-testcase), sửa references/apps/ (skill này chỉ đề xuất diff)."
+description: "Build hoặc build lại file `apps/<KEY>/inventory.md` trong repo knowledge-work cho một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) — đọc nguồn thật (code local, staging qua Playwright MCP, Confluence) rồi ghi ra route, màn hình, setting đúng tên UI, custom config flag, môi trường test, và mục 'phát hiện lệch' so với README / business-rules của app. Dùng khi người dùng nói 'build context cho app X', 'inventory QCO', 'staging đang có gì', 'cập nhật context app', 'reference cũ rồi build lại', hoặc khi terra/sonder báo reference không khớp hệ thống thật. KHÔNG dùng để: lưu business rule (update-business-rules), phân tích ticket (qa-requirement-analysis), sinh test case (gen-testcase), sửa apps/<KEY>/README.md (skill này chỉ đề xuất diff)."
 ---
 
 ## Vai trò
 
-Người khảo sát hệ thống thật cho đội QA Qikify. Nhiệm vụ: với **một** app (`<KEY>`), đi đọc nguồn thật rồi ghi `knowledge-work/inventory/<KEY>.md` theo đúng [`templates/inventory.md`](../../knowledge-work/templates/inventory.md) và luật ở [`inventory/README.md`](../../knowledge-work/inventory/README.md). Đầu ra là **bằng chứng có nguồn**, không phải hiểu biết.
+Người khảo sát hệ thống thật cho đội QA Qikify. Nhiệm vụ: với **một** app (`<KEY>`), đi đọc nguồn thật rồi ghi `knowledge-work/apps/<KEY>/inventory.md` theo đúng [`templates/inventory.md`](../../knowledge-work/templates/inventory.md) và luật ở [`conventions/inventory.md`](../../knowledge-work/conventions/inventory.md). Đầu ra là **bằng chứng có nguồn**, không phải hiểu biết.
 
-Skill này ghi **đúng hai chỗ**: file `inventory/<KEY>.md` trong repo, và **một item context trên QA Hub** mang cùng nội dung (xem "Nộp lên QA Hub"). Không ghi `references/apps/`, không ghi `business-rules/`, không ghi `open-questions/`, không ghi knowledge (`upsert_knowledge`) — mọi thứ đáng vào những chỗ đó được liệt kê ở § 5 của inventory để người dùng quyết.
+Skill này ghi **đúng hai chỗ**: file `apps/<KEY>/inventory.md` trong repo, và **một item context trên QA Hub** mang cùng nội dung (xem "Nộp lên QA Hub"). Không ghi `apps/<KEY>/README.md`, không ghi `business-rules.md`, không ghi `open-questions.md`, không ghi knowledge (`upsert_knowledge`) — mọi thứ đáng vào những chỗ đó được liệt kê ở § 5 của inventory để người dùng quyết.
 
 ## Vị trí trong quy trình
 
@@ -17,8 +17,8 @@ Bước **0** (trước phân tích) hoặc bước bảo trì (sau release). `q
 
 Tính từ thư mục skill này: `../../knowledge-work/` là submodule repo [`ownego/qa-knowledge-work`](https://github.com/ownego/qa-knowledge-work). Nếu thư mục rỗng → báo `git submodule update --init` và dừng. Không tạo file ngoài repo để bù.
 
-- Ghi: `../../knowledge-work/inventory/<KEY>.md`
-- Đọc để đối chiếu: `../../knowledge-work/references/apps/<KEY>.md`, `business-rules/<KEY>.md`, `open-questions/<KEY>.md`
+- Ghi: `../../knowledge-work/apps/<KEY>/inventory.md`
+- Đọc để đối chiếu: `../../knowledge-work/apps/<KEY>/README.md`, `apps/<KEY>/business-rules.md`, `apps/<KEY>/open-questions.md`
 - `<KEY>` = key project trên QA Hub (`list_projects`), viết HOA. Không có project khớp → dừng, hỏi.
 - Trên QA Hub: file ≤ 40.000 ký tự → một item **`Inventory <KEY>`**, một file **`<KEY>-inventory.md`**. File lớn hơn → **tách** thành nhiều item tên **`Inventory <KEY> · NN <Module>`** (`00 Tổng quan` + từng module), mỗi item một file `<KEY>-NN-<slug>.md` — xem "Nộp lên QA Hub". `qa-requirement-analysis`, `gen-testcase` và các agent tìm theo tiền tố `Inventory <KEY>`.
 
@@ -48,8 +48,8 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 ## Các bước
 
 1. `list_projects` → khớp `<KEY>`, lấy `projectId`. `list_tasks` → gom tag đang dùng, để điền dòng `Tag QA Hub` ở § 2.
-2. Đọc `references/apps/<KEY>.md`, `business-rules/<KEY>.md`, `open-questions/<KEY>.md` **và** `search_knowledge { projectId }` trên QA Hub (mọi doc `active`: business-rule, feature-profile, known-issue, env) — gộp thành danh sách feature *kỳ vọng* để đối chiếu ở § 5. Rule trên QA Hub có `sourceUrl` → ghi nguồn đó khi đối chiếu. `get_project_context { projectId, includeFileText: false }` → biết item `Inventory <KEY>` đã có chưa (cho bước 9).
-3. Đọc `inventory/<KEY>.md` cũ nếu có → biết route "không tồn tại" lần trước, giữ ghi chú sửa tay (xem commit message), và **ghi lại số mục § 2 + số dòng § 5 của bản cũ** (dùng ở bước 8). Không có bản local mà QA Hub có item `Inventory <KEY>` → đọc bản trên QA Hub làm bản cũ.
+2. Đọc `references/apps/<KEY>/README.md`, `apps/<KEY>/business-rules.md`, `apps/<KEY>/open-questions.md` **và** `search_knowledge { projectId }` trên QA Hub (mọi doc `active`: business-rule, feature-profile, known-issue, env) — gộp thành danh sách feature *kỳ vọng* để đối chiếu ở § 5. Rule trên QA Hub có `sourceUrl` → ghi nguồn đó khi đối chiếu. `get_project_context { projectId, includeFileText: false }` → biết item `Inventory <KEY>` đã có chưa (cho bước 9).
+3. Đọc `apps/<KEY>/inventory.md` cũ nếu có → biết route "không tồn tại" lần trước, giữ ghi chú sửa tay (xem commit message), và **ghi lại số mục § 2 + số dòng § 5 của bản cũ** (dùng ở bước 8). Không có bản local mà QA Hub có item `Inventory <KEY>` → đọc bản trên QA Hub làm bản cũ.
 4. Đọc code theo thứ tự ở trên.
 5. Đi staging. Screenshot lưu vào thư mục scratchpad của session (không commit ảnh vào repo).
 6. Đọc Confluence cho chỗ còn trống.
@@ -62,8 +62,8 @@ MTRO: URL + tài khoản lấy từ `.env` repo `qikify-QA-mailtro`, không hỏ
 
 Cùng nội dung file vừa ghi, đưa vào tab Context của project. Tool QA Hub nhận **toàn bộ nội dung file trong một lần gọi** — agent không chép nguyên văn được file quá ~40.000 ký tự (sự cố MTRO 03/10/2026: lượt sinh bị dừng giữa chừng, item bị ghi đè bằng bản cụt 11k byte). Vì vậy:
 
-**Bước A — chọn kiểu nộp.** `python3 -c "print(len(open('<file>').read()))"` trên `inventory/<KEY>.md`.
-- ≤ 40.000 ký tự → **một file**: nộp nguyên `inventory/<KEY>.md` vào item `Inventory <KEY>` (file `<KEY>-inventory.md`).
+**Bước A — chọn kiểu nộp.** `python3 -c "print(len(open('<file>').read()))"` trên `apps/<KEY>/inventory.md`.
+- ≤ 40.000 ký tự → **một file**: nộp nguyên `apps/<KEY>/inventory.md` vào item `Inventory <KEY>` (file `<KEY>-inventory.md`).
 - > 40.000 ký tự → **tách**: `python3 ../../knowledge-work/scripts/split-inventory.py <KEY> --out <scratchpad>/inventory-split/<KEY>`. Script in ra danh sách file + số ký tự và tự kiểm không mất dòng (báo `LỖI` → dừng, ghi tóm tắt, không nộp). Mỗi file con → một item: `<KEY>-00-overview.md` → item **`Inventory <KEY> · 00 Tổng quan`**; `<KEY>-NN-<slug>.md` → item **`Inventory <KEY> · NN <tên module>`** (tên module = dòng `# <KEY> — Inventory · <tên>` đầu file con). Nhóm module của MTRO cố định trong `MAPS` của script; app khác script tự gộp các mục 2.x theo cỡ — muốn nhóm cố định thì thêm vào `MAPS` (đề xuất trong tóm tắt, không tự sửa script).
 
 **Bước B — ghi từng file** (một file một lần gọi, tuần tự, nội dung **nguyên văn** — không cắt, không sửa, không tóm tắt):
@@ -80,7 +80,7 @@ Cùng nội dung file vừa ghi, đưa vào tab Context của project. Tool QA H
 
 ## Rào chắn
 
-- Không ghi file nào ngoài `inventory/<KEY>.md` (file tách nằm ở scratchpad, không commit), và trên QA Hub chỉ đụng item `Inventory <KEY>` / `Inventory <KEY> · …` — không tạo/sửa item khác, không `upsert_knowledge`, không `delete_project_context`. Muốn sửa reference hay lưu rule → đề xuất ở § 5 và trong tóm tắt.
+- Không ghi file nào ngoài `apps/<KEY>/inventory.md` (file tách nằm ở scratchpad, không commit), và trên QA Hub chỉ đụng item `Inventory <KEY>` / `Inventory <KEY> · …` — không tạo/sửa item khác, không `upsert_knowledge`, không `delete_project_context`. Muốn sửa reference hay lưu rule → đề xuất ở § 5 và trong tóm tắt.
 - Không suy diễn hành vi từ UI thành rule. "Nút Save disabled khi thiếu field" là quan sát (ghi được ở § 2 kèm nguồn staging); "hệ thống bắt buộc field X" là rule (→ § 5, đề xuất `update-business-rules`).
 - Không credential, token, store domain merchant thật, dữ liệu khách hàng. Tài khoản chỉ ghi tên biến env.
 - Không thêm sản phẩm vào cart, không tạo item trong app, không Test connection / gửi thật (digest, webhook). Muốn xem form thì mở Edit của item có sẵn rồi Discard.
@@ -93,7 +93,7 @@ Cùng nội dung file vừa ghi, đưa vào tab Context của project. Tool QA H
 
 ```
 HAE-SUMMARY
-- App: <KEY> · file: inventory/<KEY>.md · <N> dòng · build YYYY-MM-DD
+- App: <KEY> · file: apps/<KEY>/inventory.md · <N> dòng · build YYYY-MM-DD
 - Nguồn đã đọc: code <repo@sha> · staging <URL> (<M> màn) · Confluence <K> trang · QA Hub knowledge <N> doc
 - Nguồn không đọc được: <…> hoặc "không"
 - QA Hub: <"đã nộp — item Inventory <KEY> (mới tạo | cập nhật), file <KEY>-inventory.md" | "đã nộp tách N item — Inventory <KEY> · 00…NN (mới tạo a / cập nhật b), byte khớp" | "nộp cụt — <item> <byte>/<byte>" | "chưa nộp — lý do">
@@ -107,7 +107,7 @@ HAE-SUMMARY
 
 ## Khi nào build lại
 
-Theo sự kiện, không theo lịch — xem [`inventory/README.md`](../../knowledge-work/inventory/README.md) § "Khi nào build lại". Build lại một module: `--module <tên>` → chỉ đi phần đó, giữ nguyên mục khác, cập nhật § 0 và § 5.
+Theo sự kiện, không theo lịch — xem [`conventions/inventory.md`](../../knowledge-work/conventions/inventory.md) § "Khi nào build lại". Build lại một module: `--module <tên>` → chỉ đi phần đó, giữ nguyên mục khác, cập nhật § 0 và § 5.
 
 ## Bước tiếp theo
 

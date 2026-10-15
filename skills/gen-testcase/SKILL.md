@@ -28,18 +28,18 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 - Project không khớp app nào, hoặc khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; gọi tiếp cũng chỉ nhận 403.
 - `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `qa-requirement-analysis` trước. **Skill này không tự tạo task.**
 - **Business rule + inventory: QA Hub trước, file local sau** — đọc một nơi, không cả hai:
-  - `search_knowledge { projectId }` (+ `{ projectId, tag }` cho `feature-profile`) → có doc `active` thì đó là bộ rule; **không có** (hoặc MCP lỗi) → đọc `../qa-requirement-analysis/references/business-rules/<KEY>.md` ở bước 4 dưới. Mỗi rule là ít nhất một case Negative/Edge/Regression; `known-issue` chưa fix → case Regression đánh `PO/DEV confirm`; `env` cho tên biến env để điền Preconditions.
-  - `get_project_context { projectId, includeFileText: false }` → có item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) thì đọc text để Steps dùng **đúng tên màn hình, setting, nút**; không có → `../../knowledge-work/inventory/<KEY>.md` local; cũng không có → bỏ qua.
+  - `search_knowledge { projectId }` (+ `{ projectId, tag }` cho `feature-profile`) → có doc `active` thì đó là bộ rule; **không có** (hoặc MCP lỗi) → đọc `../qa-requirement-analysis/references/apps/<KEY>/business-rules.md` ở bước 4 dưới. Mỗi rule là ít nhất một case Negative/Edge/Regression; `known-issue` chưa fix → case Regression đánh `PO/DEV confirm`; `env` cho tên biến env để điền Preconditions.
+  - `get_project_context { projectId, includeFileText: false }` → có item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) thì đọc text để Steps dùng **đúng tên màn hình, setting, nút**; không có → `../../knowledge-work/apps/<KEY>/inventory.md` local; cũng không có → bỏ qua.
   - Inventory có § 5 "Phát hiện lệch" với cột **BR bị ảnh hưởng** → rule có tên ở đó là **đang lệch**: case có Expected dựa vào rule đó đánh `PO/DEV confirm`, ghi ở cột ghi chú *"rule đang lệch theo inventory YYYY-MM-DD § 5 #n"*. Không viết Expected theo hành vi staging để né lệch — Expected vẫn theo rule, chờ PO/Dev chốt.
 - Chưa kết nối MCP → nói rõ, đưa bộ test case ra trong chat để người dùng tự nhập; đừng im lặng bỏ qua.
 
-**2. Đọc app reference** — `../qa-requirement-analysis/references/apps/<KEY>.md`, một file cho một app, tên file là `key` project trên QA Hub — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) trước khi sinh test case. Danh mục app + glossary + cross-app ở `../qa-requirement-analysis/references/apps/README.md`. File app chưa có nội dung → bỏ qua, đừng bịa bối cảnh.
+**2. Đọc app reference** — `../qa-requirement-analysis/references/apps/<KEY>/README.md`, một file cho một app, tên file là `key` project trên QA Hub — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) trước khi sinh test case. Danh mục app + glossary + cross-app ở `../qa-requirement-analysis/references/apps/README.md`. File app chưa có nội dung → bỏ qua, đừng bịa bối cảnh.
 
 > Đây là **bản duy nhất** của thư mục reference, đặt trong skill `qa-requirement-analysis` và dùng chung cho cả 2 skill. Không tạo bản copy trong `gen-testcase/references/` — sửa một chỗ là cả 2 skill cùng thấy.
 
-**3. Nếu app là Mailtro (MTRO): đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — bảng tỷ lệ auto/manual theo epic + quy ước điền 2 cột `Execution Type` / `Automation Script Ref`. File này **chỉ áp dụng cho Mailtro**, bỏ qua khi làm app khác.
+**3. Nếu app là Mailtro (MTRO): đọc `../qa-requirement-analysis/references/apps/MTRO/auto-manual-ratio.md`** — bảng tỷ lệ auto/manual theo epic + quy ước điền 2 cột `Execution Type` / `Automation Script Ref`. File này **chỉ áp dụng cho Mailtro**, bỏ qua khi làm app khác.
 
-**4. Đọc business rules đã xác nhận** — chỉ khi QA Hub không có (bước 1) — `../qa-requirement-analysis/references/business-rules/<APP_PREFIX>.md` (nếu tồn tại) — để nắm các rule đã xác nhận từ các issue trước của app này. Giúp coverage đủ hơn cho Negative/Edge/Regression case dựa trên rule đã biết, kể cả khi rule đó không được nhắc lại trong issue hiện tại. Nếu file chưa tồn tại, bỏ qua bước này.
+**4. Đọc business rules đã xác nhận** — chỉ khi QA Hub không có (bước 1) — `../qa-requirement-analysis/references/apps/<APP_PREFIX>/business-rules.md` (nếu tồn tại), cộng `../qa-requirement-analysis/references/platform/business-rules.md` khi feature chạm upload / HTML config / auth / metafield (rule nền tảng chung mọi app) — để nắm các rule đã xác nhận từ các issue trước của app này. Giúp coverage đủ hơn cho Negative/Edge/Regression case dựa trên rule đã biết, kể cả khi rule đó không được nhắc lại trong issue hiện tại. Nếu file chưa tồn tại, bỏ qua bước này.
 
 ## Thông tin cần thu thập
 
@@ -200,7 +200,7 @@ Key đang có trên QA Hub (kiểm lại bằng `list_projects` chứ đừng ti
 
 - App không có project trên QA Hub → **dừng, hỏi người dùng**, đừng tự chế prefix.
 - Jira project key và key trên QA Hub hiện trùng nhau ở các app đang test, nhưng **nguồn sự thật là QA Hub** — lệch nhau thì theo QA Hub.
-- Thư mục `../qa-requirement-analysis/references/apps/` vẫn dùng để tra bối cảnh app (`<KEY>.md`) và QA component (`README.md`), nhưng **không còn là nguồn của prefix**.
+- Thư mục `../qa-requirement-analysis/references/apps/` vẫn dùng để tra bối cảnh app (`<KEY>/README.md`) và QA component (`README.md`), nhưng **không còn là nguồn của prefix**.
 - **Mailtro là ngoại lệ đang giữ nguyên**: id trong repo automation `qikify-QA-mailtro` vẫn đặt theo màn hình (`TC-SIGNUP-001`…) — xem mục "Mailtro (MTRO)" bên dưới. Case ghi lên QA Hub vẫn nhận id `TC-MTRO-<số>` do QA Hub cấp.
 
 ## Shopify-specific notes
@@ -219,7 +219,7 @@ Mailtro là SaaS email marketing **độc lập, không phải Shopify app**. Kh
 - **Test Case ID theo màn hình trong repo automation**: `TC-SIGNUP-0xx`, `TC-LOGIN-0xx`, `TC-INVITE-0xx`, `TC-CONTACT-0xx`, `TC-CAMPAIGN-0xx`... để map 1-1 giữa `docs/manual-testcases/` và spec Playwright của `qikify-QA-mailtro`. Quy ước này **giữ nguyên** — nó là id trong repo. Trên QA Hub, case vẫn nhận id `TC-MTRO-<số>` do QA Hub cấp; khi cần trace, ghi id repo (`TC-SIGNUP-004`) vào field `Automation Script Ref`.
 - **Ngữ cảnh module**: đặt theo cây thư mục của repo automation, ví dụ `Mailtro > 01-auth > Signup > Validation từng field` — trên QA Hub thì nằm ở tag của task và trong `title`.
 - **Preconditions**: ghi môi trường + URL cụ thể (`Staging https://staging-id.mailtro.ai/signup, chưa đăng nhập`). **Không** ghi theme, Shopify plan, development store. Lưu ý 2 domain khác nhau: auth ở `staging-id.mailtro.ai`, app workspace ở `<workspace-slug>.wisle.app`.
-- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md`** — xem mục "Tỷ lệ auto/manual" ngay bên dưới.
+- **Cột Execution Type / Automation Script Ref**: đây là chỗ ghi trạng thái automation (thay cho quy ước cũ `Auto: ✅ ...` ở cột Notes). Tên file trong ref lấy theo spec của repo `qikify-QA-mailtro`, ví dụ `` `signup.spec.ts` › TC-SIGNUP-004 ``. **Trước khi gán 2 cột này cho Mailtro, đọc `../qa-requirement-analysis/references/apps/MTRO/auto-manual-ratio.md`** — xem mục "Tỷ lệ auto/manual" ngay bên dưới.
 - **Cột Notes**: chỉ giữ ghi chú không thuộc 2 cột trên. Nếu Jira có ghi priority gốc (P0/P1) thì giữ lại: `Priority gốc: P0`.
 
 ### Output khi làm trong repo `qikify-QA-mailtro`
@@ -250,7 +250,7 @@ Trong repo automation `qikify-QA-mailtro`, nguồn sự thật là Markdown. Nh�
 
 ### Tỷ lệ auto/manual — chỉ áp dụng cho Mailtro
 
-File `../qa-requirement-analysis/references/apps/MTRO-auto-manual-ratio.md` là **nguồn duy nhất** của tỷ lệ này: bảng tỷ lệ cho 15 epic MTRO, nguyên tắc chung để suy ra tỷ lệ cho epic chưa có trong bảng, và quy ước điền 2 cột. Đọc file đó khi sinh test case cho MTRO; **không** áp tỷ lệ này cho TEPO/QSC/QCO/DUOS.
+File `../qa-requirement-analysis/references/apps/MTRO/auto-manual-ratio.md` là **nguồn duy nhất** của tỷ lệ này: bảng tỷ lệ cho 15 epic MTRO, nguyên tắc chung để suy ra tỷ lệ cho epic chưa có trong bảng, và quy ước điền 2 cột. Đọc file đó khi sinh test case cho MTRO; **không** áp tỷ lệ này cho TEPO/QSC/QCO/DUOS.
 
 Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file trên):
 
@@ -272,7 +272,7 @@ Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file tr�
 - Epic chưa có trong bảng: áp bộ nguyên tắc ở mục 2 của file reference (rule ở backend / lặp lại nhiều / regression cao / kết quả nhị phân → auto; phụ thuộc thị giác / hệ thống ngoài / thời gian thực / đánh giá trải nghiệm → manual).
 - Bảng đang ở trạng thái **draft** vì phần lớn epic MTRO chưa có AC. Nếu issue đang xử lý đã có AC chi tiết và scope thật lệch rõ so với ước lượng trong bảng, báo cho user để cập nhật lại file reference (mục 4 — Quy trình cập nhật) thay vì âm thầm dùng số cũ.
 - Phần lớn feature Mailtro (phase 2–4) còn "To Do", chưa có UI/selector → kỳ vọng chi tiết thường chưa chốt, dùng `PO/DEV confirm` nhiều hơn bình thường thay vì tự suy đoán UI.
-- Đọc `../qa-requirement-analysis/references/apps/MTRO.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability).
+- Đọc `../qa-requirement-analysis/references/apps/MTRO/README.md` để nắm map epic ↔ thư mục test, hành vi auth/slug/invite đã xác nhận, và QA focus (multi-tenant isolation, bảo mật invite token, role matrix, deliverability).
 
 ## Tạo test case trên QA Hub
 

@@ -38,7 +38,7 @@ Thiếu thứ chỉ người dùng cấp được (OTP, 2FA, tài khoản, thi�
 
 ## Trước khi chạy
 
-1. **Xác định app** (`<KEY>`: MTRO / TEPO / QSC / QCO / DUOS) từ task, issue, hoặc repo. Đọc business rule của app tại `../../knowledge-work/business-rules/<KEY>.md` và inventory `../../knowledge-work/inventory/<KEY>.md` nếu có. Khi Expected trong case mâu thuẫn hành vi app, **rule đã xác nhận là trọng tài**; Expected mâu thuẫn rule → Blocked + "Expected nghi sai, cần PO/DEV confirm", **không** tự sửa case.
+1. **Xác định app** (`<KEY>`: MTRO / TEPO / QSC / QCO / DUOS) từ task, issue, hoặc repo. Đọc business rule của app tại `../../knowledge-work/apps/<KEY>/business-rules.md` và inventory `../../knowledge-work/apps/<KEY>/inventory.md` nếu có. Khi Expected trong case mâu thuẫn hành vi app, **rule đã xác nhận là trọng tài**; Expected mâu thuẫn rule → Blocked + "Expected nghi sai, cần PO/DEV confirm", **không** tự sửa case.
 2. **Nguồn A**: `whoami` → `list_projects` (xác nhận `isMember: true`, không phải member → dừng) → `list_tasks` xác nhận `taskId` tồn tại (**không** đọc `notes` — bản phân tích rất dài) → `list_test_cases` **đúng một lần**, lấy id/title/steps/expectedResult/status. Lọc bỏ case `Execution Type` = `Automated` trừ khi được đưa đích danh id; đếm số case bỏ qua để báo.
 3. **Nguồn B**: xem mục "Nguồn B" bên dưới.
 4. **Kênh browser**: Chrome bridge khi người dùng đã đăng nhập sẵn trong Chrome (`chrome_status` để kiểm tra), còn lại Playwright MCP. App Shopify embedded (iframe `admin.shopify.com`) → **bắt buộc Playwright MCP**, Chrome bridge không vào được iframe. Không chuyển kênh giữa chừng trừ khi kênh đang dùng hỏng — ghi vào log.
@@ -73,7 +73,7 @@ Ghi kết quả: `update_test_case` với **đúng hai trường** `status` + `a
    | `Không tái hiện` | Đi đúng step mà không thấy lỗi — ghi rõ môi trường + build/commit đang test, **không** kết luận "đã fix" thay Dev |
    | `Blocked` | Thiếu precondition, thiếu tài khoản, môi trường lỗi, hoặc issue không nói đủ để đi |
 4. **Issue feature / checklist** → chạy như case thường, Expected lấy nguyên văn từ issue.
-5. **Chỗ issue không nói rõ Expected** → `blocked` + "issue không nói Expected cho <bước>", **không** tự suy ra Expected rồi chấm điểm app theo đó. Rule đã xác nhận trong `business-rules/<KEY>.md` được dùng làm Expected, nhưng phải ghi rõ nguồn.
+5. **Chỗ issue không nói rõ Expected** → `blocked` + "issue không nói Expected cho <bước>", **không** tự suy ra Expected rồi chấm điểm app theo đó. Rule đã xác nhận trong `apps/<KEY>/business-rules.md` được dùng làm Expected, nhưng phải ghi rõ nguồn.
 6. **Chỉ đọc GitHub**: không `gh issue comment`, không đóng/mở lại issue, không đổi label/assignee, không tạo issue, không push, không commit. Kết quả nằm ở log local + báo cáo; người dùng quyết định có mang lên GitHub hay không.
 7. Issue có link tới task QA Hub hoặc ghi id case (`TC-<KEY>-<số>`) → chuyển sang nguồn A cho các case đó (được ghi status), và ghi trong log là chúng đến từ issue nào.
 
