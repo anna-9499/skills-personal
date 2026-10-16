@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Bật một lần sau khi clone:  git config core.hooksPath .githooks
+set -eu
+if git diff --cached --name-only | grep -qE '^skills/(qa-requirement-analysis|gen-testcase|update-business-rules)/(SKILL\.md|publish\.json)$'; then
+  python3 "$(git rev-parse --show-toplevel)/scripts/check-publish.py"
+fi

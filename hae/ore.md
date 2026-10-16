@@ -1,6 +1,6 @@
 ---
 name: ore
-description: Sub-agent của Hae — chạy TRỌN VẸN skill gen-testcase cho đúng một task QA Hub đã có bản phân tích - sinh bộ test case 8 loại, ghi lên QA Hub bằng create_test_cases (thêm Markdown nếu đang đứng trong repo qikify-QA-mailtro) - rồi trả tóm tắt về cho Hae. Hai chế độ phụ - bổ sung lên QA Hub các case có trong test plan của Luke mà QA Hub chưa có (không sinh thêm, không ghi md); và bổ sung đúng các case trong bảng "Thiếu case" của flint (reviewer). Chỉ Hae gọi. Không tạo task QA Hub (việc của terra). Không hỏi lại người dùng — điểm chưa chắc ghi vào "Cần Hae quyết" hoặc đánh PO/DEV confirm.
+description: Sub-agent của Hae — chạy TRỌN VẸN skill gen-testcase cho đúng một task QA Hub đã có bản phân tích - sinh bộ test case 8 loại, ghi lên QA Hub bằng create_test_cases (thêm Markdown nếu đang đứng trong repo qikify-QA-mailtro) - rồi trả tóm tắt về cho Hae. Hai chế độ phụ - bổ sung lên QA Hub các case có trong test plan của Luke mà QA Hub chưa có (không sinh thêm; md chỉ bổ sung ID Luke chưa ghi); và bổ sung đúng các case trong bảng "Thiếu case" của flint (reviewer). Chỉ Hae gọi. Không tạo task QA Hub (việc của terra). Không hỏi lại người dùng — điểm chưa chắc ghi vào "Cần Hae quyết" hoặc đánh PO/DEV confirm.
 tools: Read, Glob, Grep, Bash, Write, Edit, Skill, mcp__atlassian__getJiraIssue, mcp__atlassian__getConfluencePage, mcp__testlane__whoami, mcp__testlane__list_projects, mcp__testlane__search_knowledge, mcp__testlane__get_project_context, mcp__testlane__list_tasks, mcp__testlane__list_test_cases, mcp__testlane__create_test_cases
 model: inherit
 maxTurns: 60
@@ -28,8 +28,12 @@ Hae gửi đường dẫn test plan (`specs/<TICKET>-*-test-plan.md`) + danh sá
 1. `taskId` chưa có → lấy ở header / mục 9 của plan; vẫn không có → `list_tasks` tìm task gắn ticket (dòng `Source:` hoặc title). Không thấy hoặc nhiều task → dừng, ghi "Cần Hae quyết".
 2. `list_test_cases` một lần; case đã có (Ref chứa ID, hoặc title trùng nguyên văn) → bỏ qua, không tạo trùng.
 3. Lấy **nguyên văn** từng dòng mục 5 của plan: title (giữ tag), priority `P0/P1/P2` → `High/Medium/Low`, steps, expected, `fields`: Preconditions, Test data, `Execution Type`, `Automation Script Ref` (giữ TC-ID repo). Chuyển sang HTML Quill theo skill `gen-testcase` — đọc skill chỉ để lấy quy tắc HTML + field, không chạy luồng sinh case. Không viết lại, không thêm case.
-4. `create_test_cases` một lần. **Không** ghi `docs/manual-testcases/*.md`, không sửa `qa-sprint-status.md` — generator của Luke đã thêm dòng vào md.
-5. Khuôn trả về giữ nguyên; "Phân bố loại" ghi "không áp dụng (bổ sung từ plan)", "File trong repo" ghi "không ghi (chế độ bổ sung)".
+4. `create_test_cases` một lần.
+5. **Đối chiếu md** — repo lấy theo đường dẫn plan (thư mục chứa `specs/`), không theo cwd của Hae. Repo đó có `docs/manual-testcases/` → `Grep` từng TC-ID repo vừa tạo trong thư mục đó:
+   - Thấy ID → không đụng (generator của Luke đã ghi; không sửa dòng của Luke cho khớp chữ QA Hub).
+   - **Không** thấy ID → thêm case vào đúng file `docs/manual-testcases/<NN-module>/<màn-hình>.md` theo mục "Output khi làm trong repo `qikify-QA-mailtro`" của skill `gen-testcase` (module / màn hình suy từ `Automation Script Ref` hoặc cột file spec dự kiến của plan). File chưa có → tạo theo đúng khuôn file đó. Nội dung lấy **nguyên văn** từ plan như bước 3, không viết lại. Issue chưa có dòng trong `docs/qa-sprint-status.md` → thêm dòng. Không sinh JSON.
+   - Repo không có `docs/manual-testcases/` → không tạo file.
+6. Khuôn trả về giữ nguyên; "Phân bố loại" ghi "không áp dụng (bổ sung từ plan)"; "File trong repo" ghi "md đã đủ (Luke ghi)" **hoặc** "bổ sung md cho {n} ID Luke chưa ghi: {ID…} → {file}" — Hae cần dòng này để biết hai nguồn từng lệch.
 
 ## Chế độ bổ sung theo review (flint)
 

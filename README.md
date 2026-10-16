@@ -25,6 +25,8 @@ hae/                         Nhóm QA manual — agent mặc định mọi sessi
   bin/staging-lock.sh        Khoá staging một app một khoá, dùng chung Hae (sonder, ash) và Luke (healer)
   bin/preflight.sh           Kiểm repo / MCP / staging / khoá trước khi Hae giao sonder hoặc ash
   hooks/                     env-guard (chặn browser vào URL production) + apply-settings.sh vá settings.json
+scripts/check-publish.py     Kiểm publish.json khớp SKILL.md — chạy trong pre-commit
+.githooks/pre-commit         Hook của repo (bật bằng core.hooksPath)
 luke/                        Nhóm Playwright automation — mở bằng `claude --agent luke` (xem mục "Luke")
   luke.md                    Luke — agent điều phối, chạy ở main thread
   playwright-test-planner.md    Sub-agent: khám phá app trên staging → test plan
@@ -44,6 +46,7 @@ Máy mới:
 ```bash
 git clone --recurse-submodules git@github.com:anna-9499/skills-personal.git
 cd skills-personal
+git config core.hooksPath .githooks         # pre-commit kiểm publish.json (xem "Bẫy: publish.json")
 mkdir -p ~/.claude/skills
 for d in skills/*/; do                      # mọi skill trong repo, thêm skill mới không phải sửa dòng này
   ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"
@@ -126,24 +129,13 @@ Quyền do org quản, sửa có audit qua git log, cả team mount cùng một 
 
 Đổi tiêu đề một section mà quên sửa `publish.json` → trỏ trượt, không báo lỗi, bản trên Worker âm thầm sai. Sửa tiêu đề thì mở `publish.json` cùng skill sửa theo.
 
-Kiểm nhanh trước khi commit — báo ngay nếu có khoá nào trỏ trượt:
+Kiểm tự động bằng **pre-commit hook**: commit có đụng `SKILL.md` / `publish.json` của 3 skill trên thì `scripts/check-publish.py` chạy trên bản đang staged, khoá nào trỏ trượt (0 lần) hoặc mơ hồ (≥ 2 lần) → chặn commit. Khoá là tiêu đề (`## …`) phải khớp **nguyên dòng** — thêm chữ vào cuối tiêu đề cũng bị bắt. Bật hook một lần sau khi clone:
 
 ```bash
-python3 - << 'EOF'
-import io, json
-for skill in ["qa-requirement-analysis", "gen-testcase", "update-business-rules"]:
-    cfg = json.load(io.open(f"skills/{skill}/publish.json", encoding="utf-8"))
-    md  = io.open(f"skills/{skill}/SKILL.md", encoding="utf-8").read()
-    bad = [f"{f}: [{md.count(k)}x] {k[:70]}"
-           for f in ["dropSections", "dropParagraphs"] for k in cfg.get(f, [])
-           if md.count(k) != 1]
-    bad += [f"{f}: [{md.count(k)}x] {k[:70]}"
-            for f in ["sectionNotes", "replaceSections", "replaceParagraphs"] for k in cfg.get(f, {})
-            if md.count(k) != 1]
-    print(("FAIL " if bad else "OK   ") + skill)
-    for b in bad: print("      ", b)
-EOF
+git config core.hooksPath .githooks
 ```
+
+Kiểm tay file trên đĩa: `python3 scripts/check-publish.py --worktree`. Bỏ qua khẩn cấp: `git commit --no-verify`.
 
 Worker **không có filesystem**. Thêm một câu "đọc `references/...`" vào SKILL.md thì phải đưa câu đó vào `dropParagraphs` (hoặc `replaceParagraphs`), và phần cốt lõi của file đó phải được inline sẵn trong SKILL.md — nếu không bản Worker sẽ mất hẳn phần hướng dẫn ấy mà không báo gì.
 
