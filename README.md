@@ -14,12 +14,17 @@ skills/
   gen-testcase/              Sinh test case 8 loại → ghi thẳng lên QA Hub qua MCP
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/apps/<KEY>/business-rules.md
   daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
+  build-app-context/         Đọc code / staging / Confluence → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
 hae/                         Nhóm QA manual — agent mặc định mọi session (xem mục "Hae")
   hae.md                     Hae — agent điều phối, chạy ở main thread
   terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task QA Hub
   ore.md                     Sub-agent: chạy trọn vẹn gen-testcase → test case trên QA Hub
   flint.md                   Sub-agent: review độc lập bản phân tích + bộ test case (chỉ đọc, Opus)
   sonder.md                  Sub-agent: chạy manual test case trên staging → status lên QA Hub
+  ash.md                     Sub-agent: chạy trọn vẹn build-app-context → inventory app
+  bin/staging-lock.sh        Khoá staging một app một khoá, dùng chung Hae (sonder, ash) và Luke (healer)
+  bin/preflight.sh           Kiểm repo / MCP / staging / khoá trước khi Hae giao sonder hoặc ash
+  hooks/                     env-guard (chặn browser vào URL production) + apply-settings.sh vá settings.json
 luke/                        Nhóm Playwright automation — mở bằng `claude --agent luke` (xem mục "Luke")
   luke.md                    Luke — agent điều phối, chạy ở main thread
   playwright-test-planner.md    Sub-agent: khám phá app trên staging → test plan
@@ -39,8 +44,9 @@ Máy mới:
 ```bash
 git clone --recurse-submodules git@github.com:anna-9499/skills-personal.git
 cd skills-personal
-for s in qa-requirement-analysis gen-testcase update-business-rules daily-recap; do
-  ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s
+mkdir -p ~/.claude/skills
+for d in skills/*/; do                      # mọi skill trong repo, thêm skill mới không phải sửa dòng này
+  ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"
 done
 mkdir -p ~/.claude/agents/Hae ~/.claude/agents/Luke
 for a in hae terra ore flint sonder ash; do
@@ -57,6 +63,14 @@ Rồi đặt Hae làm agent mặc định cho mọi session — thêm vào `~/.c
 { "agent": "hae" }
 ```
 Không có dòng này thì session là Claude Code thường; vẫn gọi được Hae từng lần bằng `claude --agent hae`.
+
+Rồi cài rào chắn — **bắt buộc**, thiếu bước này thì `sonder` / `ash` điều hướng được tới URL production mà không ai chặn:
+```bash
+bash hae/hooks/apply-settings.sh    # backup + vá ~/.claude/settings.json, in diff; restart Claude Code
+```
+Script thêm hook `PreToolUse` `env-guard` cho các tool navigate của Playwright MCP / Chrome bridge (URL production → deny; mở tạm 30 phút bằng `touch ~/.hae-allow-production`, chỉ chị làm) và đưa `delete_bug` / `delete_knowledge` của QA Hub vào `permissions.ask`. Đường dẫn trong `settings-patch.jq` đang hardcode `~/Downloads/AI Agent/skills-personal` — clone chỗ khác thì sửa file đó trước.
+
+`hae/bin/*.sh` không cần symlink — `hae.md` gọi thẳng theo đường dẫn repo (`"$HOME/Downloads/AI Agent/skills-personal/hae/bin/..."`), nên repo phải nằm đúng chỗ đó, hoặc sửa đường dẫn trong `hae.md`. Cần `jq`, `python3`, `curl`.
 
 > ⚠️ Quên `--recurse-submodules` → `knowledge-work/` rỗng → cả 3 symlink trong
 > `references/` chết mà Claude **không báo lỗi rõ**, chỉ im lặng phân tích thiếu
@@ -144,7 +158,7 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 
 ## Hae — agent điều phối
 
-Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích yêu cầu, sinh test case hay chạy manual test — giao cho 3 sub-agent, nhận kết quả, tự quyết bước tiếp, báo lại. Việc ngoài 3 mảng đó (business rule, daily recap, code, hỏi đáp) Hae làm như một session Claude Code bình thường.
+Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích yêu cầu, sinh test case, review, chạy manual test hay build inventory app — giao cho 5 sub-agent, nhận kết quả, tự quyết bước tiếp, báo lại. Việc ngoài 5 mảng đó (business rule, daily recap, code, hỏi đáp) Hae làm như một session Claude Code bình thường.
 
 ```
 chị ──▶ hae (main thread, settings.agent = "hae")
@@ -155,31 +169,33 @@ chị ──▶ hae (main thread, settings.agent = "hae")
           │               + chế độ MISS: bug production → case nào lẽ ra bắt được / ứng viên thiếu case
           ├──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
           │               + case cần mắt nhìn: chụp ảnh từng bước, để not-run · chế độ retest bug: Passed / To Do
+          ├──▶ ash      chạy trọn vẹn build-app-context → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
           └──  (tự làm) báo cáo gửi Dev/PO cho một task — chỉ trong chat
 ```
 
 Vì sao Hae phải là **main thread** chứ không phải sub-agent: sub-agent trong Claude Code không gọi được Agent tool, nên "agent cha" bắt buộc là session chính. Claude Code ≥ 2.1 có `--agent <tên>` và setting `agent` cho việc này.
 
-Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 4 file là `~/.claude/skills/...`, không phụ thuộc vị trí file agent.
+Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 6 file là `~/.claude/skills/...`, không phụ thuộc vị trí file agent.
 
 Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
 
 | Tình huống | Hae làm gì | Vì sao |
 |---|---|---|
-| Verdict Ready / Partially Ready | tự nối sang `ore`, không hỏi | đúng gợi ý sẵn trong skill qa-requirement-analysis; case chạm GAP mở đã có nhãn `PO/DEV confirm` |
-| Verdict Not Ready | dừng, đưa câu hỏi mục 12 | có GAP Blocker thì sinh case dễ sai cả hướng |
+| Verdict Ready / Partially Ready | `flint` review RA rồi tự nối sang `ore`, không hỏi | đúng gợi ý sẵn trong skill qa-requirement-analysis; case chạm GAP mở đã có nhãn `PO/DEV confirm` |
+| Verdict Not Ready | vẫn đi tiếp, sinh bộ case **nháp**: case chạm GAP Blocker gắn `PO/DEV confirm`, Expected theo giả định `AS-xx`; GAP Blocker + câu hỏi mục 12 lên đầu "Chị cần làm" (chốt 2026-10-05) | dừng hẳn thì chờ PO lâu mà không có gì để chạy; PO trả lời → `terra` chế độ cập nhật → `flint` TC sửa trên case cũ. Chị nói "chỉ phân tích" / "Not Ready thì dừng" thì vẫn dừng |
 | "Tạo test case" mà chưa có task QA Hub | chạy `terra` trước, nói một câu, không hỏi | gen-testcase không tự tạo task |
 | "Chạy test" mà task chưa có test case | đi `terra` → `ore` trước; xong mới hỏi có chạy `sonder` không | bước chạy cần môi trường + tài khoản, nên **không** tự nối `ore` → `sonder` |
 | Chạy manual cho MTRO | không hỏi URL / tài khoản — `sonder` tự đọc `.env` của repo `qikify-QA-mailtro` | data test đã nằm trong repo; 4 app Shopify thì hỏi một câu gộp URL + cách đăng nhập |
 | `sonder` báo nghi vấn bug | liệt kê bug, hỏi có report lên QA Hub không; chỉ gọi lại `sonder` cho đúng các case đó | `report_bug` có thể announce Slack/Jira — luôn không kèm `reportTo` |
 | Retest bug sau khi Dev fix | `sonder` retest, không hỏi quyền `update_bug`; bug trên Jira → không đổi status | Jira giữ status bug (webhook ghi đè); đóng bug là việc của chị |
 | `flint` MISS trả ứng viên thiếu case | hỏi chị chọn dòng rồi mới gọi `ore` | ứng viên chưa phải kết luận |
+| Giao `sonder` / `ash` | chạy `bin/preflight.sh` rồi `bin/staging-lock.sh acquire`; `sonder` chia lô ≤ 15 case, giữ khoá suốt các lô | hai agent dùng chung staging (cả healer của Luke) dẫm data nhau |
 
-Danh sách 9 tình huống Hae **được phép hỏi** nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
+Danh sách 11 câu Hae **được phép hỏi** (chia 3 nhóm A thiếu input / B duyệt trước khi ghi / C xung đột, đánh số cố định nên không liền) nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
 
 **Sub-agent không nói chuyện được với người dùng.** Chúng chạy hết việc được giao, điểm nào skill bảo "hỏi người dùng" thì ghi vào `Cần Hae quyết` trong khối `### HAE-SUMMARY` đầu output. Hae bóc khối đó để ra quyết định, rồi chuyển kết quả cho người dùng — **dán nguyên văn** báo cáo 14 mục của `terra` và bảng kết quả chạy của `sonder`, vì output của sub-agent không tự hiện ra.
 
-Khác với `req-analyst` đã xoá (xem bên dưới): ba sub-agent này chạy skill **đầy đủ**, có ghi lên QA Hub, và chỉ có Hae gọi — nên không còn chuyện model phân vân giữa skill và agent.
+Khác với `req-analyst` đã xoá (xem bên dưới): `terra`, `ore`, `ash` chạy skill **đầy đủ**, có ghi lên QA Hub, và chỉ có Hae gọi — nên không còn chuyện model phân vân giữa skill và agent.
 
 Tool của sub-agent được khai tường minh trong frontmatter và cố ý **thiếu** — mỗi agent chỉ ghi được đúng phần việc của mình:
 
@@ -188,8 +204,10 @@ Tool của sub-agent được khai tường minh trong frontmatter và cố ý *
 | `terra` | `create_task`, `update_task` (chỉ `notes`, chế độ cập nhật) | `create_test_cases`, `update_test_case`, `report_bug` |
 | `ore` | `create_test_cases` | `create_task`, `update_test_case`, `report_bug` |
 | `sonder` | `update_test_case`, `report_bug` (chỉ khi Hae cho phép), `update_bug` (chỉ chế độ retest, chỉ `status` `Passed` / `To Do` — không đóng bug) | `create_task`, `create_test_cases`, `add_test_case_image` (bị treo — ảnh lưu local) |
+| `flint` | **không ghi gì** — chỉ đọc QA Hub, Jira, file | mọi tool ghi, `Bash`, `Write`, `Edit` |
+| `ash` | `add_project_context`, `update_project_context`, `update_project_context_file` (chỉ item `Inventory <KEY>…`); file `apps/<KEY>/inventory.md` | `create_task`, `create_test_cases`, `upsert_knowledge`, tool ghi Jira |
 
-Cả ba chỉ **đọc** Jira, không có tool ghi lên Jira. `sonder` mở app bằng Playwright MCP, hoặc Chrome bridge (`mcp__chrome__*`) khi cần session người dùng đã đăng nhập. Muốn mở thêm quyền thì mở ở frontmatter, có chủ đích.
+Không sub-agent nào có tool ghi lên Jira / Slack. `sonder` và `ash` mở app bằng Playwright MCP, hoặc Chrome bridge (`mcp__chrome__*`) khi cần session người dùng đã đăng nhập. Muốn mở thêm quyền thì mở ở frontmatter, có chủ đích.
 
 ### Lịch sử: agent req-analyst đã bị xoá
 

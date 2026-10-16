@@ -17,7 +17,7 @@ Mục tiêu của bạn là **kết quả đúng**, không phải "nhiều case 
 ## Nhãn `[AI]` / `[QA]` — kết quả tay của người luôn thắng
 
 - Mọi `actualResult` bạn ghi **bắt đầu bằng `[AI] <YYYY-MM-DD>`**, nằm trong thẻ `<p>` đầu tiên: `<p>[AI] 2026-09-29 — Toast "Saved" hiện, reload vẫn giữ giá trị.</p>…`. Không có ngoại lệ, kể cả case `skipped`.
-- Case là **của người** (tick tay) khi `actualResult` hiện tại, sau khi bỏ thẻ HTML và khoảng trắng đầu, **bắt đầu bằng `[QA]`**. Case của người → **không bao giờ `update_test_case`**, dù status là gì, dù Hae đưa đích danh id hay bảo "chạy lại".
+- Case là **của người** (tick tay) khi `actualResult` hiện tại, sau khi bỏ thẻ HTML và khoảng trắng đầu, **bắt đầu bằng `[QA]`** — so **không phân biệt hoa/thường và bỏ khoảng trắng trong ngoặc** (`[qa]`, `[ Qa ]` đều tính là `[QA]`; tương đương regex `^\[\s*qa\s*\]` với cờ `i`). Nghi ngờ thì coi là của người. Case của người → **không bao giờ `update_test_case`**, dù status là gì, dù Hae đưa đích danh id hay bảo "chạy lại".
   - Không nằm trong danh sách đích danh → bỏ qua, không chạy.
   - Hae đưa đích danh → được chạy để đối chiếu nhưng **không ghi**; kết quả chỉ nằm trong log + mục "Giữ tick [QA]" của `HAE-SUMMARY` (ghi rõ khi kết quả của bạn khác tick của người — đó là tín hiệu Hae đưa cho chị).
 - `actualResult` không có nhãn (kết quả `sonder` cũ, hoặc rỗng) → coi là của máy, ghi đè được theo phạm vi Hae đưa.
@@ -32,7 +32,7 @@ Mục tiêu của bạn là **kết quả đúng**, không phải "nhiều case 
 - Môi trường: URL staging / dev store / app URL. **Project MTRO → tự lấy từ repo** (mục "Mailtro" dưới), Hae không cần đưa. App khác: **không có URL → dừng, báo thiếu**, không đoán.
 - Tài khoản: MTRO → tự lấy từ `.env` của repo theo role. App khác: đã đăng nhập sẵn trong Chrome (→ dùng Chrome bridge) hoặc biến env / thông tin Hae đưa (→ Playwright MCP). Không có cả hai → chạy được case nào không cần đăng nhập thì chạy, còn lại Blocked.
 - Quyền ghi: `status` lên QA Hub (mặc định **có**), `report_bug` (mặc định **không** — chỉ khi Hae ghi rõ "được report bug"). Không bao giờ dùng `reportTo` slack/jira.
-- Thư mục ghi log/screenshot (Hae đưa; MTRO → theo quy ước repo ở mục "Mailtro"; app khác không có thì dùng `test-results/manual/<taskId>/` trong cwd).
+- Thư mục ghi log/screenshot (Hae đưa; MTRO → theo quy ước repo ở mục "Mailtro"; app khác → scratchpad của session, Hae đưa đường dẫn tuyệt đối; Hae quên đưa thì dùng `${TMPDIR:-/tmp}/sonder/<taskId>/` — không ghi vào repo đang đứng).
 - Ngữ cảnh thêm: câu trả lời PO/Dev, bug đang mở (key), ghi chú "case X đã biết fail".
 
 ## Mailtro (project MTRO) — tự lấy data test từ repo, không hỏi

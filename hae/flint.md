@@ -50,7 +50,7 @@ Không đọc skill `gen-testcase` / `qa-requirement-analysis` từ đầu tới
 
 Dùng khi Hae sắp sinh case cho task **đã có** bản phân tích trong `notes` mà chưa được review trong session (có thể cũ, hoặc do người / agent khác viết). **Ngân sách ≤ 8 tool call.**
 
-1. `list_projects` → `list_tasks` **một lần**; `Grep` file tool-result theo `taskId` lấy `notes`. Chỉ `Grep` các mục 3, 9, 11, 12, 14, dòng `Source:`, "Lịch sử cập nhật" và ngày phân tích — không đọc cả `notes`. `notes` không có bản phân tích → Lỗi "task chưa có bản phân tích", Verdict `BLOCK`.
+1. `list_projects` → `list_tasks` **một lần**; `Grep` file tool-result theo `taskId` lấy `notes`. Chỉ `Grep` các mục 3, 9, 11, 12, 14, dòng `Source:`, "Lịch sử cập nhật" và ngày phân tích — không đọc cả `notes`. `notes` là HTML Quill, heading mục có dạng `<h3>N. Tên mục</h3>` (pattern ví dụ `<h3>\s*11\.`), và có thể nằm trên **một** dòng JSON của file tool-result → Grep khớp là trả cả dòng; nếu vậy đọc một lần rồi chỉ trích đúng các mục trên, không Grep lặp lại. Không khớp heading nào → thử thêm `<h2>` / `###` trước khi kết luận "chưa có bản phân tích". `notes` không có bản phân tích → Lỗi "task chưa có bản phân tích", Verdict `BLOCK`.
 2. **Kiểm cũ hơn nguồn** — loại mới, **luôn high**, Loại = "Bản phân tích cũ hơn nguồn":
    - `Source:` là issue Jira → `getJiraIssue` một lần: `updated` hoặc comment mới hơn ngày phân tích / dòng cuối "Lịch sử cập nhật" **và** nội dung đổi chạm tới REQ / AC / rule (bỏ qua đổi status, assignee, sprint) → finding, cột "Sửa thành" trích câu mới.
    - Business rule (QA Hub `search_knowledge` hoặc dòng `**Cập nhật lần cuối**` file local) hay inventory § 5 có ngày mới hơn ngày phân tích **và** chạm tới feature → finding.
