@@ -4,6 +4,17 @@ Capability cá nhân: skill và agent tự viết. Tách khỏi knowledge của 
 
 Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của app không nằm ở đây — nó ở repo [`knowledge-work`](knowledge-work), mount vào đây làm submodule.
 
+**Mục lục:** [Yêu cầu](#yêu-cầu) · [Nội dung](#nội-dung) · [Nối vào Claude Code](#nối-vào-claude-code) · [Phụ thuộc knowledge-work](#phụ-thuộc-knowledge-work) · [Sửa skill](#sửa-skill) · [Hae](#hae--agent-điều-phối) · [Luke](#luke--agent-điều-phối-playwright-automation) · [daily-recap](#daily-recap-vì-sao-có-scriptstestlane-digestpy)
+
+## Yêu cầu
+
+- **macOS** (hoặc Linux). Mọi thứ nối bằng symlink và script bash; Windows không hỗ trợ.
+- Claude Code **≥ 2.1** — cần `--agent <tên>` và setting `agent` để Hae chạy ở main thread.
+- `git`, `python3` (≥ 3.8), `jq`, `curl`.
+- Quyền đọc repo private `ownego/qa-knowledge-work` (submodule).
+- Repo nằm đúng **`~/Downloads/AI Agent/skills-personal`**: `hae.md` gọi `hae/bin/*.sh` và `settings-patch.jq` gọi `env-guard.sh` theo đường dẫn tuyệt đối đó. Mailtro thêm: repo automation ở `~/Downloads/Auto testing/qikify-QA-mailtro` (`hae.md`, `sonder.md` đọc `.env` ở đó). Đặt chỗ khác thì sửa các đường dẫn này — `install.sh` sẽ nhắc.
+- MCP server: `testlane` (QA Hub), `playwright` (headed), `chrome` (Chrome bridge), `atlassian`, Slack — `hae/bin/preflight.sh` kiểm đủ trước khi giao `sonder` / `ash`.
+
 ---
 
 ## Nội dung
@@ -25,6 +36,7 @@ hae/                         Nhóm QA manual — agent mặc định mọi sessi
   bin/staging-lock.sh        Khoá staging một app một khoá, dùng chung Hae (sonder, ash) và Luke (healer)
   bin/preflight.sh           Kiểm repo / MCP / staging / khoá trước khi Hae giao sonder hoặc ash
   hooks/                     env-guard (chặn browser vào URL production) + apply-settings.sh vá settings.json
+install.sh                   Nối repo vào Claude Code (symlink + hook) — chạy lại được
 scripts/check-publish.py     Kiểm publish.json khớp SKILL.md — chạy trong pre-commit
 .githooks/pre-commit         Hook của repo (bật bằng core.hooksPath)
 luke/                        Nhóm Playwright automation — mở bằng `claude --agent luke` (xem mục "Luke")
@@ -44,22 +56,12 @@ Skill khác trong `~/.claude/skills/` (cloudflare, wrangler, sandbox-*, nodeterm
 
 Máy mới:
 ```bash
-git clone --recurse-submodules git@github.com:anna-9499/skills-personal.git
-cd skills-personal
-git config core.hooksPath .githooks         # pre-commit kiểm publish.json (xem "Bẫy: publish.json")
-mkdir -p ~/.claude/skills
-for d in skills/*/; do                      # mọi skill trong repo, thêm skill mới không phải sửa dòng này
-  ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"
-done
-mkdir -p ~/.claude/agents/Hae ~/.claude/agents/Luke
-for a in hae terra ore flint sonder ash; do
-  ln -sfn "$PWD/hae/$a.md" ~/.claude/agents/Hae/$a.md
-done
-# qa-automation.template.md không phải agent nhưng vẫn phải link: luke.md đọc template qua đường dẫn này
-for a in luke playwright-test-planner playwright-test-generator playwright-test-healer qa-automation.template; do
-  ln -sfn "$PWD/luke/$a.md" ~/.claude/agents/Luke/$a.md
-done
+git clone --recurse-submodules git@github.com:anna-9499/skills-personal.git "$HOME/Downloads/AI Agent/skills-personal"
+cd "$HOME/Downloads/AI Agent/skills-personal"
+bash install.sh
 ```
+
+`install.sh` chạy lại bao nhiêu lần cũng được: symlink mọi `skills/*/`, `hae/*.md`, `luke/*.md` (trừ `profiles.*`; `qa-automation.template.md` vẫn link vì `luke.md` đọc template qua đường dẫn này), gỡ symlink chết của skill / agent đã xoá khỏi repo, bật pre-commit hook, tự `git submodule update --init` nếu quên `--recurse-submodules`, và nhắc hai việc dưới nếu chưa làm. Thêm skill / agent mới → chạy lại `install.sh`, không phải sửa script. Không ghi đè file thật (không phải symlink) đang nằm ở đích — báo `BỎ QUA` để chị tự xem.
 
 Rồi đặt Hae làm agent mặc định cho mọi session — thêm vào `~/.claude/settings.json`:
 ```json
@@ -72,8 +74,6 @@ Rồi cài rào chắn — **bắt buộc**, thiếu bước này thì `sonder` 
 bash hae/hooks/apply-settings.sh    # backup + vá ~/.claude/settings.json, in diff; restart Claude Code
 ```
 Script thêm hook `PreToolUse` `env-guard` cho các tool navigate của Playwright MCP / Chrome bridge (URL production → deny; mở tạm 30 phút bằng `touch ~/.hae-allow-production`, chỉ chị làm) và đưa `delete_bug` / `delete_knowledge` của QA Hub vào `permissions.ask`. Đường dẫn trong `settings-patch.jq` đang hardcode `~/Downloads/AI Agent/skills-personal` — clone chỗ khác thì sửa file đó trước.
-
-`hae/bin/*.sh` không cần symlink — `hae.md` gọi thẳng theo đường dẫn repo (`"$HOME/Downloads/AI Agent/skills-personal/hae/bin/..."`), nên repo phải nằm đúng chỗ đó, hoặc sửa đường dẫn trong `hae.md`. Cần `jq`, `python3`, `curl`.
 
 > ⚠️ Quên `--recurse-submodules` → `knowledge-work/` rỗng → cả 3 symlink trong
 > `references/` chết mà Claude **không báo lỗi rõ**, chỉ im lặng phân tích thiếu
