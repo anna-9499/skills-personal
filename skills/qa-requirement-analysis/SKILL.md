@@ -74,6 +74,51 @@ Ngoài ra, mỗi rule đọc được đều phải soi thêm: rule có điều 
 
 Bộ câu hỏi đầy đủ cho từng trục nằm ở `references/method/analysis-guide.md` — đọc khi ticket phức tạp hoặc khi thấy mình đang bí ý ở một mục.
 
+## Tự giải điểm mơ hồ trước khi hỏi
+
+Mỗi ứng viên GAP **phải qua bước này trước** khi thành câu hỏi. PO/Dev chỉ nhận những gì bằng chứng không trả lời được, hoặc là lựa chọn nghiệp vụ thật sự. Mục tiêu: ít câu hỏi mà câu nào cũng đáng hỏi — một danh sách 25 câu thì PO sẽ không trả lời câu nào.
+
+**Tra bằng chứng theo thứ tự, dừng ở nguồn đầu tiên trả lời được:**
+
+| # | Nguồn | Ví dụ trả lời được gì |
+|---|---|---|
+| E1 | Comment / description / link trong chính issue, issue cha, issue liên kết | Spec đã có ở sub-task khác |
+| E2 | Business rule + knowledge đã lưu (QA Hub → file local) | Rule dismiss của promo cũ, quy ước role |
+| E3 | Inventory / hành vi thật trên staging (inventory, test case đã `passed` cùng module) | Tab nào đang có, tên UI thật, modal đang đóng bằng Esc hay không |
+| E4 | Feature tương tự **trong cùng app** đã ship | Banner promo trước đó dismiss thế nào, có dịch không |
+| E5 | Quy ước nền tảng: Shopify Polaris / admin, convention của app (README `references/apps/<KEY>/`) | Modal Polaris đóng bằng Esc + click overlay; text admin theo locale |
+| E6 | Chuẩn chung: WCAG, GDPR, OWASP | Nút đóng phải có nhãn truy cập được |
+
+**Phân loại kết quả — mỗi ứng viên rơi vào đúng một loại:**
+
+| Loại | Khi nào | Ghi ở đâu | Lên phần A? |
+|---|---|---|---|
+| **Đã giải** | Có nguồn E1–E2 trả lời trực tiếp | Thành BR ở mục 3 (nguồn = nguồn đó) — không mở GAP | Không |
+| **Giả định – tin cậy Cao** | Suy ra từ E3–E6, nguồn khớp trực tiếp, sai thì chỉ lệch vài case | Bảng `AS-xx` mục 3, kèm bằng chứng | Không (chỉ phần B) |
+| **Giả định – tin cậy Trung bình** | Có bằng chứng nhưng gián tiếp (feature tương tự, quy ước chung), hoặc sai thì ảnh hưởng một mảng | Bảng `AS-xx` + GAP loại `Giả định` | Có — mục "Em đã giả định" |
+| **Cần PO** | Lựa chọn nghiệp vụ / sản phẩm / marketing mà không bằng chứng nào quyết thay được, hoặc bằng chứng mâu thuẫn nhau | GAP loại `Cần PO` | Có — câu A/B |
+| **Cần Dev** | Sự thật kỹ thuật (lưu ở đâu, flag nào, reset thế nào) mà inventory/code không cho biết | GAP loại `Cần Dev` | Có — câu yes/no |
+| **Cần Designer** | Asset / bố cục / copy cuối | GAP loại `Cần Designer` | Có, gộp 1 dòng |
+
+Luật:
+
+- **Nguồn từ Dev (PR, commit, code, comment của Dev) chỉ giải được câu hỏi kỹ thuật** (lưu ở đâu, field nào, reset thế nào). Nó cho biết Dev *đã làm* gì, không phải PO *đã chốt* gì — nên lựa chọn nghiệp vụ (hiện cho ai, khi nào, dismiss bao lâu…) suy từ PR/code **không bao giờ thành BR**: ghi là giả định tin cậy **TB** (lên phần A để PO thấy), cột Bằng chứng ghi `E1-Dev — PR #…`. PR và ticket nói khác nhau → `Cần PO`, nêu cả hai phiên bản.
+- **Staging của chính feature đang phân tích không phải bằng chứng E3.** Hành vi mới mà ticket này thêm vào (thấy trên staging / build chưa release) là cách Dev đã làm → tính như `E1-Dev`, cùng luật với PR: lựa chọn nghiệp vụ suy từ đó tối đa tin cậy **TB**, không bao giờ Cao, không tính vào "tự giải". E3 chỉ dùng cho phần hệ thống **đã có trước** ticket (inventory, case `passed` của feature cũ).
+- **Lời QA không phải nguồn nghiệp vụ.** Mapping / nhận xét của QA (kể cả người dùng skill) là bằng chứng quan sát, không phải PO chốt — giả định dựa vào đó tối đa TB.
+- **Hai nguồn mâu thuẫn nhau thì không được giả định** (ví dụ Polaris nói Esc đóng modal, inventory nói Esc đóng cả editor) → mở GAP, nêu cả hai.
+- **Một câu A/B chỉ chứa một quyết định.** Hai quyết định độc lập (khi nào hiện / ẩn trong phạm vi nào) là hai câu, dù cùng một màn hình — gộp chỉ khi cùng một quyết định gốc.
+- **Đề xuất không được ngược nguồn E1.** Nếu ticket / tài liệu PO đã nghiêng về một phương án, đề xuất phải theo phương án đó hoặc ghi rõ *"trái {nguồn}, vì …"*.
+- **Kỳ vọng bảo mật / chuẩn chung (E6) không phải điểm mơ hồ.** "Link mở tab mới phải noopener", "không lộ token" là SEC-xx ở mục 9, không phải AS và không tính vào "tự giải". E5/E6 chỉ được tin cậy Cao khi khớp một điều khoản cụ thể **và** app không có hành vi riêng ngược lại (inventory không nói khác).
+- **Phương án A/B/C phải phủ được các cách hiểu đã nêu trong GAP.** GAP hỏi "theo staff / hiện lại sau N ngày" thì phương án phải có các ý đó, hoặc ghi "mặc định: không".
+- **Không có bằng chứng thì không được giả định.** Giả định "vì thấy hợp lý" không có nguồn = `Cần PO`. Cột *Bằng chứng* ghi mã nguồn + chỗ cụ thể (`E3 — inventory § 2.4, 2026-10-15`, `E5 — Polaris Modal`).
+- **Mức Blocker không bao giờ là giả định tin cậy Cao.** Blocker chỉ giải được bằng E1–E2 (thành BR) hoặc phải hỏi.
+- **Câu hỏi luôn kèm đề xuất.** `Cần PO` viết dạng *"A) … B) … — em đề xuất A vì {bằng chứng / lý do}"*. `Cần Dev` viết dạng *"Em hiểu là … — đúng không?"*. Chỉ hỏi mở khi thật sự không đưa nổi một phương án.
+- **Gộp câu cùng gốc.** Nhiều GAP cùng một quyết định (ví dụ dismiss lưu theo store hay option set) → một câu hỏi, liệt kê các GAP trong ngoặc.
+- **Ngưỡng hiệu năng** vẫn theo luật cũ: con số tự đề xuất luôn là `Cần PO`, không bao giờ là giả định.
+- **Câu đã hỏi rồi thì không hỏi lại.** Trước khi mở `Cần PO` / `Cần Dev`, tra `open-questions` của app (QA Hub: item context hồ sơ app / `search_knowledge`; local: `knowledge-work/apps/<KEY>/open-questions.md`). Đã có câu trả lời → Đã giải (nguồn = câu trả lời đó). Đã hỏi mà chưa ai trả lời → vẫn mở GAP, ghi *"đã hỏi {ngày}, chưa có trả lời"*.
+
+**Cách đếm "tự giải"** — dùng đúng một định nghĩa ở mọi chỗ (phần A, dòng cuối mục 11): `tự giải = Đã giải + Giả định Cao`. Giả định TB đếm riêng. Tổng `y` = mọi điểm mơ hồ phát hiện được. Ví dụ: *"Tự giải 10/23 · 4 giả định chờ PO xem · 9 câu hỏi"*.
+
 ## Input cần thu thập
 
 Nếu người dùng đã paste sẵn Jira issue / mô tả tính năng, không cần hỏi thêm — tự suy luận và bắt đầu phân tích ngay với những gì có. Các trường input tham khảo (điền phần nào có, để trống phần không có — không tự bịa):
@@ -88,6 +133,8 @@ Nếu người dùng đã paste sẵn Jira issue / mô tả tính năng, không 
 - **Known constraints**: phạm vi, ngoài phạm vi, giới hạn kỹ thuật/browser/thiết bị/file, nếu có
 
 Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví dụ `TEPO-980`, `https://ownego.atlassian.net/browse/TEPO-980`), dùng công cụ Jira (`getJiraIssue`, cloudId `ownego.atlassian.net`, fields `*all` hoặc tối thiểu summary/description/project/labels/status/priority/issuetype, bao gồm cả comment nếu có để nắm các cập nhật/xác nhận mới nhất) để lấy đầy đủ nội dung issue gốc trước khi phân tích. Đọc kỹ comment — quyết định cuối cùng của PO/khách hàng thường nằm trong comment chứ không phải description gốc.
+
+**`getJiraIssue` lỗi** (403 "app not installed", hết hạn token…): thử đường dự phòng `getTeamworkGraphContext` → `getTeamworkGraphObject` cho issue + sub-task / issue liên kết. Đường này thường **không có comment** — khi đó ghi rõ ở Feature Summary *"không đọc được comment Jira — {lý do}"*, mở một RISK "có thể sót quyết định của PO trong comment", chấm tiêu chí 2 (Acceptance criteria) tối đa **1 điểm**, và báo người dùng một câu: kết nối lại Atlassian (`/mcp`) rồi chạy lại để chắc. Cả hai đường đều hỏng → dừng, báo lỗi; không phân tích từ trí nhớ hay từ tiêu đề.
 
 ## Nhiệm vụ của bạn
 
@@ -107,15 +154,16 @@ Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví 
 ## Rào chắn AI (AI Guardrails)
 
 - Không tự bịa ra hành vi không được nêu trong yêu cầu.
-- Không tự giả định kết quả mong đợi.
+- Không tự giả định kết quả mong đợi **khi không có bằng chứng** — giả định chỉ hợp lệ khi đi qua bước "Tự giải điểm mơ hồ trước khi hỏi" và ghi nguồn E1–E6.
 - Không coi các đề xuất là yêu cầu đã được xác nhận.
 - Nếu thiếu thông tin, đưa vào mục "Missing / Ambiguous Information".
-- Nếu có điều gì được suy luận, đánh dấu rõ ràng là "Assumption".
+- Nếu có điều gì được suy luận, đánh dấu rõ ràng là "Assumption" (`AS-xx`) kèm bằng chứng và mức tin cậy.
 - Nếu điều gì cần PO/Dev xác nhận, đưa vào mục "Open Questions for PO/Dev".
 - Tách biệt rõ ràng giữa sự thật đã xác nhận, giả định, và đề xuất.
 - Không tạo test case ở bước này.
 - Không bao gồm dữ liệu nhạy cảm như token, mật khẩu, dữ liệu khách hàng, private key, hoặc production credentials — kể cả khi đưa vào `notes` của task QA Hub.
-- Nếu issue quá mơ hồ, tập trung vào việc đặt câu hỏi thay vì tự cố gắng hoàn thiện yêu cầu.
+- Nếu issue quá mơ hồ, tập trung vào việc đặt câu hỏi thay vì tự cố gắng hoàn thiện yêu cầu — nhưng vẫn ưu tiên ít câu: **phần A tối đa 7 câu `Cần PO` + 5 câu `Cần Dev`**. Nhiều hơn thì gộp theo quyết định gốc; vẫn không gộp nổi thì giữ các câu Blocker/Major ở phần A, Minor để ở phần B.
+- **Viết cho người đọc nhanh.** Không lặp một ý ở nhiều mục: phần B mục nào không có gì riêng của ticket thì ghi một dòng "Không có điểm riêng" thay vì checklist chung.
 - Với các phát hiện quan trọng, nêu rõ phần nào trong input hỗ trợ cho phân tích đó.
 - Không tự động quét project để tìm issue mới, không dùng JQL search định kỳ — chỉ xử lý issue mà người dùng chỉ định trực tiếp trong chat.
 - Không thêm bất kỳ label nào vào issue Jira gốc.
@@ -129,14 +177,57 @@ Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví 
 
 ## Định dạng output
 
-Trả lời trực tiếp trong chat (markdown), **không** tạo file, theo đúng cấu trúc sau:
+Bản phân tích có **hai phần**:
+
+- **Phần A — Tóm tắt cho PO/Dev**: gọn trong một màn hình — **tối đa 25 dòng** (dòng bảng tính một dòng), QA copy thẳng vào Jira/Slack được. Đây là thứ in trong chat.
+- **Phần B — Chi tiết cho QA**: 14 mục như trước, là nguồn cho `gen-testcase` và reviewer. Lưu trong `notes` của task QA Hub, dưới phần A.
+
+In trong chat: **phần A** + một dòng *"Chi tiết 14 mục: {link task QA Hub}"*. Không tạo được task (không có project, MCP lỗi) → in cả phần B ngay dưới. Người dùng nói "cho xem bản đầy đủ" → in cả hai. Không tạo file.
+
+Phần A viết **sau cùng** — sau khi đã có phần B và đã chạy "Tự giải điểm mơ hồ trước khi hỏi".
 
 ```
-## Requirement Analysis
+## Requirement Analysis — {KEY}: {tiêu đề}
 
-> **Verdict: {Ready | Partially Ready | Not Ready}** — {tổng}/14 điểm
+> **{Ready | Partially Ready | Not Ready}** — {1 câu: vì sao}. Tự giải {x}/{y} điểm mơ hồ · {k} giả định chờ PO xem · {n} việc PO quyết · {m} việc Dev xác nhận.
 
-Dòng verdict đặt ngay đầu báo cáo để người đọc thấy kết luận trước; bảng điểm chi tiết vẫn nằm ở mục 14.
+**Feature**: {1–2 câu: làm gì, cho ai, chạm màn hình nào}
+
+**PO cần quyết** {bỏ khối nếu không có}
+1. (GAP-01 · Blocker) {tình huống} — A) … B) … — **đề xuất A**: {lý do ngắn}
+2. …
+
+**Dev cần xác nhận** {bỏ khối nếu không có}
+1. (GAP-04) Em hiểu {…} — đúng không?
+
+**Designer** {1 dòng, bỏ nếu không có}: {asset / bố cục cần chốt}
+
+**Em đã giả định** — sai thì báo, không thì QA test theo đây {chỉ giả định tin cậy Trung bình; bỏ nếu không có}
+| ID | Giả định | Dựa vào |
+|---|---|---|
+| AS-02 | {…} | {E4 — banner X đang dismiss vĩnh viễn theo store} |
+
+**Rule chính** {tối đa 3 rule quan trọng nhất, mỗi rule 1 ví dụ cụ thể}
+| ID | Rule | Ví dụ |
+|---|---|---|
+| BR-01 | {…} | {input / thao tác → kết quả thấy được} |
+
+**Rủi ro test chính**: {tối đa 3 gạch đầu dòng, mỗi dòng 1 câu}
+```
+
+Luật cho phần A:
+
+- Không thuật ngữ nội bộ QA (không "Readiness Score", không "8 loại case"). Không bảng điểm.
+- Quá 25 dòng thì cắt theo thứ tự: rủi ro còn 1 dòng → Rule chính còn 1 → giả định giữ tối đa 5 (phần còn lại chỉ ở phần B, ghi "+{n} giả định khác trong chi tiết") → câu Minor chuyển hết sang mục 12. Không bao giờ cắt câu Blocker/Major.
+- Mỗi câu hỏi tự hiểu được mà không cần đọc phần B: nêu tình huống cụ thể, không viết "như GAP-03".
+- Ticket Ready, không có gì để hỏi → phần A chỉ còn verdict + Feature + Rule chính. Đừng bịa câu hỏi.
+
+### Phần B — Chi tiết cho QA
+
+```
+## Chi tiết phân tích (cho QA)
+
+> Verdict: {Ready | Partially Ready | Not Ready} — {tổng}/14 điểm
 
 ### 1. Feature Summary
 Tóm tắt tính năng bằng ngôn ngữ dễ hiểu cho QA, 3–5 dòng: feature làm gì, cho ai, chạm vào phần nào của hệ thống. Ghi rõ đã đọc những nguồn nào (issue key, comment, trang Confluence). Nếu chỉ đọc được description mà không truy cập được spec liên kết, nói rõ.
@@ -154,11 +245,16 @@ Các business rule mà QA có thể kiểm thử, **mỗi rule một ID và mộ
 
 Rule chốt trong comment mà description chưa cập nhật → vẫn ghi nhận, nhưng đánh dấu `⚠ chưa cập nhật vào description` (bản thân nó là một gap về tài liệu). Không trích dẫn được nguồn thì không được nằm trong bảng này.
 
-**Giả định của tôi (cần PO xác nhận)** — chỉ hiện bảng này khi thật sự có giả định:
+Rule giải được bằng nguồn E1–E2 ở bước "Tự giải" cũng nằm ở bảng này, nguồn ghi đúng chỗ (comment, BR đã lưu).
 
-| ID | Giả định | Vì sao tôi suy ra vậy | Hệ quả nếu sai |
-|---|---|---|---|
-| AS-01 | | | |
+**Giả định** — chỉ hiện bảng này khi thật sự có giả định. Mọi giả định đều có bằng chứng (xem "Tự giải điểm mơ hồ trước khi hỏi"):
+
+| ID | Giả định | Bằng chứng (E1–E6 + chỗ cụ thể) | Tin cậy | Hệ quả nếu sai |
+|---|---|---|:--:|---|
+| AS-01 | | E3 — inventory § 2.4 (2026-10-15) | Cao | |
+| AS-02 | | E4 — banner Y đang dismiss theo store | TB | |
+
+Tin cậy `Cao` chỉ ở phần B; `TB` lên phần A mục "Em đã giả định". Skill `gen-testcase` gắn `AS-xx` vào case dựa trên giả định, để PO bác thì biết case nào phải sửa.
 
 ### 4. User Flow
 Mô tả flow chính và flow thay thế nếu có.
@@ -183,7 +279,7 @@ Rủi ro QA/testing và rủi ro sản phẩm (loại trừ security/performance
 Khả năng / Tác động dùng thang **Cao – Trung bình – Thấp**, sắp xếp giảm dần theo mức nghiêm trọng.
 
 ### 9. Security Considerations
-Khía cạnh bảo mật cần soi. Ghi "Không có khía cạnh bảo mật đáng kể" nếu thay đổi thuần UI/cosmetic.
+Khía cạnh bảo mật cần soi. Ghi **một dòng** "Không có khía cạnh bảo mật đáng kể — {lý do}" nếu thay đổi thuần UI/cosmetic; không kèm bảng rỗng.
 
 | ID | Khía cạnh | Kịch bản kiểm thử | Vì sao áp dụng cho feature này |
 |---|---|---|---|
@@ -192,7 +288,7 @@ Khía cạnh bảo mật cần soi. Ghi "Không có khía cạnh bảo mật đ�
 Cột cuối bắt buộc — mỗi dòng phải chỉ ra đường tấn công cụ thể trên chính feature này.
 
 ### 10. Performance Considerations
-Khía cạnh hiệu năng cần soi. Ghi "Không có khía cạnh hiệu năng đáng kể" nếu thay đổi không đụng tới data volume/query/tài nguyên trang.
+Khía cạnh hiệu năng cần soi. Ghi **một dòng** "Không có khía cạnh hiệu năng đáng kể — {lý do}" nếu thay đổi không đụng tới data volume/query/tài nguyên trang.
 
 | ID | Khía cạnh | Kịch bản / ngưỡng | Ghi chú |
 |---|---|---|---|
@@ -201,12 +297,15 @@ Khía cạnh hiệu năng cần soi. Ghi "Không có khía cạnh hiệu năng �
 Ngưỡng nào là đề xuất của mình thì ghi rõ `đề xuất — cần PO chốt` và mở GAP tương ứng ở mục 11.
 
 ### 11. Missing / Ambiguous Information
-Chi tiết còn thiếu hoặc mơ hồ gây cản trở việc hiểu đầy đủ, **mỗi gap một ID và một mức**:
+Những điểm còn lại **sau** bước "Tự giải" (đã giải → BR, giả định Cao → chỉ AS, không mở GAP). **Mỗi gap một ID, một mức, một loại xử lý**:
 
-| ID | Nội dung thiếu hoặc mơ hồ | Mức | Chặn việc gì |
-|---|---|:--:|---|
-| GAP-01 | | Blocker | |
-| GAP-02 | | Major | |
+| ID | Nội dung thiếu hoặc mơ hồ | Mức | Loại | Đề xuất / giả định | Chặn việc gì |
+|---|---|:--:|:--:|---|---|
+| GAP-01 | | Blocker | Cần PO | A — vì … | |
+| GAP-02 | | Major | Giả định | AS-02 | |
+| GAP-03 | | Minor | Cần Dev | Em hiểu … | |
+
+Loại: `Cần PO` · `Cần Dev` · `Cần Designer` · `Giả định` (tin cậy TB, trỏ tới AS-xx). GAP cùng một quyết định gốc ghi cột *Đề xuất* = *"cùng câu với GAP-01"* — chúng thành **một** câu hỏi ở mục 12 và đếm **một** lần ở luật ghi đè, theo mức cao nhất trong nhóm. Cuối bảng một dòng: *"Tự giải {x}/{y} (Đã giải + giả định Cao → BR-…, AS-…): {liệt kê ID ngắn}"* — cùng con số với phần A.
 
 Phân mức:
 
@@ -215,7 +314,7 @@ Phân mức:
 - **Minor** — ảnh hưởng cục bộ tới vài test case chi tiết. VD: chưa chốt nội dung chính xác của thông báo lỗi; chưa rõ định dạng hiển thị ngày.
 
 ### 12. Open Questions for PO/Dev
-Câu hỏi rõ ràng mà QA có thể copy thẳng vào Jira/Slack. Gộp theo người nhận, **mỗi câu gắn với GAP nguồn**:
+Chỉ GAP loại `Cần PO` / `Cần Dev` / `Cần Designer` (GAP `Giả định` không thành câu hỏi — PO thấy chúng ở phần A, mục "Em đã giả định"). Đây là bản đầy đủ của khối câu hỏi ở phần A: cùng câu, cùng thứ tự, thêm câu Minor nếu phần A đã cắt bớt. Gộp theo người nhận, **mỗi câu gắn với GAP nguồn**, câu PO có A/B + đề xuất:
 
 **Hỏi PO / BA**
 1. (GAP-01) …
@@ -327,8 +426,11 @@ Chấm **7 tiêu chí, mỗi tiêu chí 0 / 1 / 2 điểm**, tổng tối đa **
 
 ### Luật ghi đè (áp dụng SAU khi tính tổng)
 
-- Có **≥ 1 gap mức Blocker** → ép về **Not Ready**, bất kể tổng điểm bao nhiêu.
-- Có **≥ 3 gap mức Major** → hạ một bậc (Ready → Partially Ready; Partially Ready → Not Ready).
+Hai luật đầu đếm theo **câu hỏi sau khi gộp** (mục 12), không theo số dòng GAP — một quyết định tách thành 3 GAP vẫn là 1 câu, mức = mức cao nhất của nhóm.
+
+- Có **≥ 1 câu hỏi mức Blocker loại `Cần PO` / `Cần Dev`** còn mở → ép về **Not Ready**, bất kể tổng điểm bao nhiêu.
+- Có **≥ 3 câu hỏi mức Major loại `Cần PO` / `Cần Dev`** còn mở → hạ một bậc (Ready → Partially Ready; Partially Ready → Not Ready).
+- GAP loại `Giả định` (có bằng chứng) **không** kích hoạt hai luật trên. Khi chấm điểm từng tiêu chí, điểm đã tự giải bằng bằng chứng tính như đã rõ; giả định TB tính như "có nhưng chưa chốt" (tối đa 1 điểm ở tiêu chí liên quan).
 - Tiêu chí 2 (Acceptance criteria) **bằng 0** → không được vượt quá **Partially Ready**. Không có AC thì không có chuẩn để phán định pass/fail.
 
 Khi luật ghi đè kích hoạt, phải nêu rõ ở mục 14: điểm thô là bao nhiêu, bị hạ vì lý do gì.
@@ -356,7 +458,7 @@ Dùng **MCP của QA Hub** (server tên `testlane`, tool `mcp__testlane__*`; tok
 
 - `projectId`: id lấy từ `list_projects`.
 - `description`: **tiêu đề ngắn một dòng** — trong UI đây là **Title**, không phải cả bản phân tích. Input là issue Jira thì dùng summary gốc; input tự do thì rút một câu từ "1. Feature Summary". Không cần thêm mã app vào đầu — id task đã mang sẵn key project (`QCO-004`).
-- `notes`: **toàn bộ bản phân tích 14 mục**, dạng HTML (xem mục dưới) — trong UI đây là phần **Description**. Nếu input là issue Jira, dòng đầu là link nguồn: `<p>Source: <a href="https://ownego.atlassian.net/browse/KEY">KEY</a></p>` — đây là chỗ duy nhất giữ đường trace ngược về Jira, `create_task` không còn field `jiraKey` riêng.
+- `notes`: **phần A rồi phần B** (đủ 14 mục), dạng HTML (xem mục dưới) — trong UI đây là phần **Description**. Phần A mở bằng `<h2>Tóm tắt cho PO/Dev</h2>`, phần B mở bằng `<h2>Chi tiết phân tích (cho QA)</h2>` — người mở task thấy phần A trước. Bảng ở phần A cũng đổi thành danh sách (`<ul>`), mỗi dòng `<strong>AS-02</strong> — giả định — <em>dựa vào …</em>`. Nếu input là issue Jira, dòng đầu là link nguồn: `<p>Source: <a href="https://ownego.atlassian.net/browse/KEY">KEY</a></p>` — đây là chỗ duy nhất giữ đường trace ngược về Jira, `create_task` không còn field `jiraKey` riêng.
 - `priority`: theo mức độ ưu tiên của issue gốc nếu có. QA Hub chỉ có `Low` / `Medium` / `High` — Jira `Critical`/`Highest` gộp vào `High`. Không rõ thì bỏ trống (mặc định `Medium`).
 - `status`: bỏ trống (mặc định `todo`). Các giá trị hợp lệ: `todo` / `in-progress` / `waiting-for-dev` / `ready-to-deploy` / `done`.
 - `assigneeId`: **bỏ trống** — mặc định là chủ token, tức đúng người đang chạy skill. Đừng hardcode user id.
@@ -386,9 +488,11 @@ Dùng khi task QA Hub **đã có** bản phân tích trong `notes`, và người
 - **Đầu vào:** `taskId`, nguyên văn câu trả lời, ai trả lời, ngày.
 - **Khớp:** mỗi ý trong câu trả lời gắn với đúng một `GAP-xx` / câu hỏi mục 12. Ý không khớp GAP nào, khớp hai GAP, hoặc mâu thuẫn với rule đã có → không gộp, đưa lại cho người dùng quyết. Không tự suy câu trả lời cho GAP chưa được trả lời.
 - **Gộp:** ý khớp thành rule mới ở mục 3, nguồn ghi *"{tên}, {ngày} — qua {người dán}"*; đóng GAP ở mục 11 (giữ dòng, đánh `✅ → BR-xx`), đánh `✅` câu hỏi mục 12; chỉ sửa đúng câu bị ảnh hưởng ở mục 5 / 8 / 13, mục khác giữ nguyên chữ.
+- **Giả định bị xác nhận / bác:** PO đồng ý `AS-xx` → thành BR (nguồn = câu trả lời), AS giữ dòng đánh `✅ → BR-xx`. PO bác → AS đánh `✗ bác {ngày}`, rule đúng thành BR, và ghi vào dòng *"Thay đổi so với bản cũ"* (case gắn AS-xx đó phải sửa). PO im lặng không tính là xác nhận.
+- **Phần A viết lại** sau khi gộp: bỏ câu đã trả lời, cập nhật verdict + số đếm. Phần A không giữ lịch sử.
 - **Chấm lại** mục 14 theo rubric + luật ghi đè với GAP còn mở; ghi *"Verdict cũ → mới"*.
 - **Lịch sử cập nhật:** một dòng mỗi lượt ở cuối bản — ngày · người trả lời · GAP đã đóng · Verdict cũ → mới.
-- **Ghi:** `update_task` chỉ với `taskId` + `notes` = toàn bộ bản mới (HTML Quill như khi tạo task). `notes` bị thay cả trường nên bản gửi phải đủ 14 mục. Không đổi status / title / tags.
+- **Ghi:** `update_task` chỉ với `taskId` + `notes` = toàn bộ bản mới (HTML Quill như khi tạo task). `notes` bị thay cả trường nên bản gửi phải đủ phần A + 14 mục phần B. Không đổi status / title / tags.
 
 ## Bước tiếp theo
 

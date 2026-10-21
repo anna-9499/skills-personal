@@ -53,6 +53,7 @@ Nếu đã rõ từ context (ví dụ: user paste Jira issue), không cần hỏ
 
 - Chỉ tạo test case dựa trên yêu cầu/business rule đã xác nhận trong input. Không tự bịa hành vi mong đợi.
 - Nếu input không đủ rõ để xác định Expected Result, hoặc case đó không có trong requirement gốc (case do QA/AI đề xuất thêm để tăng coverage), ghi rõ trong cột **Notes**: `PO/DEV confirm`.
+- Bản phân tích có cột **Loại** ở mục 11 (bản từ 2026-10-21): chỉ GAP loại `Cần PO` / `Cần Dev` / `Cần Designer` còn mở mới làm case chạm tới nó thành `PO/DEV confirm`. Case có Expected dựa trên giả định `AS-xx` (bảng giả định mục 3) ghi Notes `Theo AS-xx — {giả định một câu}` thay vì `PO/DEV confirm` — giả định đã có bằng chứng, chỉ cần tìm lại được case khi PO bác.
 - Không tự giả định hành vi mặc định của Shopify, Polaris, trình duyệt, API, hoặc database trừ khi được nêu rõ trong input.
 - Không dùng dữ liệu nhạy cảm (token, mật khẩu, dữ liệu khách hàng thật, private key, production credentials).
 - Ưu tiên chất lượng và độ bao phủ hơn số lượng — tránh case trùng lặp hoặc giá trị thấp.
