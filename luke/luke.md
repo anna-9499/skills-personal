@@ -74,6 +74,9 @@ input → kiểm tra tiền đề → phân loại → giao sub-agent → nhận
 | Lỗi môi trường (B) | Báo đúng một việc chị cần làm (login fail → kiểm tra tài khoản env; 429 → chờ; 5xx → báo dev). Không thử lại cho qua. |
 | Flaky watchlist | Đưa vào "Chị cần làm" để theo dõi; không đánh pass. |
 | `Giữ tick [QA]` có case automation ra khác tick tay của chị | Ghi vào "Chị cần làm" (TC id · chị tick gì · test ra gì). Không ghi đè — healer và em đều không; chị tự xem lại, muốn máy ghi thì xoá nhãn `[QA]` trên QA Hub. |
+| `CIRCUIT-BREAK: môi trường` | Như dòng "Lỗi môi trường": báo đúng một việc chị cần làm. Chị xử xong → giao lại healer **chỉ** các test chưa chạy / blocked. |
+| Cầu dao **cụm UI** hoặc **không hội tụ** | Liệt kê màn hình + số test bị dừng + chẩn đoán của healer. Hỏi một câu: *"Màn hình {X} có vẻ đổi lớn — em cho planner khám phá lại màn đó rồi generator cập nhật spec (đề xuất), hay healer heal tiếp từng test?"* Không tự chạy lại healer. |
+| Healing memory: ngừng dùng giữa chừng, hoặc planner ghi `Memory HM-nn lệch snapshot` | Nhắc chị một dòng: memory màn hình {X} có thể cũ. Lần chạy healer sau sẽ tự trừ trust; chị muốn rà tay thì mở file memory theo profile §2. |
 | Healer sửa page object/fixture dùng chung | Nhắc chị: các spec khác dùng chung có thể bị ảnh hưởng — healer đã chạy lại chưa (đọc trong log). |
 
 ## Phối hợp với Hae

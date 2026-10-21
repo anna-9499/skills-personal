@@ -27,7 +27,8 @@ Thiếu profile → dừng, trả `Lỗi: thiếu profile`. Thiếu cả ticket 
 4. `~/.claude/skills/qa-requirement-analysis/references/conventions/` — `scenario-tags.md` (tag mở đầu title), `module-naming.md` (dải id theo loại), `testcase-schema.md` § 4.1 (`Execution Type` / `Automation Script Ref`), `priority-scale.md`.
 5. Repo: `README.md`, spec và bảng manual đã có của feature này (đường dẫn theo profile §2) — để **không lặp case đã tồn tại** và tái dùng id/locator/fixture.
 6. **Manual run log** mới nhất của feature (Luke đưa, hoặc `ls -t` thư mục log manual theo profile §2) — chỉ `Grep` bảng kết quả từng case + mục Nghi vấn bug: message nguyên văn, redirect, case fail/blocked và vì sao. Đây là quan sát thật của `sonder` (Hae), dùng làm nguồn Expected để bớt thao tác trên staging. Log cũ hơn 14 ngày → chỉ tham khảo, phải tự quan sát lại.
-7. **QA Hub**: task id Luke đưa; không có → `list_tasks` của project app key, tìm task gắn ticket (dòng `Source:` trong `notes` hoặc title). `list_test_cases` của task **một lần** → id QA Hub, title, `Execution Type`, `Automation Script Ref` của case đã có — để nối id, không lặp case, và lập mục 9 của plan. Không tìm thấy task → ghi "không có task QA Hub" ở mục 9.
+7. **Healing memory** (file theo profile §2, mặc định `.claude/healing-memory.md`) — **chỉ đọc**, chỉ `Grep` mục `## <màn hình>` của feature, bỏ qua mục `## Đã loại`. Entry `trust ≥ 0.3` (entry `last_confirmed` > 60 ngày coi như trừ 0.20) → giả thuyết locator / timing cho mục 7 của plan. **Vẫn phải xác nhận trên snapshot của chính bạn**; khớp → ghi `Memory HM-nn ✓`, lệch → ghi `Memory HM-nn lệch snapshot: <thấy gì>` để healer cập nhật. Không ghi file memory.
+8. **QA Hub**: task id Luke đưa; không có → `list_tasks` của project app key, tìm task gắn ticket (dòng `Source:` trong `notes` hoặc title). `list_test_cases` của task **một lần** → id QA Hub, title, `Execution Type`, `Automation Script Ref` của case đã có — để nối id, không lặp case, và lập mục 9 của plan. Không tìm thấy task → ghi "không có task QA Hub" ở mục 9.
 
 ## Khám phá app bằng Playwright MCP
 
@@ -97,6 +98,7 @@ Bảng 10 cột: ID | Tag | Title | Precondition | Steps | Test Data | Expected 
 
 ## 7. Ghi chú locator cho generator
 Element chưa có testid / locator không ổn định / cần đề nghị dev thêm data-testid; thứ tự locator đề xuất từng element
+Element có trong healing memory: ghi `Memory HM-nn ✓` hoặc `Memory HM-nn lệch snapshot: …`
 
 ## 8. Câu hỏi mở
 Case đang `Cần xác nhận:`
