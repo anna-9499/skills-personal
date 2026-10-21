@@ -26,6 +26,7 @@ skills/
   update-business-rules/     Merge rule đã xác nhận vào knowledge-work/apps/<KEY>/business-rules.md
   daily-recap/               Tổng hợp việc QA đang mở mỗi sáng — chỉ đọc
   build-app-context/         Đọc code / staging / Confluence → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
+  context-change-request/    Soạn CCR theo nguyên văn template leader → knowledge-work/apps/<KEY>/ccr/ (scripts/ccr.py: lint, chống trùng, bản gửi QA Hub)
 hae/                         Nhóm QA manual — agent mặc định mọi session (xem mục "Hae")
   hae.md                     Hae — agent điều phối, chạy ở main thread
   terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task QA Hub
@@ -33,6 +34,7 @@ hae/                         Nhóm QA manual — agent mặc định mọi sessi
   flint.md                   Sub-agent: review độc lập bản phân tích + bộ test case (chỉ đọc, Opus)
   sonder.md                  Sub-agent: chạy manual test case trên staging → status lên QA Hub
   ash.md                     Sub-agent: chạy trọn vẹn build-app-context → inventory app
+  slate.md                   Sub-agent: chạy trọn vẹn context-change-request → file CCR (Hae gắn draft lên QA Hub sau khi chị duyệt)
   bin/staging-lock.sh        Khoá staging một app một khoá, dùng chung Hae (sonder, ash) và Luke (healer)
   bin/preflight.sh           Kiểm repo / MCP / staging / khoá trước khi Hae giao sonder hoặc ash
   hooks/                     env-guard (chặn browser vào URL production) + apply-settings.sh vá settings.json
@@ -150,7 +152,7 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 
 ## Hae — agent điều phối
 
-Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích yêu cầu, sinh test case, review, chạy manual test hay build inventory app — giao cho 5 sub-agent, nhận kết quả, tự quyết bước tiếp, báo lại. Việc ngoài 5 mảng đó (business rule, daily recap, code, hỏi đáp) Hae làm như một session Claude Code bình thường.
+Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích yêu cầu, sinh test case, review, chạy manual test hay build inventory app — giao cho 6 sub-agent, nhận kết quả, tự quyết bước tiếp, báo lại. Việc ngoài 6 mảng đó (business rule, daily recap, code, hỏi đáp) Hae làm như một session Claude Code bình thường.
 
 ```
 chị ──▶ hae (main thread, settings.agent = "hae")
@@ -162,12 +164,14 @@ chị ──▶ hae (main thread, settings.agent = "hae")
           ├──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
           │               + case cần mắt nhìn: chụp ảnh từng bước, để not-run · chế độ retest bug: Passed / To Do
           ├──▶ ash      chạy trọn vẹn build-app-context → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
+          ├──▶ slate    chạy trọn vẹn context-change-request → apps/<KEY>/ccr/CCR-….md (+ bản Anh, ⏳ chờ chị)
+          │               Hae gắn draft lên task QA Hub (set_task_ccr_file) sau câu 12 · Submit là chị bấm tay
           └──  (tự làm) báo cáo gửi Dev/PO cho một task — chỉ trong chat
 ```
 
 Vì sao Hae phải là **main thread** chứ không phải sub-agent: sub-agent trong Claude Code không gọi được Agent tool, nên "agent cha" bắt buộc là session chính. Claude Code ≥ 2.1 có `--agent <tên>` và setting `agent` cho việc này.
 
-Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 6 file là `~/.claude/skills/...`, không phụ thuộc vị trí file agent.
+Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 7 file là `~/.claude/skills/...`, không phụ thuộc vị trí file agent.
 
 Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
 
@@ -183,7 +187,7 @@ Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
 | `flint` MISS trả ứng viên thiếu case | hỏi chị chọn dòng rồi mới gọi `ore` | ứng viên chưa phải kết luận |
 | Giao `sonder` / `ash` | chạy `bin/preflight.sh` rồi `bin/staging-lock.sh acquire`; `sonder` chia lô ≤ 15 case, giữ khoá suốt các lô | hai agent dùng chung staging (cả healer của Luke) dẫm data nhau |
 
-Danh sách 11 câu Hae **được phép hỏi** (chia 3 nhóm A thiếu input / B duyệt trước khi ghi / C xung đột, đánh số cố định nên không liền) nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
+Danh sách 12 câu Hae **được phép hỏi** (chia 3 nhóm A thiếu input / B duyệt trước khi ghi / C xung đột, đánh số cố định nên không liền) nằm trong `hae.md` mục "Khi nào hỏi, khi nào tự quyết". Muốn Hae hỏi nhiều hơn / ít hơn thì sửa đúng danh sách đó, đừng sửa rải rác.
 
 **Sub-agent không nói chuyện được với người dùng.** Chúng chạy hết việc được giao, điểm nào skill bảo "hỏi người dùng" thì ghi vào `Cần Hae quyết` trong khối `### HAE-SUMMARY` đầu output. Hae bóc khối đó để ra quyết định, rồi chuyển kết quả cho người dùng — **dán nguyên văn** báo cáo 14 mục của `terra` và bảng kết quả chạy của `sonder`, vì output của sub-agent không tự hiện ra.
 
@@ -198,6 +202,7 @@ Tool của sub-agent được khai tường minh trong frontmatter và cố ý *
 | `sonder` | `update_test_case`, `report_bug` (chỉ khi Hae cho phép), `update_bug` (chỉ chế độ retest, chỉ `status` `Passed` / `To Do` — không đóng bug) | `create_task`, `create_test_cases`, `add_test_case_image` (bị treo — ảnh lưu local) |
 | `flint` | **không ghi gì** — chỉ đọc QA Hub, Jira, file | mọi tool ghi, `Bash`, `Write`, `Edit` |
 | `ash` | `add_project_context`, `update_project_context`, `update_project_context_file` (chỉ item `Inventory <KEY>…`); file `apps/<KEY>/inventory.md` | `create_task`, `create_test_cases`, `upsert_knowledge`, tool ghi Jira |
+| `slate` | **không ghi gì lên QA Hub** — chỉ 3 file trong `apps/<KEY>/ccr/` | `set_task_ccr_file` (Hae gọi sau câu 12), `create_proposal`, mọi tool ghi QA Hub / Jira |
 
 Không sub-agent nào có tool ghi lên Jira / Slack. `sonder` và `ash` mở app bằng Playwright MCP, hoặc Chrome bridge (`mcp__chrome__*`) khi cần session người dùng đã đăng nhập. Muốn mở thêm quyền thì mở ở frontmatter, có chủ đích.
 
