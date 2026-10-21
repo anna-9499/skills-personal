@@ -28,23 +28,25 @@ Ngân sách tính cho nguồn chính. Inventory đã tách thì mỗi item `Inve
 | Cần biết | Nguồn (lấy nguồn đầu tiên có) |
 |---|---|
 | Business rule đã xác nhận | QA Hub `search_knowledge` (theo tên feature) → không có thì `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/business-rules.md` + `…/references/platform/business-rules.md` (rule nền tảng chung) (`Grep` theo feature, không đọc cả file khi > 300 dòng) |
-| Tên UI / route / flag thật · rule đang lệch | QA Hub `get_project_context` item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → không có thì `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/inventory.md` (`Grep` theo feature; **luôn** `Grep` thêm § 5 "Phát hiện lệch" lấy cột **BR bị ảnh hưởng**) |
+| Tên UI / route / flag thật · rule đang lệch | QA Hub `get_project_context` item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → không có thì `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/inventory.md` (`Grep` theo feature; **luôn** `Grep` thêm § 5 "Phát hiện lệch" lấy cột **BR bị ảnh hưởng**); cộng CCR đang mở (`Grep` `"status": "(PENDING|ATTACHED)"` trong `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/ccr/*.status.json`, lấy mảng `rules`) — rule có trong đó tính như rule đang lệch theo § 5 inventory, ghi chú *"(đang có CCR mở: <file>)"* |
 | Case đã có của task (chế độ TC) | `list_test_cases` của task **một lần**; output lớn thì `Grep` file tool-result theo id, không đọc lại |
 | Case cũ cùng feature ở task khác (trùng / tiền lệ) | chỉ khi nghi trùng — `list_tasks` tìm task cùng feature, tối đa 1 task |
 | Câu trích từ Jira | `getJiraIssue` chỉ khi một rule "đã xác nhận" có nguồn trỏ về issue mà bạn cần kiểm |
 
 Không đọc skill `gen-testcase` / `qa-requirement-analysis` từ đầu tới cuối; chỉ `Grep` đúng quy tắc khi cần đối chiếu (ví dụ danh sách security bắt buộc).
 
-## Chế độ RA — quét 8 loại lỗi
+## Chế độ RA — quét 10 loại lỗi
 
 | Loại | Dấu hiệu | Mức mặc định |
 |---|---|---|
 | REQ / AC không kiểm chứng được | "xử lý đúng", "hoạt động bình thường", "hiển thị phù hợp" nằm ở mục yêu cầu mà không có GAP đi kèm | high |
 | Rule "đã xác nhận" không có nguồn | Business Rule ghi đã xác nhận nhưng không trỏ được về câu cụ thể trong issue / comment / Confluence / business rule cũ — thực chất là giả định | high |
+| Giả định thiếu bằng chứng | `AS-xx` không có cột Bằng chứng trỏ về nguồn E1–E6 cụ thể (chỉ ghi "hợp lý", "thông thường"); hoặc nguồn có nhưng không nói điều AS khẳng định; hoặc tin cậy `Cao` mà nguồn chỉ gián tiếp (feature tương tự, quy ước chung) | high |
+| Tự giải quá tay | Lựa chọn nghiệp vụ (hiện cho ai, khi nào, dismiss bao lâu, giá / giới hạn) bị đóng bằng giả định hoặc thành BR mà nguồn chỉ là PR / commit / code / lời Dev; một điểm mức **Blocker** bị giải bằng giả định; ngưỡng hiệu năng tự đặt nằm ở AS thay vì `Cần PO`. Sửa thành: chuyển sang `Cần PO` (giữ đề xuất) | high |
 | Mâu thuẫn rule / inventory bị bỏ sót | Business rule hoặc inventory nói ngược với yêu cầu mà báo cáo không mở GAP | **luôn high** |
-| Rule đang lệch bị coi là đã chốt | Rule có tên ở cột **BR bị ảnh hưởng** trong § 5 inventory, mà mục 3 trích như đã xác nhận, **thiếu** ghi chú *"(đang lệch theo inventory ngày …, § 5 #n)"*, hoặc không có dòng ở mục 8 Risks / câu hỏi ở mục 12, hoặc Readiness vẫn chấm điểm đó như đã chốt. Ghi Loại = "Mâu thuẫn business rule" để Hae xử đúng luồng dừng | **luôn high** |
-| Verdict không khớp nội dung | "Ready" / "Partially Ready" mà còn điểm lẽ ra là GAP Blocker; điểm rubric cộng sai; luật ghi đè không áp | high |
-| GAP thiếu phần bắt buộc | thiếu mức Blocker/Major/Minor, một GAP hỏi hai việc, câu hỏi mục 12 không có đáp án đề xuất trong khi rule / inventory tra được | medium |
+| Rule đang lệch bị coi là đã chốt | Rule có tên ở cột **BR bị ảnh hưởng** trong § 5 inventory, mà mục 3 trích như đã xác nhận, **thiếu** ghi chú *"(đang lệch theo inventory ngày …, § 5 #n)"* / *"(đang có CCR mở: <file>)"*, hoặc không có dòng ở mục 8 Risks / câu hỏi ở mục 12, hoặc Readiness vẫn chấm điểm đó như đã chốt. Ghi Loại = "Mâu thuẫn business rule" để Hae xử đúng luồng dừng | **luôn high** |
+| Verdict không khớp nội dung | "Ready" / "Partially Ready" mà còn điểm lẽ ra là GAP Blocker; điểm rubric cộng sai; luật ghi đè không áp (luật đếm theo **câu hỏi** `Cần PO` / `Cần Dev` sau khi gộp, không theo dòng GAP; GAP loại `Giả định` không tính); số "tự giải" ở phần A khác dòng cuối mục 11 | high |
+| GAP thiếu phần bắt buộc | thiếu mức Blocker/Major/Minor hoặc cột Loại; một GAP hỏi hai việc; câu `Cần PO` không có A/B + đề xuất; câu hỏi mục 12 mà rule / inventory / `open-questions` tra được (lẽ ra tự giải); phần A thiếu câu Blocker/Major có ở mục 12 | medium |
 | Thiếu Security / Performance | mục 9 không có security cho ô nhập text (XSS reflected + stored, HTML/SQL/template injection, chuỗi siêu dài), hoặc thiếu phân quyền khi feature có role | high khi có ô nhập / role, còn lại medium |
 | Sót Impacted Areas | đổi hành vi mặc định / dữ liệu dùng chung mà không xét luồng khác cùng dùng (storefront vs admin, API, import/export, app khác cùng store) | medium |
 
@@ -52,12 +54,12 @@ Không đọc skill `gen-testcase` / `qa-requirement-analysis` từ đầu tới
 
 Dùng khi Hae sắp sinh case cho task **đã có** bản phân tích trong `notes` mà chưa được review trong session (có thể cũ, hoặc do người / agent khác viết). **Ngân sách ≤ 8 tool call.**
 
-1. `list_projects` → `list_tasks` **một lần**; `Grep` file tool-result theo `taskId` lấy `notes`. Chỉ `Grep` các mục 3, 9, 11, 12, 14, dòng `Source:`, "Lịch sử cập nhật" và ngày phân tích — không đọc cả `notes`. `notes` là HTML Quill, heading mục có dạng `<h3>N. Tên mục</h3>` (pattern ví dụ `<h3>\s*11\.`), và có thể nằm trên **một** dòng JSON của file tool-result → Grep khớp là trả cả dòng; nếu vậy đọc một lần rồi chỉ trích đúng các mục trên, không Grep lặp lại. Không khớp heading nào → thử thêm `<h2>` / `###` trước khi kết luận "chưa có bản phân tích". `notes` không có bản phân tích → Lỗi "task chưa có bản phân tích", Verdict `BLOCK`.
+1. `list_projects` → `list_tasks` **một lần**; `Grep` file tool-result theo `taskId` lấy `notes`. Chỉ `Grep` phần A (`Tóm tắt cho PO/Dev`), các mục 3, 9, 11, 12, 14, dòng `Source:`, "Lịch sử cập nhật" và ngày phân tích — không đọc cả `notes`. `notes` là HTML Quill, heading mục có dạng `<h3>N. Tên mục</h3>` (pattern ví dụ `<h3>\s*11\.`), và có thể nằm trên **một** dòng JSON của file tool-result → Grep khớp là trả cả dòng; nếu vậy đọc một lần rồi chỉ trích đúng các mục trên, không Grep lặp lại. Không khớp heading nào → thử thêm `<h2>` / `###` trước khi kết luận "chưa có bản phân tích". `notes` không có bản phân tích → Lỗi "task chưa có bản phân tích", Verdict `BLOCK`.
 2. **Kiểm cũ hơn nguồn** — loại mới, **luôn high**, Loại = "Bản phân tích cũ hơn nguồn":
    - `Source:` là issue Jira → `getJiraIssue` một lần: `updated` hoặc comment mới hơn ngày phân tích / dòng cuối "Lịch sử cập nhật" **và** nội dung đổi chạm tới REQ / AC / rule (bỏ qua đổi status, assignee, sprint) → finding, cột "Sửa thành" trích câu mới.
    - Business rule (QA Hub `search_knowledge` hoặc dòng `**Cập nhật lần cuối**` file local) hay inventory § 5 có ngày mới hơn ngày phân tích **và** chạm tới feature → finding.
    - Không xác định được ngày phân tích → ghi "Không kết luận được", không tính finding.
-3. Chỉ quét **4 loại high** của chế độ RA: Mâu thuẫn rule / inventory bị bỏ sót (gồm rule đang lệch), Rule "đã xác nhận" không có nguồn, Verdict không khớp nội dung, Thiếu Security khi có ô nhập / role. Bỏ các loại medium.
+3. Chỉ quét **6 loại high** của chế độ RA: Mâu thuẫn rule / inventory bị bỏ sót (gồm rule đang lệch), Rule "đã xác nhận" không có nguồn, Giả định thiếu bằng chứng, Tự giải quá tay, Verdict không khớp nội dung, Thiếu Security khi có ô nhập / role. Bỏ các loại medium.
 4. Đầu ra khuôn chế độ RA; dòng Chế độ ghi `RA nhanh`, thêm dòng `Ngày phân tích: {…} · Nguồn mới hơn: {có — gì | không}`.
 
 ## Chế độ TC — quét 8 loại lỗi

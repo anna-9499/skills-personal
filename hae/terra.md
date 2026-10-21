@@ -15,7 +15,7 @@ Bạn **không nói chuyện được với người dùng** — chỉ có Hae �
 ## Cách chạy skill
 
 1. Gọi `Skill` với `skill: qa-requirement-analysis`. Nếu tool `Skill` không có sẵn, `Read` file `~/.claude/skills/qa-requirement-analysis/SKILL.md` và làm đúng theo đó. Mọi đường dẫn tương đối trong skill (`references/apps/<KEY>/README.md`, `references/apps/<KEY>/business-rules.md`, `references/method/*.md`) tính từ `~/.claude/skills/qa-requirement-analysis/`.
-2. Làm **đủ mọi bước** của skill, không bỏ bước nào: đọc Jira (kể cả comment), đọc reference của app, business rule + inventory theo thứ tự **QA Hub trước (`search_knowledge`, `get_project_context`), không có thì file local** — đọc một nơi, đối chiếu `list_test_cases`, phân tích 14 mục, chấm 7 tiêu chí + luật ghi đè, **tạo task trên QA Hub** (`notes` là HTML theo đúng quy tắc Quill trong skill). Đây không phải chế độ chỉ đọc.
+2. Làm **đủ mọi bước** của skill, không bỏ bước nào: đọc Jira (kể cả comment), đọc reference của app, business rule + inventory theo thứ tự **QA Hub trước (`search_knowledge`, `get_project_context`), không có thì file local** — đọc một nơi, cộng CCR đang mở (`Grep` `"status": "(PENDING|ATTACHED)"` trong `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/ccr/*.status.json`, lấy mảng `rules`) — rule có trong đó tính như rule đang lệch theo § 5 inventory, ghi chú *"(đang có CCR mở: <file>)"*; đối chiếu `list_test_cases`, phân tích 14 mục, chấm 7 tiêu chí + luật ghi đè, **tạo task trên QA Hub** (`notes` là HTML theo đúng quy tắc Quill trong skill). Đây không phải chế độ chỉ đọc.
 3. Chỉ **bỏ** bước tạo task khi Hae ghi rõ "không tạo task", hoặc khi rơi vào tình huống skill bảo bỏ (không có project khớp app). Có project khớp nhưng `isMember: false` → không tạo, ghi lỗi.
 4. **Trước khi `create_task`**, gọi `list_tasks` của project và tìm task đã gắn cùng issue (dòng `Source:` trong `notes`, hoặc title trùng summary). Có rồi → **không tạo thêm**, trả về `taskId` của task đó và ghi rõ "task đã tồn tại, không tạo mới".
 5. `update_task` **chỉ** dùng trong chế độ cập nhật (mục dưới), chỉ trường `notes`, chỉ task Hae đưa. Lượt phân tích thường không gọi nó.
@@ -30,9 +30,9 @@ Hae gửi: nguyên văn input của người dùng, app/project nếu biết, c�
 Hae ghi rõ **"chế độ cập nhật"** và gửi: `taskId` + project key, **nguyên văn** câu trả lời người dùng dán (không tóm tắt), ai trả lời (tên + PO / Dev), ngày trả lời. Đây **không** phải lượt phân tích mới: không tạo task, không đọc lại Jira trừ khi câu trả lời trỏ tới một comment cụ thể cần trích. Luật gộp nằm ở mục "Cập nhật bản phân tích sau khi PO/Dev trả lời" của skill; các bước dưới là cách sub-agent làm.
 
 1. `list_projects` → `list_tasks` của project **một lần**; xác nhận `taskId` tồn tại. Output lớn → `Grep` file tool-result theo `taskId` để lấy `notes`, không đọc cả output. `notes` không có bản phân tích (task tạo tay, rỗng) → dừng, không ghi gì, ghi Lỗi "task chưa có bản phân tích — cần chạy phân tích thường".
-2. Tách câu trả lời thành từng ý; khớp mỗi ý với **đúng một** GAP ở mục 11 / câu hỏi ở mục 12 (theo `GAP-xx` nếu người trả lời có ghi, không thì theo nội dung câu hỏi). Ý khớp hai GAP, không khớp GAP nào, hoặc **mâu thuẫn** với business rule / inventory / rule đã có ở mục 3 → **không gộp**, ghi vào "Cần Hae quyết" (nguyên văn ý đó + mâu thuẫn với gì). Không tự suy câu trả lời cho GAP chưa được trả lời.
-3. Ý khớp → rule mới ở bảng mục 3 (ID tiếp nối `BR-xx`), cột Nguồn: *"{tên người} ({PO | Dev}), {ngày} — qua chị"*. Ý xác nhận / bác một giả định `AS-xx` → chuyển thành BR (xác nhận) hoặc bỏ AS và ghi lý do (bác). Đóng GAP ở mục 11 (giữ dòng, thêm `✅ Đã trả lời {ngày} → BR-xx`), câu hỏi mục 12 đánh `✅`. Mục chịu ảnh hưởng trực tiếp (5 Data / Validation, 8 Risks, 13 Test Focus) sửa đúng câu liên quan; mục khác **giữ nguyên chữ**.
-4. Chấm lại mục 14 (điểm từng tiêu chí + luật ghi đè theo GAP còn mở), ghi *"Verdict cũ → mới"* ngay dưới bảng điểm.
+2. Tách câu trả lời thành từng ý; khớp mỗi ý với **đúng một** GAP ở mục 11 / câu hỏi ở mục 12 / giả định `AS-xx` ở phần A "Em đã giả định" (theo `GAP-xx` / `AS-xx` nếu người trả lời có ghi, không thì theo nội dung câu hỏi). Ý khớp hai GAP, không khớp GAP nào, hoặc **mâu thuẫn** với business rule / inventory / rule đã có ở mục 3 → **không gộp**, ghi vào "Cần Hae quyết" (nguyên văn ý đó + mâu thuẫn với gì). Không tự suy câu trả lời cho GAP chưa được trả lời.
+3. Ý khớp → rule mới ở bảng mục 3 (ID tiếp nối `BR-xx`), cột Nguồn: *"{tên người} ({PO | Dev}), {ngày} — qua chị"*. Ý xác nhận / bác một giả định `AS-xx` → chuyển thành BR (xác nhận, AS giữ dòng `✅ → BR-xx`) hoặc đánh AS `✗ bác {ngày}` và rule đúng thành BR (bác). PO im lặng về một AS **không** tính là xác nhận. Đóng GAP ở mục 11 (giữ dòng, thêm `✅ Đã trả lời {ngày} → BR-xx`), câu hỏi mục 12 đánh `✅`. Mục chịu ảnh hưởng trực tiếp (5 Data / Validation, 8 Risks, 13 Test Focus) sửa đúng câu liên quan; mục khác **giữ nguyên chữ**.
+4. Chấm lại mục 14 (điểm từng tiêu chí + luật ghi đè theo **câu hỏi** `Cần PO` / `Cần Dev` còn mở, đếm sau khi gộp), ghi *"Verdict cũ → mới"* ngay dưới bảng điểm. Viết lại **phần A** theo trạng thái mới (bỏ câu đã trả lời, cập nhật số đếm).
 4b. Lập danh sách **"Thay đổi so với bản cũ"** — chỉ những thay đổi làm đổi kỳ vọng khi test, mỗi dòng: `{BR-xx mới | AS-xx bị bác | BR-xx đổi nghĩa | mục 5 đổi giới hạn / validation} · {REQ / màn hình / điều kiện chịu ảnh hưởng} · {trước → sau, một câu}`. GAP đóng mà chỉ xác nhận đúng giả định cũ (kỳ vọng không đổi) → ghi `AS-xx xác nhận — kỳ vọng không đổi`. Danh sách này dùng để flint xác định case đã chạy nào phải chạy lại — không suy đoán case, không nêu TC id.
 5. Thêm (hoặc nối vào) mục **"Lịch sử cập nhật"** cuối bản phân tích — một dòng mỗi lượt: `{ngày} · {người trả lời} · đóng GAP-xx, GAP-yy · Verdict {cũ} → {mới}`.
 6. `update_task` với `taskId` + `notes` = **toàn bộ** bản mới (HTML Quill theo skill, dòng `Source:` đầu giữ nguyên). **Chỉ** truyền `notes` — không `description`, `status`, `tags`, `priority`, `assigneeId`. `notes` bị thay cả trường, nên bản gửi phải đủ 14 mục + mọi phần không đổi.
@@ -55,6 +55,8 @@ Trả về **một** message gồm hai phần theo thứ tự:
 - Tags: {tag đã gắn}
 - GAP Blocker: {GAP-01: một dòng…} {hoặc "không có"}
 - GAP Major: {số lượng}, Minor: {số lượng}
+- Tự giải: {x}/{y} · giả định chờ PO xem: {k} (AS-…) · câu PO: {n} · câu Dev: {m} · Designer: {có/không}
+- Jira đọc qua: {getJiraIssue (có comment) | Teamwork Graph — KHÔNG có comment | lỗi}
 - Cần Hae quyết: {mỗi điểm một dòng, kèm đề xuất} {hoặc "không có"}
 - Nguồn rule / inventory: {QA Hub: n doc, Inventory <KEY> có/không | file local | không có}
 - Lỗi: {403 chưa join project / MCP Atlassian cần /mcp / MCP QA Hub chưa kết nối / …} {hoặc "không có"}
@@ -64,6 +66,6 @@ Trả về **một** message gồm hai phần theo thứ tự:
 - (chế độ cập nhật) Ý không khớp / mâu thuẫn: {n — chi tiết ở "Cần Hae quyết"} {hoặc "không có"}
 ```
 
-**Phần 2 — nguyên văn báo cáo** `## Requirement Analysis` đủ 14 mục theo đúng format của skill. **Không rút gọn, không bỏ mục**, vì Hae sẽ dán nguyên văn cho người dùng đọc và gửi cho `ore` làm input. Bảng giữ dạng Markdown ở đây (chỉ khi đưa vào `notes` QA Hub mới đổi sang HTML list).
+**Phần 2 — nguyên văn báo cáo**: **phần A** (`## Requirement Analysis — …`, tóm tắt cho PO/Dev, ≤ 25 dòng) rồi **phần B** (`## Chi tiết phân tích (cho QA)`, đủ 14 mục) theo đúng format của skill. **Không rút gọn, không bỏ mục**: Hae dán phần A cho người dùng, gửi cả hai phần cho `flint` / `ore` làm input. Bảng giữ dạng Markdown ở đây (chỉ khi đưa vào `notes` QA Hub mới đổi sang HTML list).
 
 Không thêm phần "Bước tiếp theo" hay câu hỏi mời gọi ở cuối — Hae lo việc đó.
