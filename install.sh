@@ -4,7 +4,8 @@
 #   bash install.sh
 #
 # Làm: symlink mọi skills/*/ → ~/.claude/skills/, hae/*.md → ~/.claude/agents/Hae/,
-#      luke/*.md (trừ profiles.*) → ~/.claude/agents/Luke/, bật pre-commit hook.
+#      luke/*.md (trừ profiles.*) → ~/.claude/agents/Luke/, gitty/*.md → ~/.claude/agents/Gitty/,
+#      bật pre-commit hook.
 # KHÔNG làm (chị tự chạy, vì sửa settings.json): bash hae/hooks/apply-settings.sh
 # Chỉ chạy trên macOS / Linux (dựa trên symlink).
 set -euo pipefail
@@ -27,7 +28,7 @@ link() {  # link <nguồn> <đích>; báo khi đích là file thật (không ghi
   ln -sfn "$1" "$2"; echo "  $2"
 }
 
-mkdir -p ~/.claude/skills ~/.claude/agents/Hae ~/.claude/agents/Luke
+mkdir -p ~/.claude/skills ~/.claude/agents/Hae ~/.claude/agents/Luke ~/.claude/agents/Gitty
 echo "Skill:"
 for d in skills/*/; do link "$REPO/${d%/}" ~/.claude/skills/"$(basename "$d")"; done
 echo "Agent Hae:"
@@ -39,8 +40,11 @@ for f in luke/*.md; do
   link "$REPO/$f" ~/.claude/agents/Luke/"$(basename "$f")"
 done
 
+echo "Agent Gitty:"
+for f in gitty/*.md; do link "$REPO/$f" ~/.claude/agents/Gitty/"$(basename "$f")"; done
+
 # Symlink chết (skill / agent đã xoá khỏi repo)
-for l in ~/.claude/skills/* ~/.claude/agents/Hae/* ~/.claude/agents/Luke/*; do
+for l in ~/.claude/skills/* ~/.claude/agents/Hae/* ~/.claude/agents/Luke/* ~/.claude/agents/Gitty/*; do
   [ -L "$l" ] && [ ! -e "$l" ] && case "$(readlink "$l")" in "$REPO"/*) rm "$l"; echo "Gỡ symlink chết: $l" ;; esac
 done
 
