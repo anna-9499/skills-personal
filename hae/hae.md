@@ -34,7 +34,7 @@ Gọi bằng Agent tool với `subagent_type` đúng tên trên. Mỗi lần g�
 
 Khoá chỉ áp cho `sonder` và `ash` (đụng data / mở browser trên staging). `terra`, `ore`, `flint` không cần. Không bao giờ `release --force` khoá không phải của em, trừ khi chị bảo.
 
-**Pre-flight** — ngay trước khi acquire khoá cho `sonder` / `ash`, em chạy `"$HOME/Downloads/AI Agent/skills-personal/hae/bin/preflight.sh" <KEY> [URL staging]` (MTRO không cần URL — script tự đọc `.env`). Script kiểm: đọc được repo trong `~/Downloads` (macOS hay thu hồi quyền), 5 MCP server cần (`testlane`, `playwright`, `chrome`, `atlassian`, Slack), staging trả HTTP, khoá staging, git repo automation sạch. Dòng `FAIL` → **không giao**, báo chị đúng việc cần làm (dòng `FIX:` của script); `WARN` → giao, ghi một dòng trong báo cáo. Kênh Chrome bridge: `mcp list` báo Connected cả khi extension chưa nối → giao việc dùng Chrome bridge thì gọi thêm `mcp__chrome__chrome_status`, `connected: false` → chị bấm "Lưu & kết nối lại" trên extension. Đăng nhập / captcha / store state là phần **sonder tự kiểm trên browser** (bước 0 của nó) — script không kiểm được.
+**Pre-flight** — ngay trước khi acquire khoá cho `sonder` / `ash`, em chạy `"$HOME/Downloads/AI Agent/skills-personal/hae/bin/preflight.sh" <KEY> [URL staging]` (MTRO không cần URL — script tự đọc `.env`). Script kiểm: đọc được repo trong `~/Downloads` (macOS hay thu hồi quyền), URL không phải production / trang billing (dùng chính env-guard; MTRO kiểm cả `ENV=staging` + `AUTH_URL`), 5 MCP server cần (`testlane`, `playwright`, `chrome`, `atlassian`, Slack), staging trả HTTP, khoá staging, git repo automation sạch. Dòng `FAIL` → **không giao**, báo chị đúng việc cần làm (dòng `FIX:` của script); `WARN` → giao, ghi một dòng trong báo cáo. Kênh Chrome bridge: `mcp list` báo Connected cả khi extension chưa nối → giao việc dùng Chrome bridge thì gọi thêm `mcp__chrome__chrome_status`, `connected: false` → chị bấm "Lưu & kết nối lại" trên extension. Đăng nhập / captcha / store state là phần **sonder tự kiểm trên browser** (bước 0 của nó) — script không kiểm được.
 
 **Chia lô `sonder`** — mỗi lần giao tối đa **15 case**. Phạm vi nhiều hơn → em chia lô theo thứ tự case (giữ cụm case phụ thuộc nhau trong cùng lô), giao **nối tiếp** từng lô, **giữ khoá** suốt các lô (gia hạn nếu quá 2,5 giờ), chỉ release sau lô cuối. Mốc tiến độ là status trên QA Hub: lô sau = case trong phạm vi còn `not-run` (không cần file progress). Giữa các lô không báo chị; xong hết thì báo **một** bảng gộp. Dừng chuỗi lô sớm khi sonder trả `PREFLIGHT FAIL` hoặc `CIRCUIT-BREAK` (xem "Sau khi `sonder` trả về"). sonder trả về "còn {n} case chưa chạy" (gần chạm `maxTurns`) → giao lại đúng các case đó như một lô mới.
 
@@ -230,7 +230,7 @@ Nguyên tắc: **hỏi khi và chỉ khi hai cách hiểu dẫn tới hai việc
 
 **C. Xung đột / rủi ro cần chị quyết** — hai hướng đều làm được nhưng hậu quả khác nhau. Câu hỏi nêu **cả hai hướng + hậu quả mỗi hướng + hướng em đề xuất**. Trong lúc chờ: không làm hướng nào.
 6. Chị nói mâu thuẫn với lần trước trong cùng session (ví dụ trước bảo "chỉ phân tích", giờ đưa ticket mới không nói gì) → xác nhận một câu.
-10. Chị đưa URL production / store live cho `sonder` hoặc `ash` → hỏi lại, nói rõ rủi ro (đơn thật, email thật). Hook env-guard vẫn chặn — chị phải tự mở override (xem "Rào chắn").
+10. Chị đưa URL production / store live cho `sonder` hoặc `ash` → hỏi lại, nói rõ rủi ro (đơn thật, email thật). Hook env-guard vẫn chặn — chị phải tự mở override (xem "Rào chắn"). **Ngoại lệ — không hỏi:** store `shiki-perfect` (admin `https://admin.shopify.com/store/shiki-perfect`, storefront `https://shiki-perfect.myshopify.com/`) — store production dùng để test các app Shopify của Qikify (TEPO, QSC, QCO, DUOS; không áp cho MTRO): coi như dev store, giao bình thường (khoá staging + pre-flight như dev store), sub-agent được mọi thao tác trừ billing / đổi plan và thanh toán thật (chị duyệt 2026-10-22).
 11. Khoá staging `<KEY>` đang bận do người khác (Luke / session khác) → *"Staging {KEY} đang bị {owner} giữ từ {giờ} ({việc}). Em chờ họ xong rồi chạy (đề xuất), hay chị xác nhận việc đó đã dừng để em gỡ khoá?"* Chị nói đã dừng → `release --force` rồi giao.
 
 Những điểm flint chặn (mâu thuẫn business rule, bản phân tích cũ hơn nguồn) và `PREFLIGHT FAIL` / `CIRCUIT-BREAK` của sonder **không** phải câu hỏi — em dừng, đưa "Chị cần làm", chị bảo tiếp thì làm.
@@ -336,13 +336,14 @@ Với kết quả chạy manual: dán **bảng id · title · status · actual m
 
 **Chỉ khi chị bảo** — mặc định không làm, chỉ gợi ý trong "Chị cần làm":
 - Em không sửa business rule, không chạy `update-business-rules`, không `upsert_knowledge` / `delete_knowledge` trên QA Hub — kể cả khi analyst phát hiện rule mới. Chỉ **gợi ý** một dòng (đích ưu tiên: QA Hub `upsert_knowledge kind=business-rule`, `sourceUrl` = link issue). Chị bảo lưu → em gọi thẳng `mcp__testlane__upsert_knowledge`, không qua sub-agent.
-- `sonder` / `ash` chạy trên URL production hay store live → câu 10, trước khi giao (hook env-guard vẫn chặn tới khi chị tự mở override).
+- `sonder` / `ash` chạy trên URL production hay store live → câu 10, trước khi giao (hook env-guard vẫn chặn tới khi chị tự mở override). Trừ store `shiki-perfect` — giao không hỏi, hook cho qua (xem câu 10).
 - Xoá / sửa case đã có, đổi status task → câu 5. `report_bug` → câu 8. Đính kèm CCR → câu 12.
 - Em không tự quét Jira tìm ticket, không JQL định kỳ. Chỉ xử lý ticket / truy vấn chị đưa.
 
 **Luồng chuẩn, không hỏi** — nhưng có giới hạn:
 - `sonder` chế độ retest được tự chuyển bug `To Do` ↔ `Passed`, không trạng thái nào khác.
-- `sonder` chỉ chạy trên staging / dev store chị đưa (MTRO: `.env` của repo).
+- Trên store staging / dev store Shopify của team và `shiki-perfect` (TEPO / QSC / QCO / DUOS), `sonder` / `ash` được mọi thao tác trừ billing / đổi plan và thanh toán thật (đặt đơn chỉ cổng test) — chị duyệt 2026-10-22; hook env-guard chặn trang billing / plan / charge của mọi store Shopify. MTRO giữ quy tắc cũ.
+- `sonder` chỉ chạy trên staging / dev store chị đưa (MTRO: `.env` của repo), hoặc store `shiki-perfect` (store production chị duyệt làm store test, mọi thao tác trừ billing / đổi plan và thanh toán thật).
 - Không lặp lại việc sub-agent đã báo là lỗi (tạo task lần hai, thử project khác, ghi test case vào task gần đúng).
 - Sub-agent trả về thiếu khuôn hoặc thiếu báo cáo → gọi lại **một lần** với yêu cầu rõ hơn; vẫn thiếu thì báo chị, không tự bịa phần thiếu.
 

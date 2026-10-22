@@ -24,7 +24,8 @@ from urllib.parse import urlparse
 
 # Host khớp một trong các suffix này là "đáng ngờ" nếu KHÔNG có dấu hiệu staging.
 PRODUCTION_SUFFIXES = (
-    "mailtro.ai",        # Mailtro app / id / api
+    "mailtro.ai",        # Mailtro id / api (production: id.mailtro.ai; staging: staging-id.mailtro.ai)
+    "mailtro.app",       # workspace Mailtro production (<slug>.mailtro.app); staging = <slug>.wisle.app
     "myshopify.com",     # store live
 )
 # admin.shopify.com/store/<handle>/... -> xét <handle>
@@ -33,6 +34,17 @@ SHOPIFY_ADMIN_HOST = "admin.shopify.com"
 # Có một trong các marker này (trong host hoặc store handle) -> coi là staging/dev.
 STAGING_MARKERS = ("staging", "stg", "dev", "test", "qa", "sandbox", "preview", "localhost", "127.0.0.1")
 
+# Store production được chị duyệt làm store test (2026-10-22): mọi thao tác TRỪ billing / đổi plan
+# và thanh toán thật; không cần override. Trang billing / plan / charge của store này vẫn bị deny
+# (override ~/.hae-allow-production KHÔNG mở được các trang này). Thanh toán thật ở checkout không
+# nhận ra được qua URL -> chặn bằng prompt sub-agent (chỉ cổng thanh toán test).
+# So khớp CHÍNH XÁC (host / store handle), không dùng endswith.
+ALLOWED_PROD_HOSTS = ("shiki-perfect.myshopify.com",)
+ALLOWED_STORE_HANDLES = ("shiki-perfect",)
+# Dev store của team không có marker staging trong tên -> cho qua như dev store (2026-10-22).
+ALLOWED_PROD_HOSTS += ("ngant-checkout.myshopify.com",)
+ALLOWED_STORE_HANDLES += ("ngant-checkout",)
+
 # Host/suffix luôn allow, kể cả không có marker (workspace staging, tool nội bộ).
 ALWAYS_ALLOW_SUFFIXES = (
     "wisle.app",          # workspace Mailtro staging
@@ -40,6 +52,9 @@ ALWAYS_ALLOW_SUFFIXES = (
     "ownego.atlassian.net",
     "github.com",
 )
+
+# Đường dẫn billing / plan / charge trong admin của MỌI store Shopify -> luôn deny.
+BILLING_PATH_RE = re.compile(r"/(settings/(billing|plan)|charges?/|subscriptions?/confirm|billing)", re.IGNORECASE)
 
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 
@@ -55,10 +70,33 @@ def classify(url: str):
     host = (p.hostname or "").lower()
     if not host:
         return None
+    # Mọi store Shopify (staging, dev store, shiki-perfect, live): trang billing / plan / charge -> deny,
+    # override cũng không mở được (chị cấm billing / đổi plan, 2026-10-22).
+    if (host == SHOPIFY_ADMIN_HOST or host.endswith(".myshopify.com")) and BILLING_PATH_RE.search(p.path or ""):
+        return f"BILLING: trang billing / plan / charge `{host}{p.path}` — chị cấm"
+    # Mailtro workspace production = *.mailtro.app (vd ngant.mailtro.app). Không có staging nào trên
+    # domain này (staging workspace = *.wisle.app) -> luôn production, kể cả slug có chữ qa / test / dev.
+    if host == "mailtro.app" or host.endswith(".mailtro.app"):
+        return f"host `{host}` là workspace Mailtro production (*.mailtro.app)"
+    # Mailtro: chỉ coi là staging khi label đầu là `staging` / bắt đầu bằng `staging-`
+    # (khớp profile Luke qikify-QA-mailtro §5). Marker chung (qa, dev, test…) KHÔNG đủ.
+    if host == "mailtro.ai" or host.endswith(".mailtro.ai"):
+        first = host.split(".")[0]
+        if first == "staging" or first.startswith("staging-"):
+            return None
+        return f"host `{host}` không có tiền tố `staging-` (Mailtro production)"
+    if host in ALLOWED_PROD_HOSTS:
+        if BILLING_PATH_RE.search(p.path or ""):
+            return f"BILLING: trang billing / plan / charge của `{host}` — chị cấm"
+        return None
     if host.endswith(ALWAYS_ALLOW_SUFFIXES) or has_marker(host):
         return None
     if host == SHOPIFY_ADMIN_HOST:
-        m = re.match(r"^/store/([^/]+)", p.path or "")
+        m = re.match(r"^/store/([^/?#]+)", p.path or "")
+        if m and m.group(1).lower() in ALLOWED_STORE_HANDLES:
+            if BILLING_PATH_RE.search(p.path or ""):
+                return "BILLING: trang billing / plan / charge của store `%s` — chị cấm" % m.group(1)
+            return None
         if m and not has_marker(m.group(1)):
             return f"Shopify admin của store live `{m.group(1)}`"
         return None
@@ -117,7 +155,7 @@ def main() -> int:
         log(tool, "allow", reasons)
         return 0  # allow, im lặng
 
-    if override_active():
+    if override_active() and not any("BILLING:" in r for r in reasons):
         log(tool, "allow*", reasons)  # chị đã mở cửa bằng ~/.hae-allow-production
         return 0
 

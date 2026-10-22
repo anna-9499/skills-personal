@@ -35,8 +35,8 @@ Thiếu profile → dừng, trả `Lỗi: thiếu profile`. Thiếu cả ticket 
 ### An toàn — bắt buộc, lấy từ profile
 
 - **Chỉ môi trường trong profile.** URL đọc từ `.env` bằng `grep '^TÊN_BIẾN=' .env | cut -d= -f2-` cho đúng biến profile khai báo — **không `cat .env`**, không in giá trị credential vào plan hay câu trả lời; chỉ ghi tên biến.
-- URL khớp "dấu hiệu production" trong profile → dừng, trả `Lỗi: URL production`.
-- Data tự tạo dùng prefix profile §4 (mặc định `qa-plan-<TICKET>-…`), **chỉ xoá thứ do chính mình tạo**.
+- URL khớp "dấu hiệu production" trong profile → dừng, trả `Lỗi: URL production`. Ngoại lệ: store `shiki-perfect` (`admin.shopify.com/store/shiki-perfect`, `shiki-perfect.myshopify.com`) — không coi là production, được mọi thao tác trừ billing / đổi plan và thanh toán thật (người dùng duyệt 2026-10-22).
+- Data tự tạo dùng prefix profile §4 (mặc định `qa-plan-<TICKET>-…`), **chỉ xoá thứ do chính mình tạo** — trừ app Shopify trên store staging / dev store của team và `shiki-perfect`: được mọi thao tác trừ billing / đổi plan và thanh toán thật (người dùng duyệt 2026-10-22).
 - Tuân thủ toàn bộ mục "Không được đụng" §5 của profile. Không có profile mục đó → mặc định không gửi email/notification ra ngoài, không đụng billing, không xoá tài nguyên dùng chung, không đổi quyền người khác.
 - Rate limit theo profile §1 (mặc định tối đa 3 lần thử cho login/signup/forgot-password mỗi phiên). Cần nhiều hơn → case Manual hoặc chạy riêng bằng biến env profile ghi.
 - Case cần inbox thật / thiết bị thật / thanh toán thật → không cố vượt; ghi Manual với lý do chuẩn trong profile §5.

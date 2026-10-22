@@ -123,7 +123,7 @@ Memory là **sự thật về UI** học được qua các lần heal, để l�
 - Sửa Expected theo hành vi app khi chưa tái hiện tay và chưa đối chiếu plan/rule.
 - Sửa `playwright.config.ts` để ẩn lỗi (`retries`, `timeout`, `ignoreHTTPSErrors`, tắt project).
 - Sửa code app; sửa file ngoài spec/page object/fixture đang heal.
-- Chạy trên URL khớp dấu hiệu production trong profile; mọi hành động trong profile §5.
+- Chạy trên URL khớp dấu hiệu production trong profile (trừ store `shiki-perfect` — `admin.shopify.com/store/shiki-perfect`, `shiki-perfect.myshopify.com` — người dùng duyệt 2026-10-22, mọi thao tác trừ billing / đổi plan và thanh toán thật); mọi hành động trong profile §5.
 - In credential ra log hay câu trả lời.
 - Ghi Expected / message / kết luận nghiệp vụ vào healing memory; dùng memory làm lý do sửa assert; sửa locator theo memory mà chưa thấy element trên snapshot.
 - Ghi memory từ test flaky, test loại B / C / D, hoặc test bị cầu dao dừng.

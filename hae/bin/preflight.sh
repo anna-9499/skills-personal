@@ -6,6 +6,7 @@
 #     URL: bắt buộc với 4 app Shopify nếu muốn kiểm staging; MTRO tự lấy BASE_URL trong .env;
 #          DUOS bỏ qua URL truyền vào, luôn kiểm staging-admin.getduos.io/admin/login (host DUOS trả 400 ở "/").
 #
+# Kiểm cả URL có phải production không (qua hooks/env-guard.py; override ~/.hae-allow-production còn hạn thì cho qua, trừ trang billing).
 # Mỗi dòng: OK | WARN | FAIL  <mục>  <chi tiết>   (FAIL/WARN có thêm dòng "  FIX: …")
 # Exit: 0 = không có FAIL · 1 = có FAIL (Hae không giao) · 2 = sai cú pháp.
 # Không in giá trị trong .env (chỉ tên biến). Đăng nhập / captcha / store state: sonder tự kiểm ở bước 0.
@@ -39,6 +40,22 @@ if [[ "$key" == "MTRO" ]]; then
   if [[ "$e" == "staging" ]]; then ok "env" "ENV=staging"
   else fail "env" "ENV trong .env không phải staging" "sửa ENV=staging trong .env repo qikify-QA-mailtro"; fi
   [[ -z "$url" ]] && url="$(envval BASE_URL)"
+fi
+
+# 2b. URL không phải production (dùng chính env-guard; MTRO kiểm cả AUTH_URL)
+GUARD="$(dirname "$0")/../hooks/env-guard.py"
+chk_prod() { # url
+  local out; out="$(printf '{"tool_name":"preflight","tool_input":{"url":"%s"}}' "$1" | python3 -I "$GUARD" 2>/dev/null)"
+  local h; h="$(printf '%s' "$1" | sed -E 's#^https?://([^/]+).*#\1#')"
+  if [[ -z "$out" ]]; then ok "prod-guard" "$h không phải production (hoặc store được duyệt)"
+  elif [[ "$out" == *BILLING:* ]]; then fail "prod-guard" "$h: trang billing / plan / charge" "chị cấm billing — đưa URL trang khác"
+  else fail "prod-guard" "$h có hình dáng production" "đưa URL staging / dev store; store dev không có chữ staging trong tên → nhờ Hae thêm vào allow list env-guard"; fi
+}
+if [[ -f "$GUARD" ]]; then
+  [[ -n "$url" ]] && chk_prod "$url"
+  [[ "$key" == "MTRO" ]] && { a="$(envval AUTH_URL)"; [[ -n "$a" ]] && chk_prod "$a"; }
+else
+  warn "prod-guard" "không thấy $GUARD" "kiểm thư mục hae/hooks"
 fi
 
 # 3. MCP server

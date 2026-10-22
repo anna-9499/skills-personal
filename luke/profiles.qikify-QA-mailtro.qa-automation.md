@@ -23,7 +23,7 @@
   - Suite Playwright: **fixture storageState** — `tests/auth.setup.ts` (project `setup`) login 3 role, lưu `.auth/owner|admin|member.json`; project `chromium` mặc định `.auth/admin.json`; role khác dùng `fixtures/auth.fixture.ts` → `test.use({ role: 'owner' })` + `roleAwarePage`. `01-auth/**` chạy ở project `chromium-unauthenticated` (không storageState). `.auth/` gitignored, phải chạy `npx playwright test --project=setup` trước.
   - Agent khám phá/heal (Playwright MCP): đăng nhập bằng tài khoản env ở `AUTH_URL/login`, rồi đi qua Choose a workspace sang `BASE_URL`.
   - Chrome bridge session có sẵn: chỉ dùng cho manual run (sonder), không phải quy ước của repo này.
-- Dấu hiệu production cần dừng: URL `mailtro.ai` **không có** tiền tố `staging-` (theo agent planner). Repo không có guard code; biến `ENV` (`staging | production`) có trong `.env` nhưng chưa được kiểm tra ở đâu.
+- Dấu hiệu production cần dừng: Production = `https://id.mailtro.ai/` (login / id) + workspace `<slug>.mailtro.app` (ví dụ `https://ngant.mailtro.app/`) — mọi host `*.mailtro.app` và mọi `*.mailtro.ai` có label đầu không phải `staging` / `staging-…`. Staging = `https://staging-id.mailtro.ai/` + workspace `<slug>.wisle.app` (ví dụ `https://qa-workspace.wisle.app/`) (người dùng xác nhận 2026-10-22). Đã có guard: hook env-guard của Hae chặn browser theo đúng quy tắc này, `preflight.sh` kiểm `ENV=staging` + URL, sonder dừng nếu `ENV` không phải `staging` (2026-10-22).
 - Biến env đặc biệt:
   - `RUN_RATE_LIMIT_TESTS=1` — bật TC-SIGNUP-063 (11 request `/register`, làm cạn quota 10 req/60s → signup sau dính 429). Mặc định tắt, chạy riêng: `RUN_RATE_LIMIT_TESTS=1 npx playwright test -g TC-SIGNUP-063`. Lưu ý các agent cũ ghi tên biến là `RUN_RATE_LIMIT` — **tên đúng trong repo là `RUN_RATE_LIMIT_TESTS`**.
   - `SLOW_MO` (ms, mặc định 0; `npm run test:slow` đặt 800) — `use.launchOptions.slowMo`.
@@ -77,7 +77,7 @@
   - Mail API để đọc inbox: **chưa có** (R13 — blocker lớn nhất).
 
 ## 5. Không được đụng (an toàn)
-- Chỉ chạy trên staging (`staging-id.mailtro.ai`, `<slug>.wisle.app`); gặp `mailtro.ai` không có `staging-` → dừng.
+- Chỉ chạy trên staging (`staging-id.mailtro.ai`, `<slug>.wisle.app`); gặp `id.mailtro.ai`, `*.mailtro.ai` không có `staging-`, hoặc bất kỳ `*.mailtro.app` (workspace production) → dừng.
 - Không gửi campaign / test email / automation `Send email` tới địa chỉ thật ngoài hộp thư QA hoặc SES simulator; case Send sheet, Preview & test là side effect (R6/R13/R14) — chạy có kiểm soát, sau cờ env.
 - Không đụng billing; không xoá workspace, đổi tên/transfer ownership workspace dùng chung (nhóm "test phá hoại" cần workspace riêng — R31); không đổi/xoá sending domain; không revoke role, remove member, revoke invitation của người khác.
 - Không tạo tài khoản mới hàng loạt (mỗi signup gửi mail verify thật); không chạy TC-SIGNUP-063 / test rate limit trong suite mặc định; không chạy `api` song song `01-auth`.
