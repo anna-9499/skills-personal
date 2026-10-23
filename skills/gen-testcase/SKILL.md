@@ -58,7 +58,7 @@ Nếu đã rõ từ context (ví dụ: user paste Jira issue), không cần hỏ
 - Không dùng dữ liệu nhạy cảm (token, mật khẩu, dữ liệu khách hàng thật, private key, production credentials).
 - Ưu tiên chất lượng và độ bao phủ hơn số lượng — tránh case trùng lặp hoặc giá trị thấp.
 - **Không tự đặt ngưỡng hiệu năng** (thời gian tải, số bản ghi tối đa, timeout). Nếu requirement không nêu, viết Expected Result theo hành vi quan sát được và ghi `PO/DEV confirm` để chốt ngưỡng sau.
-- **Test case Security ở góc độ QA chức năng**: kiểm chứng cơ chế bảo vệ hoạt động đúng. Không viết payload tấn công thật, không mô tả cách khai thác lỗ hổng, không nhắm vào môi trường production.
+- **Test case Security ở góc độ QA chức năng**: kiểm chứng cơ chế bảo vệ hoạt động đúng. Test data chỉ dùng chuỗi thử chuẩn của team (bảng "Payload mẫu" — `<script>alert(1)</script>`, `' OR 1=1 --`, `{{7*7}}`…), không viết payload khai thác thật, không mô tả cách khai thác tiếp, không nhắm vào production hay shop merchant thật.
 - **Không tự đánh số Test Case ID.** QA Hub cấp id theo `key` của project (`TC-QCO-064`, `TC-QCO-065`…), theo đúng thứ tự case trong lần gọi `create_test_cases`. Trước khi ghi, gọi `list_test_cases` của task để biết case nào đã có, tránh tạo trùng.
 
 ## Loại test case cần bao phủ
@@ -86,7 +86,19 @@ Nếu trong lúc bao phủ 8 loại trên, Claude nhận thấy có case hữu �
 
 ### Test case Security
 
-Phạm vi là **QA chức năng**: kiểm chứng cơ chế bảo vệ có hoạt động đúng không. Không viết payload tấn công thật, không hướng dẫn dò lỗ hổng, không chạy trên production.
+Phạm vi là **QA chức năng**: kiểm chứng cơ chế bảo vệ có hoạt động đúng không. Chỉ dùng chuỗi thử trong bảng "Payload mẫu" của checklist, không hướng dẫn dò lỗ hổng, không chạy trên production hay shop merchant thật.
+
+Checklist đầy đủ của team (Phần 0 theo loại feature · Phần A chung Shopify app · Phần B từng app · Phần C Mailtro · Payload mẫu · mức P1/P2/P3): `../qa-requirement-analysis/references/method/security-checklist.md` (cùng file terra dùng cho mục 9 và flint dùng để soi) — đọc đúng phần khớp feature khi đọc được file. Mục **[P1]** của phần app mà feature chạm tới → bắt buộc có case (priority High); **[P3]** (header, `npm audit`, CORS, ZAP) → không viết case theo ticket. Notes ghi mã mục checklist (`Checklist A2`, `C7`…). Bước cần sửa request (body / header / token / method khác GET) → Preconditions ghi `Công cụ: DevTools/Postman` (sonder tự gửi lại request đã sửa trong trang staging; webhook / App Proxy ký HMAC / OAuth callback thì chị chạy tay).
+
+Luôn dựng hai phía: **2 shop / workspace** (A, B) và **ít nhất 2 vai trò** (Owner + quyền thấp nhất).
+
+**Cổng trước khi viết một case Security** — trả lời đủ 4 câu, thiếu câu 1 hoặc 2 thì không viết (feature không có bề mặt đó, đừng ép cho đủ loại):
+1. **Ai** làm — role thấp hơn, shop / workspace / công ty khác, buyer chưa đăng nhập, người đã bị gỡ quyền.
+2. **Cái gì** được bảo vệ — dữ liệu, thao tác, tiền, cấu hình của ai.
+3. **Đường đi khác** ngoài nút trên UI — URL dán thẳng, đổi id, tab cũ, export, email, storefront, import.
+4. **Kết quả đo được** — chặn ở đâu, người dùng thấy gì, và không dữ liệu nào lộ ra.
+
+Preconditions của case Security nêu đủ hai phía: tài khoản thấp quyền / tenant khác **và** bản ghi cần bảo vệ.
 
 Các nhóm case thường dùng — chọn nhóm liên quan tới tính năng đang test:
 
@@ -102,6 +114,11 @@ Các nhóm case thường dùng — chọn nhóm liên quan tới tính năng đ
 | Rate limit | Gửi lại email xác thực / login sai / import liên tục → bị giới hạn sau N lần |
 | Token của link | Link invite/reset/unsubscribe: token hết hạn, token đã dùng, sửa tham số email trên query string → không chiếm được tài khoản khác |
 | Session | Token hết hạn giữa chừng, logout rồi dùng lại tab cũ |
+| Gỡ quyền / xoá | Member bị gỡ hoặc hạ role khi đang mở tab → thao tác tiếp bị chặn; bản ghi đã xoá không còn ở tìm kiếm, export, storefront, email đã lên lịch |
+| Đúng quyền ở mọi đường | Thao tác bị chặn ở màn hình chính cũng bị chặn qua bulk action, duplicate, import |
+| Luồng nhiều bước | Mở thẳng URL bước sau khi chưa xong bước trước; gửi lại form của luồng đã hoàn tất; bấm hai lần / hai tab áp cùng mã → không tạo kết quả sai |
+| Tìm kiếm / số đếm | Kết quả tìm kiếm, số đếm, autocomplete không để lộ bản ghi role đó không được xem |
+| Chuyển hướng | Tham số `redirect` / `return_to` / `next` trỏ domain ngoài → bị bỏ qua |
 
 **Theo loại app:**
 - **App Shopify (TEPO, QSC, QCO, DUOS)**: dữ liệu merchant này không lộ sang merchant khác; script trên storefront không lộ thông tin admin; endpoint public (app proxy) kiểm tra shop domain; webhook verify HMAC.
@@ -280,10 +297,10 @@ Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file tr�
 QA Hub là nơi lưu test case. Soạn xong bộ case thì ghi thẳng lên đó qua MCP — không sinh file, không import Google Sheet.
 
 1. `list_projects` → `id` và `key` của project (`key` = prefix của Test Case ID).
-2. `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý. Không có task khớp → hỏi người dùng, đừng đoán.
-3. `list_test_cases` cho task đó → xem case nào đã có, tránh ghi trùng nội dung.
-4. `create_test_cases` — **một lần gọi cho cả bộ**, tối đa 100 case. Cả batch được validate trước khi ghi: hoặc vào hết, hoặc không case nào vào, và chỉ hiện 1 dòng activity. Đừng gọi `create_test_case` từng cái một.
-5. Báo lại: số case đã tạo, dải id QA Hub cấp (ví dụ `TC-QCO-064 → TC-QCO-089`), `taskId`, và phân bố loại case / priority.
+2. `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý. Không có task khớp → hỏi người dùng, đừng đoán. Ticket có **task phụ** (title bắt đầu `[Sec/Perf]`, cùng `Source:` hoặc dòng "Task chính:" trỏ về task chính) → case `[Security]` và `[Performance]` ghi vào task phụ, mọi loại khác ghi vào task chính. Không có task phụ → ghi hết vào task chính như cũ. Task chính + task phụ không phải "nhiều task khớp".
+3. `list_test_cases` cho task đó (và task phụ nếu có) → xem case nào đã có, tránh ghi trùng nội dung.
+4. `create_test_cases` — **một lần gọi cho mỗi task** (task chính, rồi task phụ nếu có), tối đa 100 case mỗi lần. Cả batch được validate trước khi ghi: hoặc vào hết, hoặc không case nào vào, và chỉ hiện 1 dòng activity. Đừng gọi `create_test_case` từng cái một.
+5. Báo lại: số case đã tạo, dải id QA Hub cấp (ví dụ `TC-QCO-064 → TC-QCO-089`), `taskId` (tách riêng task chính / task phụ), và phân bố loại case / priority.
 
 Bộ hơn 100 case thì chia nhiều lần gọi, giữ đúng thứ tự để id chạy liên tục.
 

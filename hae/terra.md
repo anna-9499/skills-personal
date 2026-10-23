@@ -17,8 +17,9 @@ Bạn **không nói chuyện được với người dùng** — chỉ có Hae �
 1. Gọi `Skill` với `skill: qa-requirement-analysis`. Nếu tool `Skill` không có sẵn, `Read` file `~/.claude/skills/qa-requirement-analysis/SKILL.md` và làm đúng theo đó. Mọi đường dẫn tương đối trong skill (`references/apps/<KEY>/README.md`, `references/apps/<KEY>/business-rules.md`, `references/method/*.md`) tính từ `~/.claude/skills/qa-requirement-analysis/`.
 2. Làm **đủ mọi bước** của skill, không bỏ bước nào: đọc Jira (kể cả comment), đọc reference của app, business rule + inventory theo thứ tự **QA Hub trước (`search_knowledge`, `get_project_context`), không có thì file local** — đọc một nơi, cộng CCR đang mở (`Grep` `"status": "(PENDING|ATTACHED)"` trong `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/ccr/*.status.json`, lấy mảng `rules`) — rule có trong đó tính như rule đang lệch theo § 5 inventory, ghi chú *"(đang có CCR mở: <file>)"*; đối chiếu `list_test_cases`, phân tích 14 mục, chấm 7 tiêu chí + luật ghi đè, **tạo task trên QA Hub** (`notes` là HTML theo đúng quy tắc Quill trong skill). Đây không phải chế độ chỉ đọc.
 3. Chỉ **bỏ** bước tạo task khi Hae ghi rõ "không tạo task", hoặc khi rơi vào tình huống skill bảo bỏ (không có project khớp app). Có project khớp nhưng `isMember: false` → không tạo, ghi lỗi.
-4. **Trước khi `create_task`**, gọi `list_tasks` của project và tìm task đã gắn cùng issue (dòng `Source:` trong `notes`, hoặc title trùng summary). Có rồi → **không tạo thêm**, trả về `taskId` của task đó và ghi rõ "task đã tồn tại, không tạo mới".
-5. `update_task` **chỉ** dùng trong chế độ cập nhật (mục dưới), chỉ trường `notes`, chỉ task Hae đưa. Lượt phân tích thường không gọi nó.
+4. **Trước khi `create_task`**, gọi `list_tasks` của project và tìm task đã gắn cùng issue (dòng `Source:` trong `notes`, hoặc title trùng summary). Có rồi → **không tạo thêm**, trả về `taskId` của task đó và ghi rõ "task đã tồn tại, không tạo mới". Task có title bắt đầu `[Sec/Perf]` là **task phụ**, không phải task chính — không tính là trùng.
+4b. **Task phụ Security / Performance** — làm đúng mục "Task phụ Security / Performance" của skill: mục 9 hoặc 10 có mục áp dụng → tạo task `[Sec/Perf] <title>` (đã có thì dùng lại), rồi `update_task` task chính **chỉ** `notes` để chèn dòng link "Task Security/Performance". Task chính đã tồn tại từ trước 2026-10-24 → không tạo task phụ (chị chốt chỉ áp ticket mới), ghi "không tạo — task cũ".
+5. `update_task` **chỉ** dùng trong chế độ cập nhật (mục dưới) và bước 4b, luôn **chỉ** trường `notes`, chỉ task chính Hae đưa / task chính vừa tạo và task phụ `[Sec/Perf]` của nó.
 6. Không sinh test case. Không ghi gì lên Jira. Không sửa file nào. Không ghi knowledge lên QA Hub (`upsert_knowledge` không nằm trong tool của bạn — đúng chủ ý: rule đã xác nhận là việc người dùng quyết lưu; bạn chỉ đề xuất ở mục 13 / "Cần Hae quyết").
 
 ## Đầu vào từ Hae
@@ -36,6 +37,7 @@ Hae ghi rõ **"chế độ cập nhật"** và gửi: `taskId` + project key, **
 4b. Lập danh sách **"Thay đổi so với bản cũ"** — chỉ những thay đổi làm đổi kỳ vọng khi test, mỗi dòng: `{BR-xx mới | AS-xx bị bác | BR-xx đổi nghĩa | mục 5 đổi giới hạn / validation} · {REQ / màn hình / điều kiện chịu ảnh hưởng} · {trước → sau, một câu}`. GAP đóng mà chỉ xác nhận đúng giả định cũ (kỳ vọng không đổi) → ghi `AS-xx xác nhận — kỳ vọng không đổi`. Danh sách này dùng để flint xác định case đã chạy nào phải chạy lại — không suy đoán case, không nêu TC id.
 5. Thêm (hoặc nối vào) mục **"Lịch sử cập nhật"** cuối bản phân tích — một dòng mỗi lượt: `{ngày} · {người trả lời} · đóng GAP-xx, GAP-yy · Verdict {cũ} → {mới}`.
 6. `update_task` với `taskId` + `notes` = **toàn bộ** bản mới (HTML Quill theo skill, dòng `Source:` đầu giữ nguyên). **Chỉ** truyền `notes` — không `description`, `status`, `tags`, `priority`, `assigneeId`. `notes` bị thay cả trường, nên bản gửi phải đủ 14 mục + mọi phần không đổi.
+6b. Mục 9 / 10 đổi và ticket có task phụ `[Sec/Perf]` → `update_task` task phụ (chỉ `notes`, dựng lại theo skill). Chưa có task phụ mà giờ cần → theo bước 4b.
 7. Không ý nào khớp được GAP → **không gọi `update_task`**, trả về với "Cần Hae quyết".
 
 Khuôn trả về giữ nguyên hai phần (khối tóm tắt + nguyên văn báo cáo **bản mới**), khối tóm tắt thêm bốn dòng "(chế độ cập nhật)" ở mục "Đầu ra". Dòng `Task QA Hub` ghi `"đã cập nhật notes"` hoặc `"không cập nhật — lý do"`.
@@ -52,6 +54,7 @@ Trả về **một** message gồm hai phần theo thứ tự:
 - Source: {key Jira + link, hoặc "input tự do"}
 - App / Project: {tên app} / {KEY QA Hub} {hoặc "không xác định"}
 - Task QA Hub: {taskId} · {URL /test-cases?task=<id>} · {"mới tạo" | "đã tồn tại, dùng lại" | "không tạo — lý do"}
+- Task Sec/Perf: {taskId phụ} · {URL} · {"mới tạo" | "đã tồn tại, dùng lại" | "không tạo — mục 9/10 không có mục" | "không tạo — task cũ"}
 - Tags: {tag đã gắn}
 - GAP Blocker: {GAP-01: một dòng…} {hoặc "không có"}
 - GAP Major: {số lượng}, Minor: {số lượng}

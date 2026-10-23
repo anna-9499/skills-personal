@@ -56,6 +56,13 @@ ALWAYS_ALLOW_SUFFIXES = (
 # Đường dẫn billing / plan / charge trong admin của MỌI store Shopify -> luôn deny.
 BILLING_PATH_RE = re.compile(r"/(settings/(billing|plan)|charges?/|subscriptions?/confirm|billing)", re.IGNORECASE)
 
+# Mutation / REST tạo charge của Shopify — chặn trong JS chạy trong trang, kể cả không có URL tuyệt đối.
+BILLING_CODE_RE = re.compile(
+    r"appSubscription(Create|Cancel|LineItemUpdate)|appPurchaseOneTimeCreate|appUsageRecordCreate|"
+    r"recurring_application_charges?|application_charges?|application_credits?",
+    re.IGNORECASE,
+)
+
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 
 
@@ -150,6 +157,15 @@ def main() -> int:
             r = classify(url)
             if r:
                 reasons.append(f"{url} — {r}")
+
+    # Chạy JS trong trang (sonder sửa request cho case Security, 2026-10-24): fetch có thể dùng
+    # đường dẫn TƯƠNG ĐỐI nên URL_RE không thấy. Trang hiện tại đã qua guard lúc navigate (staging /
+    # dev store / shiki-perfect); ở đây chỉ chặn thêm billing bằng path tương đối / mutation tạo charge.
+    if tool.endswith(("browser_evaluate", "browser_run_code", "browser_run_code_unsafe", "javascript_eval", "javascript_tool")):
+        for s in iter_strings(tool_input):
+            if BILLING_PATH_RE.search(s) or BILLING_CODE_RE.search(s):
+                reasons.append("BILLING: JS trong trang gọi billing / plan / charge — chị cấm")
+                break
 
     if not reasons:
         log(tool, "allow", reasons)

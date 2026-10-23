@@ -464,6 +464,18 @@ Dùng **MCP của QA Hub** (server tên `testlane`, tool `mcp__testlane__*`; tok
 - `assigneeId`: **bỏ trống** — mặc định là chủ token, tức đúng người đang chạy skill. Đừng hardcode user id.
 - `tags`: tên module/feature suy ra ở bước trên (ví dụ `["Checkout"]`). Thêm tag khác chỉ khi người dùng nói rõ. **Đừng** nhét key Jira vào tag — key đã nằm ở dòng Source trong `notes`.
 
+### Task phụ Security / Performance
+
+Từ 2026-10-24 (chị chốt): case Security và Performance của một ticket nằm ở **task riêng**, không chung với case chức năng. Chỉ áp cho ticket phân tích mới; task cũ giữ nguyên.
+
+- **Khi tạo:** mục 9 **hoặc** mục 10 có ít nhất một mục áp dụng (không phải "Không áp dụng" / thay đổi thuần UI). Cả hai mục trống → không tạo, báo một câu.
+- **Thứ tự:** tạo task chính → tạo task phụ → `update_task` task chính **chỉ** trường `notes`, chèn đúng một dòng ngay dưới dòng `Source:`: `<p>Task Security/Performance: <a href="/test-cases?task=<id phụ>"><id phụ></a></p>`.
+- **Tham số `create_task` của task phụ:**
+  - `description`: `[Sec/Perf] ` + đúng title task chính.
+  - `notes`: `<p>Task chính: <a href="/test-cases?task=<id chính>"><id chính></a></p>` + dòng `Source:` giống task chính + `<h3>9. Security Considerations</h3>` và `<h3>10. Performance Considerations</h3>` chép nguyên văn từ bản phân tích + một dòng `<p>Bản phân tích đầy đủ ở task chính.</p>`.
+  - `tags`, `priority`: giống task chính. `parentId`: task chính là epic → id task chính; task chính nằm trong epic → cùng `parentId` đó; còn lại bỏ trống.
+- **Tìm task đã có:** task chính = task có `Source:` khớp và title **không** bắt đầu `[Sec/Perf]`; task phụ = title bắt đầu `[Sec/Perf]` và `Source:` khớp (hoặc dòng "Task chính:" trỏ đúng). Một task chính + một task phụ cho cùng ticket **không** phải "nhiều task khớp". Đã có task phụ → dùng lại, không tạo thêm.
+
 ### `notes` là HTML, không phải Markdown
 
 QA Hub render `notes` bằng rich-text editor (Quill) và hiển thị đúng những gì nhận được. Nhét Markdown vào thì người đọc thấy nguyên dấu `##` và `**` chứ không thành heading — **convert sang HTML trước khi gọi tool**, chỉ dùng những thẻ Quill sinh ra được, nếu không lần đầu QA sửa task là format bay mất:
@@ -477,7 +489,7 @@ QA Hub render `notes` bằng rich-text editor (Quill) và hiển thị đúng nh
 
 ### Báo lại cho người dùng
 
-Task id vừa tạo kèm đường dẫn `/test-cases?task=<id>`, project + tag đã chọn, và Readiness Score. Nếu input là issue Jira, kèm luôn link issue gốc để trace ngược.
+Task id vừa tạo kèm đường dẫn `/test-cases?task=<id>` (và task phụ `[Sec/Perf]` nếu có), project + tag đã chọn, và Readiness Score. Nếu input là issue Jira, kèm luôn link issue gốc để trace ngược.
 
 **Nếu `create_task` lỗi** (403 vì chưa join project, project không tồn tại, assignee không tồn tại): báo lỗi ngắn gọn kèm việc cần làm, đừng bỏ qua âm thầm và đừng thử tạo lại ở project khác cho xong.
 
@@ -493,6 +505,7 @@ Dùng khi task QA Hub **đã có** bản phân tích trong `notes`, và người
 - **Chấm lại** mục 14 theo rubric + luật ghi đè với GAP còn mở; ghi *"Verdict cũ → mới"*.
 - **Lịch sử cập nhật:** một dòng mỗi lượt ở cuối bản — ngày · người trả lời · GAP đã đóng · Verdict cũ → mới.
 - **Ghi:** `update_task` chỉ với `taskId` + `notes` = toàn bộ bản mới (HTML Quill như khi tạo task). `notes` bị thay cả trường nên bản gửi phải đủ phần A + 14 mục phần B. Không đổi status / title / tags.
+- **Task phụ `[Sec/Perf]`:** mục 9 / 10 đổi → `update_task` task phụ với `notes` dựng lại theo mục "Task phụ Security / Performance". Chưa có task phụ mà giờ mục 9 / 10 có mục áp dụng (và task chính được tạo từ 2026-10-24) → tạo theo mục đó. Task chính cũ hơn → không tạo, ghi vào "Cần hỏi người dùng".
 
 ## Bước tiếp theo
 
