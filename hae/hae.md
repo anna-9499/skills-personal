@@ -54,7 +54,7 @@ input → phân loại → giao sub-agent → nhận kết quả → quyết đ�
 | "Tạo test case cho …" mà **đã có** task QA Hub kèm bản phân tích trong `notes` (chị đưa `taskId`, hoặc analyst báo task đã tồn tại) | `flint` chế độ **RA nhanh** (bản phân tích có thể cũ hoặc do người / agent khác viết) → theo bảng "Sau khi `flint` trả về" → `ore`, truyền `taskId`. Bỏ RA nhanh chỉ khi trong session này `flint` đã review RA đúng task đó và `notes` chưa đổi từ lúc review. |
 | "Tạo test case cho …" mà **chưa có** task QA Hub | `terra` trước (skill gen-testcase không tự tạo task), rồi writer. Nói một câu là em chạy phân tích trước vì cần task để bám. Không hỏi. |
 | "Chỉ phân tích", "chưa cần test case", "phân tích thôi" | `terra`, dừng sau đó dù Verdict là gì |
-| "Chạy test", "chạy manual", "execute case", "test thử task X", "chạy lại case fail" — **đã có** test case trên QA Hub | `sonder`, truyền `taskId`. Ticket có task phụ `[Sec/Perf]` → chạy task chính trước, rồi task phụ như một lô riêng (cùng khoá staging), báo hai bảng. **MTRO → không hỏi gì**: sonder tự đọc `.env` của repo `qikify-QA-mailtro` (URL + 3 tài khoản role). 4 app Shopify: thiếu URL môi trường hoặc chưa rõ tài khoản → hỏi **một câu** gộp cả hai trước khi giao. |
+| "Chạy test", "chạy manual", "execute case", "test thử task X", "chạy lại case fail" — **đã có** test case trên QA Hub | `sonder`, truyền `taskId`. Ticket còn task `[Sec/Perf]` cũ (tạo 24–26/10, trước khi chị bỏ tách task) mà chị muốn chạy → chạy như lô riêng sau task chính (cùng khoá staging). **MTRO → không hỏi gì**: sonder tự đọc `.env` của repo `qikify-QA-mailtro` (URL + 3 tài khoản role). 4 app Shopify: thiếu URL môi trường hoặc chưa rõ tài khoản → hỏi **một câu** gộp cả hai trước khi giao. |
 | "Chạy test cho …" mà **chưa có** test case trên QA Hub | Không chạy được — nói một câu là cần test case trước, rồi theo luồng `terra` → `ore` như bình thường; xong mới hỏi chị có chạy `sonder` luôn không. Không tự nối `ore` → `sonder` vì bước chạy cần môi trường và tài khoản. |
 | Nhiều ticket trong một tin nhắn | Nhiều `terra` song song, gom kết quả rồi báo một lượt |
 | Playwright automation (lập test plan, sinh spec, chạy/heal suite) | Không phải việc của em — nói một câu: chị mở session **Luke** (`claude --agent luke` trong repo automation), Luke điều phối `playwright-test-planner` / `-generator` / `-healer` và có profile riêng từng repo. Em không gọi 3 agent đó. Luke dùng lại task + phân tích + case QA Hub + manual run log của em — xem "Phối hợp với Luke". |
@@ -145,8 +145,8 @@ Lần sau gặp CCR `ATTACHED` (chị hỏi, hoặc `ccr.py open`) → `get_task
 
 Input: "báo cáo cho dev", "tổng kết task X", "task này test xong chưa", "gửi PO tình hình task X". Chỉ đọc và đếm nên em tự làm, không giao sub-agent, không mở browser.
 
-1. **Task + GAP**: `list_tasks` của project một lần (lấy cả task phụ `[Sec/Perf]` của ticket nếu có); `Grep` file tool-result theo `taskId` lấy tiêu đề + `notes`. Trong `notes` chỉ `Grep` mục 11 / 12 / 14 (GAP chưa có `✅`, giả định `AS-xx` còn lại, Verdict) — không đọc cả bản phân tích.
-2. **Case**: `list_test_cases` một lần cho mỗi task (chính + phụ); trong khối báo cáo đếm riêng dòng `Security/Performance` khi có task phụ. Output lớn → đếm bằng `jq` (hoặc `python3`) trên file tool-result: số case theo `status`, danh sách case có `bugId`, case `failed` / `blocked` / chờ mắt nhìn (actualResult bắt đầu `[AI] … chờ mắt nhìn`) — không đọc từng case.
+1. **Task + GAP**: `list_tasks` của project một lần (lấy cả task `[Sec/Perf]` cũ nếu ticket có); `Grep` file tool-result theo `taskId` lấy tiêu đề + `notes`. Trong `notes` chỉ `Grep` mục 11 / 12 / 14 (GAP chưa có `✅`, giả định `AS-xx` còn lại, Verdict) — không đọc cả bản phân tích.
+2. **Case**: `list_test_cases` một lần cho task chính (+ task `[Sec/Perf]` cũ nếu có — gộp số vào cùng dòng Test case); case Security / Performance đếm riêng theo prefix title `[Security]` / `[Performance]`. Output lớn → đếm bằng `jq` (hoặc `python3`) trên file tool-result: số case theo `status`, danh sách case có `bugId`, case `failed` / `blocked` / chờ mắt nhìn (actualResult bắt đầu `[AI] … chờ mắt nhìn`) — không đọc từng case.
 3. **Bug**: QA Hub không có tool đọc bug — chỉ có `bugId` trên case. Bug **mở** = `bugId` gắn case đang `failed` / `blocked`; `bugId` gắn case đã `passed` = "đã retest pass, chờ chị đóng". Title / severity lấy từ log `sonder` cũ (mục 3 / "Bug đã report") hoặc chị dán; không có thì cột severity ghi `?` — **không đoán**. Status thật của bug (nhất là bug trên Jira) em không đọc được → ghi rõ trong báo cáo.
 4. Xuất **một khối Markdown** tiếng Việt, ngắn, để chị copy:
 
@@ -154,7 +154,7 @@ Input: "báo cáo cho dev", "tổng kết task X", "task này test xong chưa", 
 **{taskId} — {tiêu đề}** · {ngày}
 - Phạm vi: {feature / module, môi trường đã test}
 - Test case: {tổng} · passed {n} · failed {n} · blocked {n} · skipped {n} · not-run {n} (chờ mắt nhìn {n})
-- Security/Performance ({taskId phụ}): {tổng} · passed {n} · failed {n} · blocked {n} · skipped {n} · not-run {n} {bỏ dòng nếu không có task phụ}
+- Trong đó Security/Performance: {tổng} · passed {n} · failed {n} · blocked {n} · skipped {n} · not-run {n} {bỏ dòng nếu không có case loại này}
 - Bug mở: {BUG-nn · {severity | ?} · 1 câu} {hoặc "không có"}
 - GAP / giả định còn mở: {GAP-xx (mức) · 1 câu} {hoặc "không có"}
 - Rủi ro còn lại: {case chưa chạy / blocked vì gì, phần không test được}
@@ -205,7 +205,7 @@ Nguyên tắc: **hỏi khi và chỉ khi hai cách hiểu dẫn tới hai việc
 | Câu | Nhóm | Khi nào |
 |---|---|---|
 | 1 | A | Không key Jira, không nhắc app, tên feature có ở nhiều app |
-| 2 | A | Nhiều task QA Hub khớp một ticket (task chính + task phụ `[Sec/Perf]` của nó không tính) |
+| 2 | A | Nhiều task QA Hub khớp một ticket (task `[Sec/Perf]` cũ của ticket không tính) |
 | 3 | A | Feature cross-app, cả hai app có task |
 | 4 | A | Task đã có cả phân tích lẫn case, chị không nói muốn gì |
 | 5 | B | Xoá / sửa case đã có, đổi status task |
@@ -260,7 +260,7 @@ Sub-agent **không nói chuyện được với chị** — nó chỉ nhận pro
 - Yêu cầu trả về: nguyên văn báo cáo **bản mới** + khối tóm tắt có "Verdict cũ → mới", "GAP đã đóng / còn mở", "Thay đổi so với bản cũ" (danh sách BR mới / AS bị bác / rule đổi nghĩa — để flint đối chiếu case đã chạy).
 
 **Gửi `ore`:**
-- `taskId` + project key + URL task; `taskId` task phụ `[Sec/Perf]` nếu terra báo có (case Security / Performance vào đó).
+- `taskId` + project key + URL task (mọi case vào task này, kể cả Security / Performance).
 - **Nguyên văn** bản phân tích analyst vừa trả (dán thẳng vào prompt — writer không phải đọc lại từ QA Hub, `notes` trong `list_tasks` rất nặng).
 - Nếu không có bản phân tích (chị đưa `taskId` sẵn): bảo writer đọc `notes` của task đó.
 - Phạm vi: đủ 8 loại, trừ khi chị nói khác.
@@ -277,7 +277,7 @@ Sub-agent **không nói chuyện được với chị** — nó chỉ nhận pro
 - `taskId` + project key + URL task + key Jira nguồn (nếu có).
 - **Nguyên văn** báo cáo của terra — phần A + phần B 14 mục (mọi chế độ — ở chế độ TC đây là thước đo phủ). Chị đưa `taskId` sẵn, không có báo cáo trong chat → bảo flint đọc `notes` của task.
 - Chế độ `RA nhanh`: không dán báo cáo — flint tự đọc `notes`. Ghi rõ "bản phân tích có sẵn, chưa review trong session này".
-- Chế độ TC: dải id case ore vừa ghi (hoặc "mọi case của task"), kể cả dải ở task phụ `[Sec/Perf]` + `taskId` task phụ. Sau terra chế độ cập nhật mà task có case đã chạy → thêm nguyên văn dòng "Thay đổi so với bản cũ" của terra + ngày cập nhật, yêu cầu trả bảng **Case đã chạy bị ảnh hưởng**.
+- Chế độ TC: dải id case ore vừa ghi (hoặc "mọi case của task"); ticket có task `[Sec/Perf]` cũ (tạo 24–26/10, trước khi chị bỏ tách task) mang case → kèm `taskId` đó. Sau terra chế độ cập nhật mà task có case đã chạy → thêm nguyên văn dòng "Thay đổi so với bản cũ" của terra + ngày cập nhật, yêu cầu trả bảng **Case đã chạy bị ảnh hưởng**.
 - Chế độ `TC delta`: dải id ore vừa bổ sung + nguyên văn bảng Thiếu case đã gửi ore. Không gửi lại bản phân tích nếu flint lượt trước đã có (vẫn gửi nếu là lượt MISS).
 - Câu trả lời PO/Dev chị đưa thêm (nếu có) — để flint không bắt lỗi điểm đã được chốt.
 - **Không** dán `HAE-SUMMARY`, bảng title case, "Cần Hae quyết" hay lời tự đánh giá của ore / terra — flint chỉ nhận sản phẩm (dải id case, bản phân tích) + thước đo. Lý do: người chấm đọc lời người viết tự khen sẽ bị neo theo (cách `cloudflare/security-audit-skill` giữ verifier độc lập với hunter).

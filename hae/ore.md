@@ -41,14 +41,14 @@ Hae gửi `taskId` + bảng **"Thiếu case"** của `flint` (nguyên văn) + b�
 
 1. `list_test_cases` một lần; dòng nào đã có case phủ (title / điểm verify trùng) → bỏ, ghi vào "Cần Hae quyết" là flint báo thừa.
 2. Viết **đúng** các case trong bảng — mỗi dòng một case, theo đủ cấu trúc + quy tắc HTML Quill + field của skill `gen-testcase` (đọc skill chỉ để lấy cấu trúc, không chạy luồng sinh case). Không thêm case ngoài bảng. Id tiếp nối dải đã có.
-3. `create_test_cases` một lần cho mỗi task: dòng Loại Security / Performance → task phụ `[Sec/Perf]` (nếu có), còn lại → task chính.
+3. `create_test_cases` một lần, mọi dòng (kể cả Security / Performance) vào task chính.
 4. Đang ở repo `qikify-QA-mailtro` → thêm các case vào đúng file `docs/manual-testcases/*.md` như lượt thường, không sinh JSON (khác chế độ plan Luke). Ngoài repo đó → không tạo file.
 5. Không sửa case đã có — bảng "Case cần sửa" của flint **không** phải việc của bạn, kể cả khi Hae dán kèm.
 6. Khuôn trả về giữ nguyên; "Phân bố loại" chỉ đếm case vừa thêm.
 
 ## Đầu vào từ Hae
 
-Hae gửi: `taskId` + project key + URL task, `taskId` task phụ `[Sec/Perf]` nếu có (không có thì tự tìm theo skill bước 2; vẫn không có → mọi case vào task chính), nguyên văn bản phân tích (hoặc chỉ `taskId`), phạm vi (mặc định đủ 8 loại), thư mục làm việc hiện tại, và câu trả lời PO/Dev bổ sung nếu có. Câu trả lời PO/Dev **ưu tiên hơn** nội dung cũ trong báo cáo khi hai bên khác nhau — ghi nguồn vào `Notes` của case liên quan.
+Hae gửi: `taskId` + project key + URL task (mọi case vào task này, kể cả Security / Performance — không còn task phụ `[Sec/Perf]`), nguyên văn bản phân tích (hoặc chỉ `taskId`), phạm vi (mặc định đủ 8 loại), thư mục làm việc hiện tại, và câu trả lời PO/Dev bổ sung nếu có. Câu trả lời PO/Dev **ưu tiên hơn** nội dung cũ trong báo cáo khi hai bên khác nhau — ghi nguồn vào `Notes` của case liên quan.
 
 Hae có thể dán kèm **finding review RA của flint** (mức medium/low). Coi đó là checklist phải phủ: mỗi finding về Security / Impacted Areas / Expected mơ hồ đều phải phản ánh vào case (thêm case, hoặc viết Expected đo được). Finding không liên quan tới case (ví dụ điểm rubric) → bỏ qua.
 
@@ -58,7 +58,6 @@ Hae có thể dán kèm **finding review RA của flint** (mức medium/low). Co
 ### HAE-SUMMARY
 - Task: {taskId} · {URL}
 - Đã ghi lên QA Hub: {N} case · id {TC-KEY-xxx → TC-KEY-yyy} {hoặc "0 — lý do"}
-- Task Sec/Perf: {taskId phụ}: {n} case · id {…} {hoặc "không có task phụ — Security/Performance ghi ở task chính"}
 - Phân bố loại: Happy {n} · Negative {n} · Boundary {n} · Validation {n} · Edge {n} · Regression {n} · Security {n} · Performance {n}
 - Phân bố priority: High {n} · Medium {n} · Low {n} (Critical ghi trong Notes: {n})
 - Auto/Manual (chỉ MTRO): {To be automated n / Manual n ≈ a/b — mục tiêu epic MTRO-xx là a/b} {hoặc "không áp dụng"}

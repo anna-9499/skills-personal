@@ -297,10 +297,10 @@ Tóm tắt bảng (con số chi tiết + lý do từng epic nằm trong file tr�
 QA Hub là nơi lưu test case. Soạn xong bộ case thì ghi thẳng lên đó qua MCP — không sinh file, không import Google Sheet.
 
 1. `list_projects` → `id` và `key` của project (`key` = prefix của Test Case ID).
-2. `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý. Không có task khớp → hỏi người dùng, đừng đoán. Ticket có **task phụ** (title bắt đầu `[Sec/Perf]`, cùng `Source:` hoặc dòng "Task chính:" trỏ về task chính) → case `[Security]` và `[Performance]` ghi vào task phụ, mọi loại khác ghi vào task chính. Không có task phụ → ghi hết vào task chính như cũ. Task chính + task phụ không phải "nhiều task khớp".
-3. `list_test_cases` cho task đó (và task phụ nếu có) → xem case nào đã có, tránh ghi trùng nội dung.
-4. `create_test_cases` — **một lần gọi cho mỗi task** (task chính, rồi task phụ nếu có), tối đa 100 case mỗi lần. Cả batch được validate trước khi ghi: hoặc vào hết, hoặc không case nào vào, và chỉ hiện 1 dòng activity. Đừng gọi `create_test_case` từng cái một.
-5. Báo lại: số case đã tạo, dải id QA Hub cấp (ví dụ `TC-QCO-064 → TC-QCO-089`), `taskId` (tách riêng task chính / task phụ), và phân bố loại case / priority.
+2. `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý. Không có task khớp → hỏi người dùng, đừng đoán. Mọi loại case, kể cả `[Security]` / `[Performance]`, ghi vào **task chính** (chị bỏ tách task 2026-10-26). Task title bắt đầu `[Sec/Perf]` là task cũ tạo 24–26/10, trước khi chị bỏ tách task: không chọn làm đích, không tính là "nhiều task khớp".
+3. `list_test_cases` cho task đó (và task `[Sec/Perf]` cũ của ticket, nếu có) → xem case nào đã có, tránh ghi trùng nội dung.
+4. `create_test_cases` — **một lần gọi** cho task chính, tối đa 100 case mỗi lần. Cả batch được validate trước khi ghi: hoặc vào hết, hoặc không case nào vào, và chỉ hiện 1 dòng activity. Đừng gọi `create_test_case` từng cái một.
+5. Báo lại: số case đã tạo, dải id QA Hub cấp (ví dụ `TC-QCO-064 → TC-QCO-089`), `taskId`, và phân bố loại case / priority.
 
 Bộ hơn 100 case thì chia nhiều lần gọi, giữ đúng thứ tự để id chạy liên tục.
 
