@@ -1,6 +1,6 @@
 ---
 name: context-change-request
-description: "Soạn Context Change Request (CCR) theo ĐÚNG quy trình + template của leader QA (quy-trinh.md + template.md, nguyên văn) — yêu cầu cập nhật canonical QA context khi hành vi đã/sắp ship THIẾU, SAI, CŨ hoặc MÂU THUẪN với canon của app (knowledge-work/apps/<KEY>/ + knowledge trên QA Hub). Đọc ticket Jira (chỉ đọc) + test case QA Hub + canon, ghi knowledge-work/apps/<KEY>/ccr/CCR-<ngày>-<slug>.md (+ bản Anh khớp dòng + file trạng thái), chỗ cần người ghi ⏳ CHỜ BẠN. Dùng khi người dùng nói \"tạo CCR\", \"context change request\", \"cập nhật context cho ticket X\", \"ticket này KB chưa có / sai\", khi ticket đã ship mà canon chưa có, khi inventory / RA / chạy test thấy hành vi đã ship lệch business rule. Cũng xử lý \"trả lời CCR\" (điền chỗ ⏳). KHÔNG dùng để: sửa business rule (update-business-rules), build inventory (build-app-context), đính kèm / Submit CCR lên QA Hub (Hae làm sau khi người dùng duyệt; Submit là thao tác tay)."
+description: "Soạn Context Change Request (CCR) theo ĐÚNG quy trình + template của leader QA (quy-trinh.md + template.md, nguyên văn) — yêu cầu cập nhật canonical QA context khi hành vi đã/sắp ship THIẾU, SAI, CŨ hoặc MÂU THUẪN với canon của app (knowledge-work/apps/<KEY>/ + knowledge trên QA Hub). Đọc ticket Jira (chỉ đọc) + test case QA Hub + canon, ghi knowledge-work/apps/<KEY>/ccr/CCR-<ngày>-<slug>.md (+ bản Anh khớp dòng + file trạng thái), chỗ cần người ghi ⏳ CHỜ BẠN. Dùng khi người dùng nói \"tạo CCR\", \"context change request\", \"cập nhật context cho ticket X\", \"ticket này KB chưa có / sai\", khi ticket đã ship mà canon chưa có, khi inventory / RA / chạy test thấy hành vi đã ship lệch business rule. Cũng xử lý \"trả lời CCR\" (điền chỗ ⏳). KHÔNG dùng để: sửa business rule (update-business-rules), build inventory (build-app-context), đính kèm / Submit CCR lên QA Hub (Hae làm sau khi người dùng duyệt — gắn bằng set_task_ccr_file, nộp bằng submit_task_ccr)."
 ---
 
 Nguồn: `github.com/qikify-QA/qa-workflow` `.claude/skills/context-change-request` @ `33d081b` (2026-09-29). Mang về
@@ -99,7 +99,7 @@ không push** — người dùng tự commit submodule knowledge-work.
 
 Báo cáo cuối: số CCR, mỗi CCR một dòng (loại request · object/feature · số claim · số dòng CHƯA ĐỦ / ĐỦ), đường dẫn 3
 file, danh sách câu ⏳, mức gấp đề xuất, và mọi CCR đang mở của app (`ccr.py open --key <KEY>`). Bước tiếp theo nói
-đúng: *"trả lời các chỗ ⏳ → đính kèm bản Anh vào task QA Hub → bấm Submit trên QA Hub (thao tác tay)"* — không nói
+đúng: *"trả lời các chỗ ⏳ → Hae đính kèm bản Anh vào task QA Hub rồi Submit (sau khi người dùng duyệt)"* — không nói
 "đã gửi".
 
 ## Chế độ trả lời (điền chỗ ⏳)
@@ -150,7 +150,9 @@ rule đang lệch theo § 5 inventory: ghi rõ "(đang có CCR mở: <file>)", k
    Skill / sub-agent soạn CCR **không** có tool này. Điều kiện: `lint --en --final` ✅ + có `urgency` + có `taskId`.
    Trước khi gắn: `get_task_ccr` — `ccrStatus: submitted` → task đã nộp CCR (mỗi task chỉ một lần) → không gắn được, báo
    người dùng; đã có draft khác → không ghi đè khi chưa được bảo. Gắn xong → `status --set ATTACHED`.
-   **Submit vẫn là thao tác tay** trên QA Hub (đúng "Việc này KHÔNG làm" của bản gốc). Thấy `ccrStatus: submitted` ở lần
+   **Submit = MCP `submit_task_ccr`, cũng do Hae gọi, cùng lần duyệt đó** (bản gốc: người gửi tự bấm Submit; leader QA chốt
+   2026-11-02 cho submit qua MCP). Nộp xong → `status --set SUBMITTED`. QA Hub chưa có tool → người dùng bấm Submit tay.
+   Skill / sub-agent soạn CCR vẫn không Submit, không `create_proposal`. Thấy `ccrStatus: submitted` ở lần
    kiểm sau → `status --set SUBMITTED`. Bỏ CCR → `status --set DROPPED --reason …` (không gỡ file trên QA Hub).
 3. **Bản gửi QA Hub = bản Anh qua `hub-copy`.** QA Hub từ chối Submit khi còn chuỗi `<<<`, mà dòng 9 và dòng checklist
    cuối của template có sẵn chữ `` `<<< ... >>>` ``. `hub-copy` chỉ đổi đúng 2 dòng đó sang `` `‹‹‹ ... ›››` `` trong

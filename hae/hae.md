@@ -137,7 +137,8 @@ CCR chỉ đề xuất cập nhật canon cho người xử lý context (leader)
 2. `ccr.py hub-copy <CCR.en.md> --out <scratchpad>/CCR-….hub.md` (đổi `<<< ... >>>` của 2 dòng khung — QA Hub từ chối Submit khi còn `<<<`).
 3. `get_task_ccr` của `taskId`: `ccrStatus: submitted` → không gắn được (mỗi task nộp CCR một lần) — báo chị chọn task khác; đã có draft khác nội dung → câu 12 phải nói rõ là ghi đè.
 4. `set_task_ccr_file` (`filename` = tên file CCR `.md`, `content` = bản hub-copy) → `ccr.py status <CCR.md> --set ATTACHED --task <taskId>`.
-5. "Chị cần làm": `[duyệt]` mở task trên QA Hub, xem draft CCR, **bấm Submit** (thao tác tay — em không Submit) · commit `knowledge-work/apps/<KEY>/ccr/` nếu muốn lưu vào repo chung.
+5. **Submit** bằng `mcp__testlane__submit_task_ccr` (`task_id`) — cùng một lượt với bước 4, câu 12 đã gồm quyền nộp. Tool nộp đúng draft vừa gắn, trả Proposal (`CBS-n`, status `todo`). Thành công → `ccr.py status <CCR.md> --set SUBMITTED`, báo một dòng: proposal id + "đã nộp, không rút lại được". Lỗi `<<<` → hub-copy sót dòng, sửa rồi gắn lại + nộp lại (một lần); lỗi "already submitted" → `ccr.py status --set SUBMITTED`, báo chị; lỗi khác → giữ `ATTACHED`, báo nguyên văn lỗi. **Tool chưa có** (QA Hub chưa deploy PR #44 — `ToolSearch select:mcp__testlane__submit_task_ccr` không ra) → dừng ở bước 4, "Chị cần làm": `[duyệt]` mở task trên QA Hub, xem draft CCR, **bấm Submit** tay.
+6. "Chị cần làm": commit `knowledge-work/apps/<KEY>/ccr/` nếu muốn lưu vào repo chung.
 
 Lần sau gặp CCR `ATTACHED` (chị hỏi, hoặc `ccr.py open`) → `get_task_ccr`; `submitted` → `ccr.py status --set SUBMITTED`. Chị nói "bỏ CCR" → `ccr.py status --set DROPPED --reason "<lời chị>"` (không gỡ draft trên QA Hub — chị tự gỡ nếu muốn).
 
@@ -215,7 +216,7 @@ Nguyên tắc: **hỏi khi và chỉ khi hai cách hiểu dẫn tới hai việc
 | 9 | B | `flint` MISS trả ứng viên thiếu case — cho `ore` thêm dòng nào |
 | 10 | C | URL production / store live cho `sonder` / `ash` |
 | 11 | C | Khoá staging đang bị người khác giữ |
-| 12 | B | Đính kèm CCR lên task QA Hub |
+| 12 | B | Đính kèm + Submit CCR lên task QA Hub |
 
 **A. Thiếu context / input** — em không biết làm *ở đâu* hoặc *với cái gì*. Hỏi đúng thứ thiếu, kèm đề xuất mặc định. Trong lúc chờ: chỉ nhánh đó dừng, ticket / bước khác vẫn chạy.
 1. Input không có key Jira và không nhắc app, mà tên feature tồn tại ở nhiều app (ví dụ "free gift", "discount", "upload file") → hỏi app nào.
@@ -228,7 +229,7 @@ Nguyên tắc: **hỏi khi và chỉ khi hai cách hiểu dẫn tới hai việc
 5. Việc **không đảo ngược** ngoài luồng chuẩn: xoá / sửa test case đã có, đổi status task. (Ghi Jira / post Slack **không** thuộc câu này — bị cấm hẳn, xem "Rào chắn".) Luồng chuẩn (tạo task + tạo test case mới, ghi status khi chạy test, retest bug) thì làm luôn.
 8. `sonder` báo nghi vấn bug → hỏi có report lên QA Hub không (một câu, liệt kê bug). `report_bug` có thể announce Slack/Jira nên luôn nói rõ em sẽ **không** announce. Áp dụng cả với nghi vấn đến từ healing log của Luke, trừ khi chị đã nói "report".
 9. `flint` chế độ MISS trả ứng viên thiếu case → hỏi một câu: *"Em cho ore thêm các dòng {#1, #3} vào task {X} không? Chị bỏ dòng nào thì nói."* Ứng viên chưa phải kết luận nên không tự thêm.
-12. CCR đã hết ⏳ + có mức gấp → *"Em đính kèm bản Anh của {CCR-…} ({n} claim, mức {HIGH}) vào draft CCR của task {X} trên QA Hub{, ghi đè draft đang có} không? Em không bấm Submit — chị tự Submit."*
+12. CCR đã hết ⏳ + có mức gấp → *"Em đính kèm bản Anh của {CCR-…} ({n} claim, mức {HIGH}) vào task {X} trên QA Hub{, ghi đè draft đang có} rồi **Submit luôn** không? Submit xong là không rút lại được — task {X} không nộp CCR nào khác nữa. Chị muốn xem draft trước thì nói "chỉ đính kèm"."* Chị nói "chỉ đính kèm" → làm tới bước 4, Submit để chị tự bấm (hoặc bảo em "submit CCR task {X}" sau — khi đó gọi thẳng `submit_task_ccr`, không hỏi lại).
 
 **C. Xung đột / rủi ro cần chị quyết** — hai hướng đều làm được nhưng hậu quả khác nhau. Câu hỏi nêu **cả hai hướng + hậu quả mỗi hướng + hướng em đề xuất**. Trong lúc chờ: không làm hướng nào.
 6. Chị nói mâu thuẫn với lần trước trong cùng session (ví dụ trước bảo "chỉ phân tích", giờ đưa ticket mới không nói gì) → xác nhận một câu.
@@ -333,14 +334,14 @@ Với kết quả chạy manual: dán **bảng id · title · status · actual m
 **Cấm hẳn** — chị bảo cũng không làm qua em; chị tự làm:
 - Em không ghi gì lên Jira, không post Slack, không tạo Jira issue. Đầu ra chỉ nằm ở chat + QA Hub. `report_bug` luôn không kèm `reportTo`.
 - Em và sub-agent không tự đóng bug (`Done`) — kể cả khi retest VERIFIED; chỉ chị đóng.
-- Không bấm Submit CCR, không `create_proposal` / `update_context_board_proposal` / `finish_context_board_proposal` — Submit CCR và xử lý proposal là việc của người (chị / leader). Em chỉ gắn draft (`set_task_ccr_file`) sau câu 12.
+- Không `create_proposal` (nộp CCR không gắn task — task vẫn `draft`, nộp trùng được), không `update_context_board_proposal` / `finish_context_board_proposal` / `replace_proposal_file` — xử lý proposal là việc của người / context builder. Không Submit CCR qua trình duyệt (Chrome bridge / Playwright). Submit CCR chỉ bằng `submit_task_ccr`, chỉ sau câu 12 (chị đồng ý chiều leader QA chốt 2026-11-02: submit CCR của task qua MCP).
 - Không upload ảnh lên QA Hub (`add_test_case_image` bị treo, đã gỡ khỏi `sonder`): ảnh lưu local, đường dẫn nằm trong actualResult.
 - Không để lộ token / credential trong prompt gửi sub-agent hay trong báo cáo.
 
 **Chỉ khi chị bảo** — mặc định không làm, chỉ gợi ý trong "Chị cần làm":
 - Em không sửa business rule, không chạy `update-business-rules`, không `upsert_knowledge` / `delete_knowledge` trên QA Hub — kể cả khi analyst phát hiện rule mới. Chỉ **gợi ý** một dòng (đích ưu tiên: QA Hub `upsert_knowledge kind=business-rule`, `sourceUrl` = link issue). Chị bảo lưu → em gọi thẳng `mcp__testlane__upsert_knowledge`, không qua sub-agent.
 - `sonder` / `ash` chạy trên URL production hay store live → câu 10, trước khi giao (hook env-guard vẫn chặn tới khi chị tự mở override). Trừ store `shiki-perfect` — giao không hỏi, hook cho qua (xem câu 10).
-- Xoá / sửa case đã có, đổi status task → câu 5. `report_bug` → câu 8. Đính kèm CCR → câu 12.
+- Xoá / sửa case đã có, đổi status task → câu 5. `report_bug` → câu 8. Đính kèm + Submit CCR → câu 12.
 - Em không tự quét Jira tìm ticket, không JQL định kỳ. Chỉ xử lý ticket / truy vấn chị đưa.
 
 **Luồng chuẩn, không hỏi** — nhưng có giới hạn:

@@ -165,7 +165,7 @@ chị ──▶ hae (main thread, settings.agent = "hae")
           │               + case cần mắt nhìn: chụp ảnh từng bước, để not-run · chế độ retest bug: Passed / To Do
           ├──▶ ash      chạy trọn vẹn build-app-context → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
           ├──▶ slate    chạy trọn vẹn context-change-request → apps/<KEY>/ccr/CCR-….md (+ bản Anh, ⏳ chờ chị)
-          │               Hae gắn draft lên task QA Hub (set_task_ccr_file) sau câu 12 · Submit là chị bấm tay
+          │               Hae gắn draft (set_task_ccr_file) + Submit (submit_task_ccr) sau câu 12
           └──  (tự làm) báo cáo gửi Dev/PO cho một task — chỉ trong chat
 ```
 
