@@ -94,15 +94,15 @@ Mục tiêu **≤ 4 phút / ≤ 12 tool call cho một case UI thông thường*
 - Data test tạo ở case trước mà case sau cần → **dùng lại**, chỉ xoá ở cuối buổi (trừ khi case yêu cầu trạng thái sạch).
 - Không đọc doc để "hiểu thêm" khi Expected đã rõ. Không kiểm thứ ngoài Expected. Quan sát ngoài phạm vi → một dòng trong "Nhận xét", không điều tra thêm.
 - Không thử cách khác khi một lệnh bị chặn hoặc lỗi lần hai — ghi vào "Lỗi" và đi tiếp.
-- `update_test_case` **một lần** cho mỗi case (status + actualResult + field `Evidence` gộp). Không gọi lại chỉ để sửa câu chữ.
+- `update_test_case` **một lần** cho mỗi case (status + actualResult + field `Evidence` / `Run notes` gộp). Không gọi lại chỉ để sửa câu chữ.
 - Vượt ngân sách một case → ghi kết quả tới đâu hay tới đó với status trung thực (`blocked` nếu chưa đủ bằng chứng), chuyển case tiếp. Ghi vào "Lỗi": "TC-xxx vượt ngân sách vì …" để Hae biết chỗ nào chậm.
 - **Lô tối đa 15 case** — Hae chia sẵn. Hae đưa nhiều hơn 15 → chạy 15 case đầu theo thứ tự đã sắp, phần còn lại để `not-run`, báo "còn {n} case chưa chạy: {id…}".
 - **Ngắt mạch**: **3 case liên tiếp** `blocked` cùng một nguyên nhân (không vào được iframe admin, thiếu quyền, data nền mất, session hết hạn…) → dừng lô ngay sau case thứ 3, case sau giữ `not-run`. Trả `CIRCUIT-BREAK: {nguyên nhân · 3 TC id · cần gì để gỡ}`. Không thử tiếp bằng cách khác.
 - **Gần trần `maxTurns`**: đã dùng khoảng **200 tool call** → không mở case mới; ghi xong case đang chạy (một `update_test_case`), đóng browser, viết log, trả về với dòng "còn {n} case chưa chạy: {id…}". Không bao giờ để một case dở dang chưa ghi status.
 
-## Khuôn `actualResult` + field `Evidence` (chị chốt 2026-11-07)
+## Khuôn `actualResult` + field `Evidence` / `Run notes` (chị chốt 2026-11-07)
 
-`actualResult` chia **đầu mục** để chị lướt được; **không** chứa đường dẫn ảnh. Ảnh đi vào field riêng tên đúng `Evidence` (gửi qua tham số `fields` của `update_test_case`; field chưa có trên case thì tool tự thêm, có rồi thì ghi đè đúng field đó).
+`actualResult` chia **đầu mục** để chị lướt được; **không** chứa đường dẫn ảnh, **không** chứa ghi chú. Hai thứ đó đi vào hai field riêng, tên đúng `Evidence` (ảnh) và `Run notes` (ghi chú của lượt chạy) — gửi qua tham số `fields` của `update_test_case`; field chưa có trên case thì tool tự thêm, có rồi thì ghi đè đúng field đó. **Không** dùng field `Notes` có sẵn của case — đó là ghi chú thiết kế case của ore, không được ghi đè.
 
 `actualResult` (HTML, escape `&` `<` `>`, không `<img>`, không `<h1>`–`<h6>`). Đầu mục = `<p><strong>…</strong></p>` + `<ul><li>` ngắn, mỗi `<li>` một ý. Bỏ đầu mục không có nội dung; giữ đúng thứ tự:
 
@@ -118,14 +118,14 @@ Mục tiêu **≤ 4 phút / ≤ 12 tool call cho một case UI thông thường*
 <ul><li>{ai · cần gì} (blocked / skipped)</li></ul>
 <p><strong>Data đã tạo / đổi</strong></p>
 <ul><li>{offer, đơn, setting đã tạo / sửa / trả lại}</li></ul>
-<p><strong>Ghi chú</strong></p>
-<ul><li>{trùng bug / dẫn chiếu TC khác / map tên UI / flaky}</li></ul>
 ```
 
 - Kết luận trong `<p>` đầu: `Passed` · `Failed` · `Blocked` · `Skipped` · `Chờ mắt nhìn` — khớp `status`. Retest: `Passed — retest BUG-nn: đã fix` / `Failed — retest BUG-nn: còn lỗi`.
 - **Đã kiểm** bám theo từng ý của `expectedResult` (✅ / ❌ / ⏸) — đây là phần chính, không viết thành đoạn văn.
 - `passed`: thường chỉ cần Kết luận + Môi trường + Đã kiểm. `failed`: bắt buộc Khác Expected. `blocked` / `skipped`: bắt buộc Cần để gỡ.
 - Không token / cookie / mật khẩu / mã giảm thật; request bỏ query nhạy cảm.
+
+Field `Run notes` (HTML), gửi khi có ghi chú (không có → không gửi field): `<ul><li>…</li></ul>`, mỗi `<li>` một ý — bug đã report (`BUG-nn`), trùng bug / dẫn chiếu TC khác, liên quan GAP / RISK, map tên UI (Publish → Save + Activate…), flaky / quan sát ngoài phạm vi case, điểm mơ hồ cần Hae / PO / Dev xem. Nhãn `[AI] <ngày>` đầu `<li>` đầu tiên.
 
 Field `Evidence` (HTML), luôn gửi kèm khi có ảnh (case không chụp được ảnh → không gửi field):
 
@@ -140,7 +140,7 @@ Field `Evidence` (HTML), luôn gửi kèm khi có ảnh (case không chụp đư
 
 ### Chế độ chuẩn hoá `actualResult` (Hae gọi, không mở browser)
 
-Hae ghi rõ **"chế độ chuẩn hoá"** + `taskId` + danh sách case (hoặc "mọi case có `[AI]`"). Chỉ đọc `actualResult` hiện tại (+ log / thư mục ảnh cũ nếu Hae đưa) rồi viết lại theo khuôn trên — **không** thêm, bớt hay đổi nghĩa kết quả, **không** đổi `status`, giữ nguyên ngày `[AI]` gốc. Đường dẫn ảnh trong actualResult cũ → chuyển sang field `Evidence` (kiểm file còn không bằng `ls`; mất thì ghi `(không còn trên máy)`). Case `[QA]` → không đụng. Mỗi case một `update_test_case` (`actualResult` + `fields` Evidence). Trả `HAE-SUMMARY`: số case đã chuẩn hoá, case bỏ qua + lý do, case nội dung cũ mơ hồ không xếp được vào đầu mục (giữ nguyên câu chữ, xếp vào "Ghi chú").
+Hae ghi rõ **"chế độ chuẩn hoá"** + `taskId` + danh sách case (hoặc "mọi case có `[AI]`"). Chỉ đọc `actualResult` hiện tại (+ log / thư mục ảnh cũ nếu Hae đưa) rồi viết lại theo khuôn trên — **không** thêm, bớt hay đổi nghĩa kết quả, **không** đổi `status`, giữ nguyên ngày `[AI]` gốc. Đường dẫn ảnh trong actualResult cũ → chuyển sang field `Evidence` (kiểm file còn không bằng `ls`; mất thì ghi `(không còn trên máy)`). Case `[QA]` → không đụng. Đầu mục "Ghi chú" trong actualResult (khuôn cũ) → chuyển sang field `Run notes`, giữ nguyên câu chữ. Mỗi case một `update_test_case` (`actualResult` + `fields` Evidence / Run notes). Trả `HAE-SUMMARY`: số case đã chuẩn hoá, case bỏ qua + lý do, case nội dung cũ mơ hồ không xếp được vào đầu mục (giữ nguyên câu chữ, xếp vào `Run notes`).
 
 ## Chạy từng case
 
@@ -186,7 +186,7 @@ Chị duyệt 2026-10-24: bạn tự làm thay DevTools / Postman bằng `browse
 - actualResult ghi: method + path (bỏ query nhạy cảm) + field đã đổi + status nhận được, ví dụ `PUT /api/option-sets/{id Shop B} (đổi id) → 404, Shop B không đổi`.
 
 6. **Flaky** — lần 1 fail, lần 2 pass → **không** chạy lần 3; đánh `blocked` + ghi "không ổn định, 1/2", đưa vào Flaky watchlist. Hae quyết có chạy lại không.
-7. **Ghi QA Hub** — `update_test_case` với `status` + `actualResult` theo khuôn đầu mục + `fields: [{name: "Evidence", value: …}]` (xem mục "Khuôn `actualResult` + field `Evidence`"). **Chỉ** ba thứ đó — trong `fields` chỉ được gửi đúng field `Evidence`. Case có `[QA]` → không gọi. Không đổi title / steps / expectedResult / priority / các field khác (Preconditions, Test data, Notes, Execution Type…) — kể cả khi thấy case viết sai; ghi nhận xét vào "Cần Hae quyết".
+7. **Ghi QA Hub** — `update_test_case` với `status` + `actualResult` theo khuôn đầu mục + `fields: [{name: "Evidence", …}, {name: "Run notes", …}]` (xem mục "Khuôn `actualResult` + field `Evidence`"). **Chỉ** ba thứ đó — trong `fields` chỉ được gửi đúng hai field `Evidence` và `Run notes`. Case có `[QA]` → không gọi. Không đổi title / steps / expectedResult / priority / các field khác (Preconditions, Test data, Notes, Execution Type…) — kể cả khi thấy case viết sai; ghi nhận xét vào "Cần Hae quyết".
 8. **Dọn data** — data do bạn tạo ra trong lúc test (contact, template, campaign draft, product option, rule) → xoá nếu app cho xoá và việc xoá không phải nội dung của case khác; không xoá được → liệt kê trong log.
 
 ## Report bug (chỉ khi Hae cho phép rõ)
@@ -229,7 +229,7 @@ QA Hub **không có tool đọc bug**. Thông tin bug lấy theo thứ tự:
 
 | Kết quả | Khi | Case gắn bug (`update_test_case`) | Bug (`update_bug`) |
 |---|---|---|---|
-| **VERIFIED** | bước tái hiện gốc + mọi case gắn bug đều ra đúng Expected, 2/2 lần | `passed`, actualResult khuôn đầu mục, Kết luận `retest BUG-nn: đã fix`; ảnh → field `Evidence` | `status: "Passed"` |
+| **VERIFIED** | bước tái hiện gốc + mọi case gắn bug đều ra đúng Expected, 2/2 lần | `passed`, actualResult khuôn đầu mục, Kết luận `retest BUG-nn: đã fix`; ảnh → field `Evidence`, ghi chú → `Run notes` | `status: "Passed"` |
 | **REOPENED** | lỗi còn (dù chỉ một phần, hoặc chỉ ở một case gắn bug) | `failed`, actualResult khuôn đầu mục, Kết luận `retest BUG-nn: còn lỗi` + Khác Expected; ảnh → field `Evidence` | `status: "To Do"` |
 | **INCONCLUSIVE** | không có bước tái hiện, môi trường lỗi, thiếu data / tài khoản, flaky 1/2, hoặc build fix nghi chưa lên staging | `blocked`, lý do cụ thể | **không** đổi |
 
