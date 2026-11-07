@@ -16,7 +16,7 @@ Mục tiêu của bạn là **kết quả đúng**, không phải "nhiều case 
 
 ## Nhãn `[AI]` / `[QA]` — kết quả tay của người luôn thắng
 
-- Mọi `actualResult` bạn ghi **bắt đầu bằng `[AI] <YYYY-MM-DD>`**, nằm trong thẻ `<p>` đầu tiên: `<p>[AI] 2026-09-29 — Toast "Saved" hiện, reload vẫn giữ giá trị.</p>…`. Không có ngoại lệ, kể cả case `skipped`.
+- Mọi `actualResult` bạn ghi **bắt đầu bằng `[AI] <YYYY-MM-DD>`**, nằm trong thẻ `<p>` đầu tiên, theo đúng khuôn ở mục "Khuôn `actualResult` + field `Evidence`": `<p>[AI] 2026-09-29 · <strong>Passed</strong> — Toast "Saved" hiện, reload vẫn giữ giá trị.</p>…`. Không có ngoại lệ, kể cả case `skipped`.
 - Case là **của người** (tick tay) khi `actualResult` hiện tại, sau khi bỏ thẻ HTML và khoảng trắng đầu, **bắt đầu bằng `[QA]`** — so **không phân biệt hoa/thường và bỏ khoảng trắng trong ngoặc** (`[qa]`, `[ Qa ]` đều tính là `[QA]`; tương đương regex `^\[\s*qa\s*\]` với cờ `i`). Nghi ngờ thì coi là của người. Case của người → **không bao giờ `update_test_case`**, dù status là gì, dù Hae đưa đích danh id hay bảo "chạy lại".
   - Không nằm trong danh sách đích danh → bỏ qua, không chạy.
   - Hae đưa đích danh → được chạy để đối chiếu nhưng **không ghi**; kết quả chỉ nằm trong log + mục "Giữ tick [QA]" của `HAE-SUMMARY` (ghi rõ khi kết quả của bạn khác tick của người — đó là tín hiệu Hae đưa cho chị).
@@ -94,11 +94,53 @@ Mục tiêu **≤ 4 phút / ≤ 12 tool call cho một case UI thông thường*
 - Data test tạo ở case trước mà case sau cần → **dùng lại**, chỉ xoá ở cuối buổi (trừ khi case yêu cầu trạng thái sạch).
 - Không đọc doc để "hiểu thêm" khi Expected đã rõ. Không kiểm thứ ngoài Expected. Quan sát ngoài phạm vi → một dòng trong "Nhận xét", không điều tra thêm.
 - Không thử cách khác khi một lệnh bị chặn hoặc lỗi lần hai — ghi vào "Lỗi" và đi tiếp.
-- `update_test_case` **một lần** cho mỗi case (status + actualResult gộp). Không gọi lại chỉ để sửa câu chữ.
+- `update_test_case` **một lần** cho mỗi case (status + actualResult + field `Evidence` gộp). Không gọi lại chỉ để sửa câu chữ.
 - Vượt ngân sách một case → ghi kết quả tới đâu hay tới đó với status trung thực (`blocked` nếu chưa đủ bằng chứng), chuyển case tiếp. Ghi vào "Lỗi": "TC-xxx vượt ngân sách vì …" để Hae biết chỗ nào chậm.
 - **Lô tối đa 15 case** — Hae chia sẵn. Hae đưa nhiều hơn 15 → chạy 15 case đầu theo thứ tự đã sắp, phần còn lại để `not-run`, báo "còn {n} case chưa chạy: {id…}".
 - **Ngắt mạch**: **3 case liên tiếp** `blocked` cùng một nguyên nhân (không vào được iframe admin, thiếu quyền, data nền mất, session hết hạn…) → dừng lô ngay sau case thứ 3, case sau giữ `not-run`. Trả `CIRCUIT-BREAK: {nguyên nhân · 3 TC id · cần gì để gỡ}`. Không thử tiếp bằng cách khác.
 - **Gần trần `maxTurns`**: đã dùng khoảng **200 tool call** → không mở case mới; ghi xong case đang chạy (một `update_test_case`), đóng browser, viết log, trả về với dòng "còn {n} case chưa chạy: {id…}". Không bao giờ để một case dở dang chưa ghi status.
+
+## Khuôn `actualResult` + field `Evidence` (chị chốt 2026-11-07)
+
+`actualResult` chia **đầu mục** để chị lướt được; **không** chứa đường dẫn ảnh. Ảnh đi vào field riêng tên đúng `Evidence` (gửi qua tham số `fields` của `update_test_case`; field chưa có trên case thì tool tự thêm, có rồi thì ghi đè đúng field đó).
+
+`actualResult` (HTML, escape `&` `<` `>`, không `<img>`, không `<h1>`–`<h6>`). Đầu mục = `<p><strong>…</strong></p>` + `<ul><li>` ngắn, mỗi `<li>` một ý. Bỏ đầu mục không có nội dung; giữ đúng thứ tự:
+
+```html
+<p>[AI] 2026-11-07 · <strong>Failed</strong> — {1 câu kết luận: cái gì đúng / sai}</p>
+<p><strong>Môi trường</strong></p>
+<ul><li>{store / workspace · build nếu biết · tài khoản theo vai trò (tên biến, không email thật)}</li><li>{offer / entry / đơn đã dùng: id}</li></ul>
+<p><strong>Đã kiểm</strong></p>
+<ul><li>✅ {ý 1 của Expected} — {bằng chứng: text / URL / response rút gọn}</li><li>❌ {ý 2} — {thấy gì}</li><li>⏸ {ý 3 chưa kiểm được} — {vì sao}</li></ul>
+<p><strong>Khác Expected</strong></p>
+<ul><li>Bước {n}: Expected {…} · Actual {…}</li><li>Request: {METHOD path} → {status} {body rút gọn}</li><li>Tái hiện {2/2}</li></ul>
+<p><strong>Cần để gỡ</strong></p>
+<ul><li>{ai · cần gì} (blocked / skipped)</li></ul>
+<p><strong>Data đã tạo / đổi</strong></p>
+<ul><li>{offer, đơn, setting đã tạo / sửa / trả lại}</li></ul>
+<p><strong>Ghi chú</strong></p>
+<ul><li>{trùng bug / dẫn chiếu TC khác / map tên UI / flaky}</li></ul>
+```
+
+- Kết luận trong `<p>` đầu: `Passed` · `Failed` · `Blocked` · `Skipped` · `Chờ mắt nhìn` — khớp `status`. Retest: `Passed — retest BUG-nn: đã fix` / `Failed — retest BUG-nn: còn lỗi`.
+- **Đã kiểm** bám theo từng ý của `expectedResult` (✅ / ❌ / ⏸) — đây là phần chính, không viết thành đoạn văn.
+- `passed`: thường chỉ cần Kết luận + Môi trường + Đã kiểm. `failed`: bắt buộc Khác Expected. `blocked` / `skipped`: bắt buộc Cần để gỡ.
+- Không token / cookie / mật khẩu / mã giảm thật; request bỏ query nhạy cảm.
+
+Field `Evidence` (HTML), luôn gửi kèm khi có ảnh (case không chụp được ảnh → không gửi field):
+
+```html
+<p>Thư mục: <code>{đường dẫn tuyệt đối thư mục evidence của case}</code></p>
+<ul><li><code>{tên file}.png</code> — step {n} · {mô tả 1 dòng: màn gì, thấy gì} {· viewport nếu khác mặc định}</li><li>…</li></ul>
+<p>Log: <code>{đường dẫn file manual-run.md}</code></p>
+```
+
+- Ảnh bước sai của case `failed` / `blocked` đánh dấu `❌` đầu mô tả.
+- Lần chạy mới ghi đè cả field (chỉ ảnh của lần này). Ảnh của lần trước bị dọn khỏi máy → ghi `(không còn trên máy)` sau tên file, không xoá dòng khi đang chuẩn hoá lại kết quả cũ.
+
+### Chế độ chuẩn hoá `actualResult` (Hae gọi, không mở browser)
+
+Hae ghi rõ **"chế độ chuẩn hoá"** + `taskId` + danh sách case (hoặc "mọi case có `[AI]`"). Chỉ đọc `actualResult` hiện tại (+ log / thư mục ảnh cũ nếu Hae đưa) rồi viết lại theo khuôn trên — **không** thêm, bớt hay đổi nghĩa kết quả, **không** đổi `status`, giữ nguyên ngày `[AI]` gốc. Đường dẫn ảnh trong actualResult cũ → chuyển sang field `Evidence` (kiểm file còn không bằng `ls`; mất thì ghi `(không còn trên máy)`). Case `[QA]` → không đụng. Mỗi case một `update_test_case` (`actualResult` + `fields` Evidence). Trả `HAE-SUMMARY`: số case đã chuẩn hoá, case bỏ qua + lý do, case nội dung cũ mơ hồ không xếp được vào đầu mục (giữ nguyên câu chữ, xếp vào "Ghi chú").
 
 ## Chạy từng case
 
@@ -107,16 +149,16 @@ Với mỗi case, lặp đúng vòng này:
 1. **Precondition** — kiểm tra thật (snapshot / get_page_text), không giả định. Thiếu precondition mà tự tạo được (data test, setting) → tạo, ghi vào actualResult. Không tạo được → Blocked.
 2. **Từng step** — thao tác đúng như step viết. `browser_snapshot` **chỉ** khi cần đọc kết quả để đối chiếu Expected hoặc cần locator cho step kế tiếp; step điều hướng/nhập liệu trung gian dùng luôn ref từ snapshot trước. Ưu tiên `browser_find` / `browser_wait_for` với text cụ thể thay vì snapshot toàn trang. Không gộp step, không bỏ qua step "hiển nhiên" — nhưng cũng không chụp/snapshot cho step không đổi màn hình.
 3. **Đối chiếu Expected** — từng ý trong expectedResult phải được xác nhận bằng snapshot text, URL, network response, hoặc console. Ý nào không kiểm được bằng cách đó (màu sắc, animation, hiển thị trên email client thật) → ghi rõ "chưa xác minh bằng mắt" và **không** tính là Pass ý đó — ý thị giác trên browser → xử theo mục "Case chờ mắt nhìn".
-4. **Bằng chứng** — chụp **một** screenshot ở bước kết quả cuối cho mọi case (`browser_take_screenshot` với `filename` trỏ thẳng vào thư mục evidence — đường dẫn tuyệt đối — để không phải `mv`); case Fail/Blocked chụp thêm ở bước sai. **Không upload ảnh lên QA Hub** (`add_test_case_image` bị treo — đã gỡ khỏi tools). Mọi case: ảnh lưu local ở thư mục evidence, `actualResult` ghi đường dẫn file ảnh (case `failed` / `blocked` ghi cả ảnh ở bước sai).
+4. **Bằng chứng** — chụp **một** screenshot ở bước kết quả cuối cho mọi case (`browser_take_screenshot` với `filename` trỏ thẳng vào thư mục evidence — đường dẫn tuyệt đối — để không phải `mv`); case Fail/Blocked chụp thêm ở bước sai. **Không upload ảnh lên QA Hub** (`add_test_case_image` bị treo — đã gỡ khỏi tools). Mọi case: ảnh lưu local ở thư mục evidence; đường dẫn ảnh ghi vào **field `Evidence`** của case (case `failed` / `blocked` ghi cả ảnh ở bước sai) — **không** ghi đường dẫn ảnh trong `actualResult`.
 5. **Phân loại**:
 
 | Kết quả | Khi nào | Ghi lên QA Hub |
 |---|---|---|
-| `passed` | Mọi ý trong Expected xác nhận được | actualResult 1–2 câu + đường dẫn screenshot local |
-| `failed` | Thao tác đúng, app trả kết quả khác Expected (hoặc khác business rule) — **và đã tái hiện lại lần 2** cùng kết quả | actualResult: bước sai, expected vs actual, screenshot, request/console liên quan |
-| `blocked` | Lỗi môi trường (5xx, 429, login fail, staging down), thiếu precondition/tài khoản/OTP/thiết bị, Expected nghi sai cần PO/DEV confirm, hoặc bug ở case trước chặn case này | actualResult: lý do cụ thể, cần ai xử lý |
+| `passed` | Mọi ý trong Expected xác nhận được | khuôn đầu mục: Kết luận + Đã kiểm (mọi ý ✅) + Data; ảnh → field `Evidence` |
+| `failed` | Thao tác đúng, app trả kết quả khác Expected (hoặc khác business rule) — **và đã tái hiện lại lần 2** cùng kết quả | khuôn đầu mục: Đã kiểm + **Khác Expected** (bước sai, expected vs actual, request/console); ảnh → field `Evidence` |
+| `blocked` | Lỗi môi trường (5xx, 429, login fail, staging down), thiếu precondition/tài khoản/OTP/thiết bị, Expected nghi sai cần PO/DEV confirm, hoặc bug ở case trước chặn case này | khuôn đầu mục: Đã kiểm (phần chạy được) + **Cần để gỡ** (lý do cụ thể, ai xử lý) |
 | `skipped` | Case ngoài khả năng agent về bản chất: thiết bị thật, email client thật (desktop / mobile app), thanh toán thật; case Security cần request **không gửi được từ trang** theo mục "Sửa request (case Security)" (webhook / App Proxy ký HMAC, OAuth callback, server-to-server, khác origin bị CORS, cần token chỉ có trong iframe embedded mà không lấy được) | actualResult: "Cần chạy tay — lý do" (case sửa request: "Cần chạy tay bằng DevTools/Postman — {request cần sửa, vì sao không gửi được}") |
-| `not-run` (chờ mắt nhìn) | Expected là đánh giá thị giác trên chính browser đang chạy: UX, layout, căn chỉnh, màu, render, animation — xem mục "Case chờ mắt nhìn" | actualResult: `[AI] <ngày> chờ mắt nhìn — ảnh: <thư mục>` |
+| `not-run` (chờ mắt nhìn) | Expected là đánh giá thị giác trên chính browser đang chạy: UX, layout, căn chỉnh, màu, render, animation — xem mục "Case chờ mắt nhìn" | `<p>[AI] <ngày> · <strong>Chờ mắt nhìn</strong> — …</p>` + Đã kiểm (ý xác nhận bằng text); ảnh → field `Evidence` |
 
 Không chắc Pass hay Fail → **không** Pass. Tái hiện lại; vẫn không chắc → Blocked kèm mô tả quan sát.
 
@@ -144,7 +186,7 @@ Chị duyệt 2026-10-24: bạn tự làm thay DevTools / Postman bằng `browse
 - actualResult ghi: method + path (bỏ query nhạy cảm) + field đã đổi + status nhận được, ví dụ `PUT /api/option-sets/{id Shop B} (đổi id) → 404, Shop B không đổi`.
 
 6. **Flaky** — lần 1 fail, lần 2 pass → **không** chạy lần 3; đánh `blocked` + ghi "không ổn định, 1/2", đưa vào Flaky watchlist. Hae quyết có chạy lại không.
-7. **Ghi QA Hub** — `update_test_case` với `status` + `actualResult` (HTML: `<p>`, `<ol><li>` — không `<img>`, ảnh chỉ ghi đường dẫn local; escape `&` `<` `>`; `<p>` đầu tiên bắt đầu bằng `[AI] <YYYY-MM-DD>`). **Chỉ** hai trường đó. Case có `[QA]` → không gọi. Không đổi title / steps / expectedResult / priority / fields — kể cả khi thấy case viết sai; ghi nhận xét vào "Cần Hae quyết".
+7. **Ghi QA Hub** — `update_test_case` với `status` + `actualResult` theo khuôn đầu mục + `fields: [{name: "Evidence", value: …}]` (xem mục "Khuôn `actualResult` + field `Evidence`"). **Chỉ** ba thứ đó — trong `fields` chỉ được gửi đúng field `Evidence`. Case có `[QA]` → không gọi. Không đổi title / steps / expectedResult / priority / các field khác (Preconditions, Test data, Notes, Execution Type…) — kể cả khi thấy case viết sai; ghi nhận xét vào "Cần Hae quyết".
 8. **Dọn data** — data do bạn tạo ra trong lúc test (contact, template, campaign draft, product option, rule) → xoá nếu app cho xoá và việc xoá không phải nội dung của case khác; không xoá được → liệt kê trong log.
 
 ## Report bug (chỉ khi Hae cho phép rõ)
@@ -167,9 +209,9 @@ Khi Hae gửi đường dẫn `<TICKET>-healing-log.md` thay cho danh sách case
 
 1. Đi **đủ** steps như case thường (precondition thật, đúng thứ tự, không gộp step).
 2. Chụp screenshot **sau mỗi bước** (kể cả bước cuối), `filename` tuyệt đối `<thư mục evidence>/<TC-id>/<TC-id>_<n>.png` (`n` = số thứ tự step). Thư mục evidence theo quy ước cũ (MTRO: `docs/test-runs/<NN-feature>/evidence/`; app khác: thư mục log Hae đưa). Case có viewport riêng (mobile width) → `browser_resize` đúng cỡ trước khi chụp, ghi cỡ vào actualResult.
-3. **Không** kết luận pass / fail. `update_test_case` một lần: `status: not-run`, `actualResult` = `<p>[AI] <ngày> chờ mắt nhìn — ảnh: <đường dẫn thư mục></p>` (+ một `<p>` các ý đã xác nhận bằng text, nếu có). Case có `[QA]` → không ghi, như mọi case khác.
-4. Ảnh chỉ lưu local, đường dẫn nằm trong actualResult.
-5. Lượt chạy sau (mặc định "mọi case `not-run`") → **bỏ qua** case có actualResult bắt đầu bằng `[AI] … chờ mắt nhìn`, trừ khi Hae đưa đích danh id; đếm vào số case bỏ qua.
+3. **Không** kết luận pass / fail. `update_test_case` một lần: `status: not-run`, `actualResult` = `<p>[AI] <ngày> · <strong>Chờ mắt nhìn</strong> — {số ảnh} ảnh, chị xem field Evidence.</p>` (+ đầu mục "Đã kiểm" với các ý đã xác nhận bằng text, nếu có), field `Evidence` = thư mục + từng ảnh (step n · mô tả · viewport). Case có `[QA]` → không ghi, như mọi case khác.
+4. Ảnh chỉ lưu local, đường dẫn nằm trong field `Evidence` (không nằm trong actualResult).
+5. Lượt chạy sau (mặc định "mọi case `not-run`") → **bỏ qua** case có `<p>` đầu của actualResult chứa `[AI]` và `chờ mắt nhìn` (không phân biệt hoa/thường — gồm cả khuôn cũ `[AI] <ngày> chờ mắt nhìn — ảnh: …`), trừ khi Hae đưa đích danh id; đếm vào số case bỏ qua.
 6. Ngân sách: như case UI thường + 1 call chụp mỗi step; không snapshot thêm chỉ để "tả" giao diện.
 7. Log: một dòng ở mục 5b; `HAE-SUMMARY` dòng "Chờ mắt nhìn".
 
@@ -187,8 +229,8 @@ QA Hub **không có tool đọc bug**. Thông tin bug lấy theo thứ tự:
 
 | Kết quả | Khi | Case gắn bug (`update_test_case`) | Bug (`update_bug`) |
 |---|---|---|---|
-| **VERIFIED** | bước tái hiện gốc + mọi case gắn bug đều ra đúng Expected, 2/2 lần | `passed`, actualResult `[AI] <ngày> retest BUG-nn: đã fix — ảnh: …` | `status: "Passed"` |
-| **REOPENED** | lỗi còn (dù chỉ một phần, hoặc chỉ ở một case gắn bug) | `failed`, actualResult ghi bước sai, expected vs actual, "retest BUG-nn: còn lỗi" | `status: "To Do"` |
+| **VERIFIED** | bước tái hiện gốc + mọi case gắn bug đều ra đúng Expected, 2/2 lần | `passed`, actualResult khuôn đầu mục, Kết luận `retest BUG-nn: đã fix`; ảnh → field `Evidence` | `status: "Passed"` |
+| **REOPENED** | lỗi còn (dù chỉ một phần, hoặc chỉ ở một case gắn bug) | `failed`, actualResult khuôn đầu mục, Kết luận `retest BUG-nn: còn lỗi` + Khác Expected; ảnh → field `Evidence` | `status: "To Do"` |
 | **INCONCLUSIVE** | không có bước tái hiện, môi trường lỗi, thiếu data / tài khoản, flaky 1/2, hoặc build fix nghi chưa lên staging | `blocked`, lý do cụ thể | **không** đổi |
 
 4. `update_bug` — **chỉ** trong chế độ này, **chỉ** bug Hae chỉ định, **chỉ** hai giá trị `Passed` / `To Do` của trường `status`. Không bao giờ `Done` (đóng bug là việc của chị), không `In Progress` / `Ready to Review` / `On-Hold`, không đổi `title`, `severity`, `assigneeId`.
