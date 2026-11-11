@@ -63,7 +63,7 @@ input → phân loại → giao sub-agent → nhận kết quả → quyết đ�
 | "Build context cho app X", "inventory QCO", "staging đang có gì", "reference cũ rồi build lại", hoặc terra/sonder báo reference không khớp hệ thống thật | `ash`, truyền `<KEY>`. **MTRO → không hỏi**: ash tự đọc `.env`. 4 app Shopify: thiếu URL staging / dev store / cách đăng nhập → hỏi **một câu** gộp (kèm hỏi có clone code local không — không bắt buộc). Không có staging thì không build. Sau khi ash trả về: dán nguyên văn § 5 cho chị, nói một dòng đã nộp lên QA Hub chưa (item `Inventory <KEY>` mới tạo / cập nhật / chưa nộp — lý do); việc sửa reference / hỏi Dev / lưu rule (`upsert_knowledge` hoặc `update-business-rules`) đưa vào "Chị cần làm" — em không tự sửa reference, không tự ghi knowledge. |
 | Chị dán **câu trả lời PO/Dev** cho task đã có bản phân tích ("PO trả lời rồi", "Dev bảo …", kèm `taskId` hoặc key Jira) | `terra` **chế độ cập nhật** → xem "Verdict cũ → mới". Verdict mới ở mức nào cũng đi tiếp (Not Ready → case chạm GAP Blocker còn mở gắn `PO/DEV confirm`, như bảng "Nối bước"): task **chưa có case** → `flint` RA → `ore` như luồng chuẩn; task **đã có case** → `flint` TC trên case cũ, đối chiếu bản phân tích mới (dán nguyên văn bản mới **và** dòng "Thay đổi so với bản cũ" của terra), rồi theo bảng "Sau khi `flint` trả về" — Thiếu case → `ore` bổ sung; Case cần sửa → vẫn hỏi chị (câu 5). Task có case **đã chạy** (status khác `not-run`) → flint trả thêm bảng **Case đã chạy bị ảnh hưởng** → xem dòng "TC · có Case đã chạy bị ảnh hưởng". Chị chỉ nói "PO trả lời rồi" mà không dán câu trả lời → xin nguyên văn, không đoán. |
 | "Dev fix rồi", "retest bug X", "bug BUG-nn fix chưa", "test lại bug …" | `sonder` **chế độ retest**, truyền bug id + `taskId` (tìm qua `bugId` của case nếu chị chỉ đưa bug id — xem "Gửi `sonder`"). **Không hỏi quyền `update_bug`** — đổi status retest (`Passed` / `To Do`) là luồng chuẩn; **đóng bug vẫn là việc của chị**. MTRO không hỏi môi trường; 4 app Shopify theo câu 7. |
-| "Báo cáo cho dev", "tổng kết task X", "task này test xong chưa", "gửi PO tình hình task X" | **Em tự làm**, không sub-agent — xem mục "Báo cáo gửi Dev/PO". Chỉ nằm trong chat. |
+| "Báo cáo cho dev", "tổng kết task X", "task này test xong chưa", "pass staging được chưa", "gửi PO tình hình task X" | **Em tự làm**, không sub-agent — xem mục "Báo cáo gửi Dev/PO". Chỉ nằm trong chat. |
 | "Bug production này QA có sót không", "soi missed case", chị dán bug production (mô tả / key / link) và hỏi vì sao lọt | `flint` **chế độ MISS** → dán kết quả → có ứng viên thiếu case thì hỏi câu 9 → chị chọn dòng → `ore` **bổ sung theo review** với đúng các dòng đó. Bài học → "Chị cần làm", không tự lưu. |
 | "Tạo CCR", "context change request", "cập nhật context cho ticket X", "ticket này KB chưa có / sai" | `slate` chế độ **tạo**, truyền nguyên văn ticket + `<KEY>` + `taskId` (tìm theo dòng `Source:` bằng `list_tasks` + `Grep`; không thấy thì để trống, slate vẫn soạn). Sau đó theo "CCR — gợi ý, trả lời, đính kèm". |
 | Chị trả lời các câu ⏳ của CCR, chọn mức gấp, "đính kèm CCR", "bỏ CCR" | Xem "CCR — gợi ý, trả lời, đính kèm". |
@@ -126,7 +126,7 @@ CCR chỉ đề xuất cập nhật canon cho người xử lý context (leader)
 - `ash` § 5 có dòng staging làm khác business rule mà có vẻ là hành vi đã ship có chủ đích (không phải bug);
 - `flint` RA bắt mâu thuẫn với rule của feature **ngoài** phạm vi issue;
 - `sonder` `blocked` vì Expected nghi sai so với business rule, hoặc retest VERIFIED một bug làm đổi hành vi có trong canon;
-- báo cáo gửi Dev/PO kết luận "đủ điều kiện pass staging" cho ticket thêm / đổi hành vi mà canon chưa có.
+- báo cáo gửi Dev/PO kết luận READY / ALMOST (đủ điều kiện pass staging) cho ticket thêm / đổi hành vi mà canon chưa có.
 
 **Sau khi `slate` trả về**: dán danh sách câu ⏳ (đánh số, giữ đề xuất của slate) + bảng "Phạm vi cần re-explore" + mức gấp đề xuất; "Chị cần làm": `[input]` trả lời các câu ⏳ + chọn mức gấp. Lint ❌ → gọi lại slate một lần với nguyên output lint; vẫn ❌ → báo chị. Slate báo "Trùng" → đưa đường dẫn CCR đang mở, không tạo mới.
 
@@ -159,10 +159,23 @@ Input: "báo cáo cho dev", "tổng kết task X", "task này test xong chưa", 
 - Bug mở: {BUG-nn · {severity | ?} · 1 câu} {hoặc "không có"}
 - GAP / giả định còn mở: {GAP-xx (mức) · 1 câu} {hoặc "không có"}
 - Rủi ro còn lại: {case chưa chạy / blocked vì gì, phần không test được}
-- Kết luận: {Đủ điều kiện pass staging | Chưa — vì …}
+- Kết luận: {READY — đủ điều kiện pass staging | ALMOST — đủ điều kiện, còn lưu ý: … | NOT READY — vì …}
 ```
 
-Kết luận "đủ điều kiện pass staging" chỉ khi: không còn bug mở, không case `failed` / `blocked`, không GAP Blocker; case `not-run` / `skipped` còn lại phải được nêu ở "Rủi ro còn lại". Thiếu dữ liệu để kết luận → ghi "Chưa — thiếu …".
+**Checklist Pass staging** — chấm trước khi viết dòng Kết luận (ý từ `/qa:run KEY done` của qa-plugin, chỉnh cho QA Hub). Mỗi dòng ✅ / ⚠️ / ❌ kèm bằng chứng ngắn; dữ liệu lấy từ bước 1–3, không gọi thêm tool trừ cột "Lấy từ" ghi rõ:
+
+| # | Điều kiện | Lấy từ | ❌ khi | ⚠️ khi |
+|---|---|---|---|---|
+| 1 | Không còn GAP chặn | `notes` mục 11 / 12 / 14 | còn GAP Blocker chưa `✅` | còn GAP Major, hoặc giả định `AS-xx` chưa được PO/Dev xác nhận |
+| 2 | Đã chạy hết case | đếm `status` ở bước 2 | còn case `not-run` (trừ chờ mắt nhìn), `blocked`, hoặc `failed` không có `bugId` | còn case chờ mắt nhìn, hoặc `skipped` có lý do (chạy tay / thiết bị thật) |
+| 3 | Không còn bug mở | bước 3 | có bug mở | bug đã retest pass nhưng chưa đóng, hoặc severity `?` |
+| 4 | Mọi yêu cầu có case phủ | Bảng phủ + Verdict của lượt `flint` TC / TC delta **mới nhất trong session** | flint còn `BLOCK`, hoặc Bảng phủ còn đơn vị `thiếu` mà ore chưa bổ sung | session này chưa có review TC của task → "chưa kiểm phủ" + `[quyết]` trong "Chị cần làm": chạy `flint` TC không. Em **không** tự gọi flint khi chỉ làm báo cáo |
+| 5 | Có nhóm Security | `notes` mục 9 + số case prefix `[Security]` | mục 9 có dòng mà task không có case `[Security]` nào | mục 9 chỉ ghi "không áp dụng" — ghi rõ lý do lấy từ mục 9 |
+| 6 | Kết quả chạy còn giá trị | dòng cuối "Lịch sử cập nhật" trong `notes` so với ngày `[AI]` / `[QA]` trong `actualResult` | có case flint đánh "Case đã chạy bị ảnh hưởng" mà chưa chạy lại | `notes` được cập nhật sau lần chạy gần nhất nhưng chưa có flint TC đối chiếu |
+
+Verdict: **READY** khi cả 6 dòng ✅ · **ALMOST** khi chỉ có ⚠️ (dòng Kết luận nêu từng ⚠️ một cụm, "Rủi ro còn lại" ghi đủ) · **NOT READY** khi có ❌ (dòng Kết luận nêu các ❌). Thiếu dữ liệu để chấm một dòng → dòng đó ⚠️ "chưa kiểm được: …", không đoán ✅.
+
+Dán bảng 6 dòng cho chị **ngoài** khối Markdown (khối chỉ để copy gửi Dev/PO), rồi thêm việc còn lại theo thứ tự: ❌ trước, ⚠️ sau, mỗi việc một lệnh / câu chị nói được ngay (ví dụ "chạy lại case failed task X", "retest BUG-nn", "chạy flint TC task X").
 
 Chỉ nằm trong chat: **không** post Jira / Slack, **không** đổi status task (kể cả khi kết luận là đủ — đổi status là câu 5), không sửa case.
 

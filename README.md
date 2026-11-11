@@ -12,7 +12,7 @@ Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của 
 - Claude Code **≥ 2.1** — cần `--agent <tên>` và setting `agent` để Hae chạy ở main thread.
 - `git`, `python3` (≥ 3.8), `jq`, `curl`.
 - Quyền đọc repo private `ownego/qa-knowledge-work` (submodule).
-- Repo nằm đúng **`~/Downloads/AI Agent/skills-personal`**: `hae.md` gọi `hae/bin/*.sh` và `settings-patch.jq` gọi `env-guard.sh` theo đường dẫn tuyệt đối đó. Mailtro thêm: repo automation ở `~/Downloads/Auto testing/qikify-QA-mailtro` (`hae.md`, `sonder.md` đọc `.env` ở đó). Đặt chỗ khác thì sửa các đường dẫn này — `install.sh` sẽ nhắc.
+- Repo nằm đúng **`~/Downloads/AI Agent/skills-personal`**: `hae.md` gọi `hae/bin/*.sh` theo đường dẫn tuyệt đối đó (`env-guard.sh` thì `apply-settings.sh` tự tính). Mailtro thêm: repo automation ở `~/Downloads/Auto testing/qikify-QA-mailtro` (`hae.md`, `sonder.md` đọc `.env` ở đó). Đặt chỗ khác thì sửa các đường dẫn này — `install.sh` sẽ nhắc.
 - MCP server: `testlane` (QA Hub), `playwright` (headed), `chrome` (Chrome bridge), `atlassian`, Slack — `hae/bin/preflight.sh` kiểm đủ trước khi giao `sonder` / `ash`.
 
 ---
@@ -75,7 +75,7 @@ Rồi cài rào chắn — **bắt buộc**, thiếu bước này thì `sonder` 
 ```bash
 bash hae/hooks/apply-settings.sh    # backup + vá ~/.claude/settings.json, in diff; restart Claude Code
 ```
-Script thêm hook `PreToolUse` `env-guard` cho các tool navigate của Playwright MCP / Chrome bridge (URL production → deny; mở tạm 30 phút bằng `touch ~/.hae-allow-production`, chỉ chị làm) và đưa `delete_bug` / `delete_knowledge` của QA Hub vào `permissions.ask`. Đường dẫn trong `settings-patch.jq` đang hardcode `~/Downloads/AI Agent/skills-personal` — clone chỗ khác thì sửa file đó trước.
+Script thêm hook `PreToolUse` `env-guard` cho các tool navigate của Playwright MCP / Chrome bridge (URL production → deny; mở tạm 30 phút bằng `touch ~/.hae-allow-production`, chỉ chị làm) và đưa `delete_bug` / `delete_knowledge` của QA Hub vào `permissions.ask`. `apply-settings.sh` tự tính đường dẫn `env-guard.sh` theo vị trí repo — không cần sửa `settings-patch.jq` khi clone chỗ khác.
 
 > ⚠️ Quên `--recurse-submodules` → `knowledge-work/` rỗng → cả 3 symlink trong
 > `references/` chết mà Claude **không báo lỗi rõ**, chỉ im lặng phân tích thiếu

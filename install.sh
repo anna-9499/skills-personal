@@ -52,7 +52,7 @@ git config core.hooksPath .githooks && echo "Pre-commit hook: bật"
 
 echo
 if [ "$REPO" != "$EXPECTED" ]; then
-  echo "CHÚ Ý: repo đang ở $REPO, nhưng hae.md, hae/hooks/settings-patch.jq gọi script theo"
+  echo "CHÚ Ý: repo đang ở $REPO, nhưng hae.md gọi hae/bin/*.sh theo"
   echo "       $EXPECTED — sửa các đường dẫn đó hoặc chuyển repo về đúng chỗ."
 fi
 grep -q '"agent"' ~/.claude/settings.json 2>/dev/null || echo 'Chưa đặt Hae mặc định: thêm { "agent": "hae" } vào ~/.claude/settings.json'

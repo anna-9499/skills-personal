@@ -32,7 +32,10 @@ PRODUCTION_SUFFIXES = (
 SHOPIFY_ADMIN_HOST = "admin.shopify.com"
 
 # Có một trong các marker này (trong host hoặc store handle) -> coi là staging/dev.
-STAGING_MARKERS = ("staging", "stg", "dev", "test", "qa", "sandbox", "preview", "localhost", "127.0.0.1")
+# Marker phải là NGUYÊN một label (tách theo . - _), không phải chuỗi con: nếu không, store live
+# `fastest-deals` / `devote-skincare` lọt qua nhờ "test" / "dev" (review 2026-11-02 #1).
+WORD_MARKERS = ("staging", "stg", "dev", "test", "qa", "sandbox", "preview")
+LOCAL_HOSTS = ("localhost", "127.0.0.1")
 
 # Store production được chị duyệt làm store test (2026-10-22): mọi thao tác TRỪ billing / đổi plan
 # và thanh toán thật; không cần override. Trang billing / plan / charge của store này vẫn bị deny
@@ -68,7 +71,15 @@ URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 
 def has_marker(text: str) -> bool:
     t = text.lower()
-    return any(m in t for m in STAGING_MARKERS)
+    if t in LOCAL_HOSTS or t.endswith(".localhost"):
+        return True
+    return any(m in re.split(r"[.\-_]", t) for m in WORD_MARKERS)
+
+
+def suffix_match(host: str, suffixes) -> bool:
+    # Khớp chính host hoặc subdomain thật (có dấu chấm), không khớp đuôi thô: `evilgithub.com`
+    # không được ăn theo `github.com` (review 2026-11-02 #2).
+    return any(host == s or host.endswith("." + s) for s in suffixes)
 
 
 def classify(url: str):
@@ -96,7 +107,7 @@ def classify(url: str):
         if BILLING_PATH_RE.search(p.path or ""):
             return f"BILLING: trang billing / plan / charge của `{host}` — chị cấm"
         return None
-    if host.endswith(ALWAYS_ALLOW_SUFFIXES) or has_marker(host):
+    if suffix_match(host, ALWAYS_ALLOW_SUFFIXES) or has_marker(host):
         return None
     if host == SHOPIFY_ADMIN_HOST:
         m = re.match(r"^/store/([^/?#]+)", p.path or "")
