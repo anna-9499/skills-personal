@@ -47,6 +47,10 @@ ALLOWED_STORE_HANDLES = ("shiki-perfect",)
 # Dev store của team không có marker staging trong tên -> cho qua như dev store (2026-10-22).
 ALLOWED_PROD_HOSTS += ("ngant-checkout.myshopify.com",)
 ALLOWED_STORE_HANDLES += ("ngant-checkout",)
+# 4 dev store TEPO (store A–D, chị xác nhận dev store 2026-11-12, TEPO-1006).
+_TEPO_DEV = ("store-a-lfur4fwn", "store-b-qiki01gr", "store-c-3msgodbs", "store-d-uzpdqi6a")
+ALLOWED_PROD_HOSTS += tuple(h + ".myshopify.com" for h in _TEPO_DEV)
+ALLOWED_STORE_HANDLES += _TEPO_DEV
 
 # Host/suffix luôn allow, kể cả không có marker (workspace staging, tool nội bộ).
 ALWAYS_ALLOW_SUFFIXES = (
