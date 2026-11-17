@@ -31,15 +31,15 @@ Ngân sách tính cho nguồn chính. Inventory đã tách thì mỗi item `Inve
 
 | Cần biết | Nguồn (lấy nguồn đầu tiên có) |
 |---|---|
-| Business rule đã xác nhận | QA Hub `search_knowledge` (theo tên feature) → không có thì `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/business-rules.md` + `…/references/platform/business-rules.md` (rule nền tảng chung) (`Grep` theo feature, không đọc cả file khi > 300 dòng) |
-| Tên UI / route / flag thật · rule đang lệch | QA Hub `get_project_context` item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → không có thì `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/inventory.md` (`Grep` theo feature; **luôn** `Grep` thêm § 5 "Phát hiện lệch" lấy cột **BR bị ảnh hưởng**); cộng CCR đang mở (`Grep` `"status": "(PENDING|ATTACHED)"` trong `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/ccr/*.status.json`, lấy mảng `rules`) — rule có trong đó tính như rule đang lệch theo § 5 inventory, ghi chú *"(đang có CCR mở: <file>)"* |
+| Business rule đã xác nhận | QA Hub `search_knowledge` (theo tên feature) → không có thì `~/.claude/hae-skills/qa-requirement-analysis/references/apps/<KEY>/business-rules.md` + `…/references/platform/business-rules.md` (rule nền tảng chung) (`Grep` theo feature, không đọc cả file khi > 300 dòng) |
+| Tên UI / route / flag thật · rule đang lệch | QA Hub `get_project_context` item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) → không có thì `~/.claude/hae-skills/qa-requirement-analysis/references/apps/<KEY>/inventory.md` (`Grep` theo feature; **luôn** `Grep` thêm § 5 "Phát hiện lệch" lấy cột **BR bị ảnh hưởng**); cộng CCR đang mở (`Grep` `"status": "(PENDING|ATTACHED)"` trong `~/.claude/hae-skills/qa-requirement-analysis/references/apps/<KEY>/ccr/*.status.json`, lấy mảng `rules`) — rule có trong đó tính như rule đang lệch theo § 5 inventory, ghi chú *"(đang có CCR mở: <file>)"* |
 | Case đã có của task (chế độ TC) | `list_test_cases` của task **một lần** — Hae đưa thêm task `[Sec/Perf]` cũ (tạo 24–26/10, trước khi chị bỏ tách task) thì gọi cho cả task đó (+1 call), Bảng phủ tính trên **hợp** hai task; output lớn thì `Grep` file tool-result theo id, không đọc lại |
 | Case cũ cùng feature ở task khác (trùng / tiền lệ) | chỉ khi nghi trùng — `list_tasks` tìm task cùng feature, tối đa 1 task |
 | Câu trích từ Jira | `getJiraIssue` chỉ khi một rule "đã xác nhận" có nguồn trỏ về issue mà bạn cần kiểm |
 
 Không đọc skill `gen-testcase` / `qa-requirement-analysis` từ đầu tới cuối; chỉ `Grep` đúng quy tắc khi cần đối chiếu (ví dụ danh sách security bắt buộc).
 
-Feature có ô nhập / role / dữ liệu nhiều tenant → đọc `~/.claude/skills/qa-requirement-analysis/references/method/security-checklist.md` (1 call, tính vào ngân sách): mục "Cổng trước khi ghi một mục Security", đúng phần loại feature, và đúng app ở "Theo app". Đây là thước đo cho loại "Thiếu Security" ở cả RA lẫn TC.
+Feature có ô nhập / role / dữ liệu nhiều tenant → đọc `~/.claude/hae-skills/qa-requirement-analysis/references/method/security-checklist.md` (1 call, tính vào ngân sách): mục "Cổng trước khi ghi một mục Security", đúng phần loại feature, và đúng app ở "Theo app". Đây là thước đo cho loại "Thiếu Security" ở cả RA lẫn TC.
 
 ## Chế độ RA — quét 10 loại lỗi
 

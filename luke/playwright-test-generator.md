@@ -25,7 +25,7 @@ Cwd không phải repo automation (thiếu `playwright.config.ts`) → dừng, t
 3. `README.md`, `CLAUDE.md` (nếu có), `playwright.config.ts`, `.env.example` — tag, project, baseURL, cách chạy theo phase, biến env đặc biệt.
 4. **2–3 spec đã có cùng thư mục** hoặc spec trưởng thành nhất profile chỉ: cấu trúc `test.describe`, tên test, tag, fixture import, page object, helper tạo data, cross-domain.
 5. Page object / fixture / helper (thư mục thật theo profile §2): có thì **tái dùng**, thiếu thì thêm đúng chỗ — không tạo helper trùng chức năng.
-6. Bảng manual của màn hình (nếu profile §2 khai có) — file sẽ cập nhật 2 cột cuối; và `~/.claude/skills/qa-requirement-analysis/references/conventions/testcase-schema.md` § 4.1 cho giá trị hợp lệ.
+6. Bảng manual của màn hình (nếu profile §2 khai có) — file sẽ cập nhật 2 cột cuối; và `~/.claude/hae-skills/qa-requirement-analysis/references/conventions/testcase-schema.md` § 4.1 cho giá trị hợp lệ.
 
 Đọc 1–4 luôn. Đọc 5–6 khi bắt tay viết.
 

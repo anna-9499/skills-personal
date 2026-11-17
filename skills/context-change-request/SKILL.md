@@ -46,7 +46,7 @@ Mâu thuẫn giữa SKILL.md và 3 file trên → 3 file trên thắng, trừ c�
 **Bước 0 — knowledge base đích.** Không có `_registry.json` / `kb.json` / `manifest.json` / checklist JSON. Canon của
 app `<KEY>` (TEPO · QSC · QCO · DUOS · MTRO) gồm, theo thứ tự tra:
 1. QA Hub: `search_knowledge` (business rule, theo tên feature) + `get_project_context` item `Inventory <KEY>` (+ item module).
-2. File local `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/` (= `knowledge-work/apps/<KEY>/`):
+2. File local `~/.claude/hae-skills/qa-requirement-analysis/references/apps/<KEY>/` (= `knowledge-work/apps/<KEY>/`):
    `business-rules.md` (`BR-nn`) · `open-questions.md` (`OQ-…`) · `inventory.md` (§ 5 "Phát hiện lệch") · `README.md` · `kb/`.
    File lớn → `Grep`, không đọc full.
 3. Rule nền tảng chung: `…/references/platform/business-rules.md`.
@@ -82,7 +82,7 @@ các chỗ "không rõ", dòng CHƯA ĐỦ mà người dùng có thể nghĩ đ
 **Bước 8** — đúng như quy-trinh.md. File nằm trong repo knowledge-work (submodule chung của team) **và** sẽ lên QA Hub
 → redact là bắt buộc (email, SĐT, tên shop / khách thật, token, URL có token).
 
-**Bước 9 — ghi file.** Trong `~/.claude/skills/qa-requirement-analysis/references/apps/<KEY>/ccr/` (tạo thư mục nếu chưa có):
+**Bước 9 — ghi file.** Trong `~/.claude/hae-skills/qa-requirement-analysis/references/apps/<KEY>/ccr/` (tạo thư mục nếu chưa có):
 - `CCR-<YYYY-MM-DD>-<slug>.md` — bản Việt (`<slug>` = kebab-case ASCII không dấu, vd `reposition-toggle`).
 - `CCR-<…>.en.md` — bản Anh: dòng khung lấy **thẳng** từ `template.en.md` cùng số dòng; chỉ dịch phần đã điền, giữ
   nguyên key Jira, `BR-nn`, TC id, tên UI, trích dẫn (trích dẫn tiếng Việt giữ nguyên văn + dịch trong ngoặc ngay sau,
