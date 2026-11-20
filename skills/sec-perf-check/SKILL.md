@@ -1,5 +1,5 @@
 ---
-name: sec-perf-check
+name: hae-sec-perf-check
 description: Kiểm tra security + performance của một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) trên staging hoặc production, xuất báo cáo trong chat + file local. CHỈ chạy khi người dùng gọi đích danh /sec-perf-check.
 disable-model-invocation: true
 ---

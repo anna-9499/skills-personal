@@ -1,6 +1,6 @@
 ---
-name: gen-testcase
-description: "Sinh bộ manual test case (happy path, negative, boundary, validation, edge, regression, security, performance) và ghi thẳng lên QA Hub qua MCP — thêm Markdown trong docs/manual-testcases/ khi đang ở repo qikify-QA-mailtro. Dùng với MỌI đầu vào cần biến thành test case: key Jira (TEPO-, QSC-, QCO-, DUOS-, MTRO-xxx) kèm \"tạo/sinh/viết case\", user story hoặc AC (Việt hay Anh), mô tả tính năng, checklist kịch bản cần triển khai thành case đầy đủ, bản phân tích yêu cầu đã xong (\"phân tích xong, giờ sinh bộ case\"), hay yêu cầu regression sau khi dev fix (\"cần case để test lại\"). Người dùng hay nói \"bộ case\", \"viết case\", \"cover flow\", \"kiểm thử [module]\", \"cần security case\", \"test plan\" thay vì \"test case\" — vẫn dùng skill này. Apps: Tepo (Custom Product Options), Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro (MTRO). KHÔNG dùng để: đánh giá yêu cầu đã đủ để test chưa (qa-requirement-analysis), chạy test / report bug / cập nhật status, tạo Jira issue, lưu business rule (update-business-rules), sửa hay đọc file test case có sẵn, giải thích khái niệm testing."
+name: hae-gen-testcase
+description: "Sinh bộ manual test case (happy path, negative, boundary, validation, edge, regression, security, performance) và ghi thẳng lên QA Hub qua MCP — thêm Markdown trong docs/manual-testcases/ khi đang ở repo qikify-QA-mailtro. Dùng với MỌI đầu vào cần biến thành test case: key Jira (TEPO-, QSC-, QCO-, DUOS-, MTRO-xxx) kèm \"tạo/sinh/viết case\", user story hoặc AC (Việt hay Anh), mô tả tính năng, checklist kịch bản cần triển khai thành case đầy đủ, bản phân tích yêu cầu đã xong (\"phân tích xong, giờ sinh bộ case\"), hay yêu cầu regression sau khi dev fix (\"cần case để test lại\"). Người dùng hay nói \"bộ case\", \"viết case\", \"cover flow\", \"kiểm thử [module]\", \"cần security case\", \"test plan\" thay vì \"test case\" — vẫn dùng skill này. Apps: Tepo (Custom Product Options), Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro (MTRO). KHÔNG dùng để: đánh giá yêu cầu đã đủ để test chưa (hae-qa-requirement-analysis), chạy test / report bug / cập nhật status, tạo Jira issue, lưu business rule (hae-update-business-rules), sửa hay đọc file test case có sẵn, giải thích khái niệm testing."
 ---
 
 ## Giới thiệu
@@ -26,7 +26,7 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 **1. Xác định project và task trên QA Hub** (MCP của QA Hub (server tên `testlane`, tool `mcp__testlane__*`) — token cá nhân cấp ở trang `/settings/ai`):
 - `list_projects` → khớp app đang test với `key` của project. **`key` này chính là prefix của Test Case ID** — QA Hub tự cấp `TC-<KEY>-<số>`, không tự đặt tay.
 - Project không khớp app nào, hoặc khớp nhưng `isMember: false` → dừng, báo người dùng join project trước; gọi tiếp cũng chỉ nhận 403.
-- `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `qa-requirement-analysis` trước. **Skill này không tự tạo task.**
+- `list_tasks` cho project đó → chọn `taskId` ứng với issue đang xử lý (task do skill `hae-qa-requirement-analysis` tạo). Không có task nào khớp → hỏi người dùng, hoặc chạy `hae-qa-requirement-analysis` trước. **Skill này không tự tạo task.**
 - **Business rule + inventory: QA Hub trước, file local sau** — đọc một nơi, không cả hai:
   - `search_knowledge { projectId }` (+ `{ projectId, tag }` cho `feature-profile`) → có doc `active` thì đó là bộ rule; **không có** (hoặc MCP lỗi) → đọc `../qa-requirement-analysis/references/apps/<KEY>/business-rules.md` ở bước 4 dưới. Mỗi rule là ít nhất một case Negative/Edge/Regression; `known-issue` chưa fix → case Regression đánh `PO/DEV confirm`; `env` cho tên biến env để điền Preconditions.
   - `get_project_context { projectId, includeFileText: false }` → có item `Inventory <KEY>` (đã tách thì gồm `Inventory <KEY> · 00 Tổng quan` + item `Inventory <KEY> · NN <Module>` — đọc 00 và đúng module của feature, bằng `get_project_context_file`) thì đọc text để Steps dùng **đúng tên màn hình, setting, nút**; không có → `../../knowledge-work/apps/<KEY>/inventory.md` local; cũng không có → bỏ qua.
@@ -35,7 +35,7 @@ QA Hub là nơi lưu trữ test case. **Không sinh file `.xlsx`, không import 
 
 **2. Đọc app reference** — `../qa-requirement-analysis/references/apps/<KEY>/README.md`, một file cho một app, tên file là `key` project trên QA Hub — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) trước khi sinh test case. Danh mục app + glossary + cross-app ở `../qa-requirement-analysis/references/apps/README.md`. File app chưa có nội dung → bỏ qua, đừng bịa bối cảnh.
 
-> Đây là **bản duy nhất** của thư mục reference, đặt trong skill `qa-requirement-analysis` và dùng chung cho cả 2 skill. Không tạo bản copy trong `gen-testcase/references/` — sửa một chỗ là cả 2 skill cùng thấy.
+> Đây là **bản duy nhất** của thư mục reference, đặt trong skill `hae-qa-requirement-analysis` và dùng chung cho cả 2 skill. Không tạo bản copy trong `gen-testcase/references/` — sửa một chỗ là cả 2 skill cùng thấy.
 
 **3. Nếu app là Mailtro (MTRO): đọc `../qa-requirement-analysis/references/apps/MTRO/auto-manual-ratio.md`** — bảng tỷ lệ auto/manual theo epic + quy ước điền 2 cột `Execution Type` / `Automation Script Ref`. File này **chỉ áp dụng cho Mailtro**, bỏ qua khi làm app khác.
 
@@ -76,7 +76,7 @@ Với mỗi tính năng, bao phủ đủ 8 loại sau khi có thể áp dụng �
 
 > Loại test case được ghi trong cột **Test Scenario**, gắn nhãn ở đầu câu, ví dụ: "[Boundary] Upload đúng số lượng file tối đa cho phép", "[Regression] Flow checkout không bị ảnh hưởng khi tắt tính năng", "[Security] Member truy cập thẳng URL trang billing bị chặn".
 
-**Khi nào cần Security/Performance case:** nếu input là bản Requirement Analysis từ skill `qa-requirement-analysis`, lấy trực tiếp từ mục "9. Security Considerations" và "10. Performance Considerations" — mỗi phát hiện ở đó nên có ít nhất 1 test case tương ứng. Nếu input là mô tả tính năng tự do, tự đánh giá: chỉ thêm khi tính năng có đụng tới phân quyền/dữ liệu người dùng (Security) hoặc data volume/thao tác hàng loạt/tài nguyên trang (Performance). Thay đổi thuần UI/cosmetic thì bỏ qua cả 2 loại.
+**Khi nào cần Security/Performance case:** nếu input là bản Requirement Analysis từ skill `hae-qa-requirement-analysis`, lấy trực tiếp từ mục "9. Security Considerations" và "10. Performance Considerations" — mỗi phát hiện ở đó nên có ít nhất 1 test case tương ứng. Nếu input là mô tả tính năng tự do, tự đánh giá: chỉ thêm khi tính năng có đụng tới phân quyền/dữ liệu người dùng (Security) hoặc data volume/thao tác hàng loạt/tài nguyên trang (Performance). Thay đổi thuần UI/cosmetic thì bỏ qua cả 2 loại.
 
 ### Case đề xuất thêm ngoài requirement
 

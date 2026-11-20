@@ -5,8 +5,8 @@ Một file dùng chung:
 
 | Ai đọc | Dùng để |
 |---|---|
-| `qa-requirement-analysis` (terra) | Viết mục 9 Security Considerations |
-| `gen-testcase` (ore) | Biến mục 9 + mục khớp feature thành case `[Security]` |
+| `hae-qa-requirement-analysis` (terra) | Viết mục 9 Security Considerations |
+| `hae-gen-testcase` (ore) | Biến mục 9 + mục khớp feature thành case `[Security]` |
 | flint (review) | Soi bộ case thiếu Security ở đâu |
 | sonder | Biết case nào cần chạy tay (sửa request) và cách retest bug security |
 | Chị (tay) | Nhân bản Phần A + phần của app cho mỗi đợt release lớn; Phần D khi có sự cố / bản vá hạ tầng |
@@ -29,7 +29,7 @@ Một file dùng chung:
 |---|---|---|
 | **[P1]** | Bắt buộc trước release | Case priority High; vượt quyền / lộ dữ liệu / sai tiền ghi `Critical` ở Notes |
 | **[P2]** | Khi tính năng chạm khu vực đó | Case Medium, nâng High nếu lộ dữ liệu người khác |
-| **[P3]** | Định kỳ (mỗi quý, trước đợt review của Shopify) | **Không** viết case theo ticket — chị chạy tay hoặc skill `sec-perf-check`; flint không tính là thiếu case |
+| **[P3]** | Định kỳ (mỗi quý, trước đợt review của Shopify) | **Không** viết case theo ticket — chị chạy tay hoặc skill `hae-sec-perf-check`; flint không tính là thiếu case |
 
 **Nguyên tắc test:**
 
@@ -44,7 +44,7 @@ Một file dùng chung:
   Không chạy payload hay load test trên production hay shop của merchant thật.
 - Chuỗi thử chỉ lấy từ bảng **Payload mẫu** cuối file. Không viết cách khai thác tiếp, không
   scanner chủ động ngoài ZAP baseline [P3] trên staging.
-- Kiểm header / cookie / CSP / bundle của một màn hình → skill `sec-perf-check`, không viết
+- Kiểm header / cookie / CSP / bundle của một màn hình → skill `hae-sec-perf-check`, không viết
   thành case.
 
 ## Cổng 4 câu trước khi ghi một mục Security
@@ -330,7 +330,7 @@ trò như "shop"** trong các mục cách ly dữ liệu — cô lập workspace
 - [ ] [P1] Link reset password và verify email: dùng 1 lần, có hạn, không dùng được cho tài khoản khác.
 - [ ] [P1] Logout hoặc đổi mật khẩu → session cũ trên thiết bị khác hết hiệu lực.
 - [ ] [P2] Chính sách mật khẩu tối thiểu (độ dài, không cho mật khẩu quá phổ biến).
-- [ ] [P2] Cookie session có `HttpOnly`, `Secure`, `SameSite` (kiểm bằng `sec-perf-check`).
+- [ ] [P2] Cookie session có `HttpOnly`, `Secure`, `SameSite` (kiểm bằng `hae-sec-perf-check`).
 - [ ] [P2] Đổi email tài khoản yêu cầu xác thực lại (mật khẩu hoặc link gửi email cũ).
 - [ ] [P2] Không có open redirect ở `redirect` / `next` sau login.
 

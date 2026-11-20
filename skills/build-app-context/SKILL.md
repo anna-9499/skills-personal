@@ -1,6 +1,6 @@
 ---
-name: build-app-context
-description: "Build hoặc build lại file `apps/<KEY>/inventory.md` trong repo knowledge-work cho một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) — đọc nguồn thật (code local, staging qua Playwright MCP, Confluence) rồi ghi ra route, màn hình, setting đúng tên UI, custom config flag, môi trường test, và mục 'phát hiện lệch' so với README / business-rules của app. Dùng khi người dùng nói 'build context cho app X', 'inventory QCO', 'staging đang có gì', 'cập nhật context app', 'reference cũ rồi build lại', hoặc khi terra/sonder báo reference không khớp hệ thống thật. KHÔNG dùng để: lưu business rule (update-business-rules), phân tích ticket (qa-requirement-analysis), sinh test case (gen-testcase), sửa apps/<KEY>/README.md (skill này chỉ đề xuất diff)."
+name: hae-build-app-context
+description: "Build hoặc build lại file `apps/<KEY>/inventory.md` trong repo knowledge-work cho một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) — đọc nguồn thật (code local, staging qua Playwright MCP, Confluence) rồi ghi ra route, màn hình, setting đúng tên UI, custom config flag, môi trường test, và mục 'phát hiện lệch' so với README / business-rules của app. Dùng khi người dùng nói 'build context cho app X', 'inventory QCO', 'staging đang có gì', 'cập nhật context app', 'reference cũ rồi build lại', hoặc khi terra/sonder báo reference không khớp hệ thống thật. KHÔNG dùng để: lưu business rule (hae-update-business-rules), phân tích ticket (hae-qa-requirement-analysis), sinh test case (hae-gen-testcase), sửa apps/<KEY>/README.md (skill này chỉ đề xuất diff)."
 ---
 
 ## Vai trò
@@ -11,7 +11,7 @@ Skill này ghi **đúng hai chỗ**: file `apps/<KEY>/inventory.md` trong repo, 
 
 ## Vị trí trong quy trình
 
-Bước **0** (trước phân tích) hoặc bước bảo trì (sau release). `qa-requirement-analysis` và `gen-testcase` đọc file này để tránh GAP giả và để Steps dùng đúng tên UI. Chạy qua sub-agent (mở browser lâu, context nặng) — Hae giao, không tự chạy trong context điều phối.
+Bước **0** (trước phân tích) hoặc bước bảo trì (sau release). `hae-qa-requirement-analysis` và `hae-gen-testcase` đọc file này để tránh GAP giả và để Steps dùng đúng tên UI. Chạy qua sub-agent (mở browser lâu, context nặng) — Hae giao, không tự chạy trong context điều phối.
 
 ## Đường dẫn
 
@@ -20,7 +20,7 @@ Tính từ thư mục skill này: `../../knowledge-work/` là submodule repo [`o
 - Ghi: `../../knowledge-work/apps/<KEY>/inventory.md`
 - Đọc để đối chiếu: `../../knowledge-work/apps/<KEY>/README.md`, `apps/<KEY>/business-rules.md`, `apps/<KEY>/open-questions.md`
 - `<KEY>` = key project trên QA Hub (`list_projects`), viết HOA. Không có project khớp → dừng, hỏi.
-- Trên QA Hub: file ≤ 40.000 ký tự → một item **`Inventory <KEY>`**, một file **`<KEY>-inventory.md`**. File lớn hơn → **tách** thành nhiều item tên **`Inventory <KEY> · NN <Module>`** (`00 Tổng quan` + từng module), mỗi item một file `<KEY>-NN-<slug>.md` — xem "Nộp lên QA Hub". `qa-requirement-analysis`, `gen-testcase` và các agent tìm theo tiền tố `Inventory <KEY>`.
+- Trên QA Hub: file ≤ 40.000 ký tự → một item **`Inventory <KEY>`**, một file **`<KEY>-inventory.md`**. File lớn hơn → **tách** thành nhiều item tên **`Inventory <KEY> · NN <Module>`** (`00 Tổng quan` + từng module), mỗi item một file `<KEY>-NN-<slug>.md` — xem "Nộp lên QA Hub". `hae-qa-requirement-analysis`, `hae-gen-testcase` và các agent tìm theo tiền tố `Inventory <KEY>`.
 
 ## Input
 
@@ -81,7 +81,7 @@ Cùng nội dung file vừa ghi, đưa vào tab Context của project. Tool QA H
 ## Rào chắn
 
 - Không ghi file nào ngoài `apps/<KEY>/inventory.md` (file tách nằm ở scratchpad, không commit), và trên QA Hub chỉ đụng item `Inventory <KEY>` / `Inventory <KEY> · …` — không tạo/sửa item khác, không `upsert_knowledge`, không `delete_project_context`. Muốn sửa reference hay lưu rule → đề xuất ở § 5 và trong tóm tắt.
-- Không suy diễn hành vi từ UI thành rule. "Nút Save disabled khi thiếu field" là quan sát (ghi được ở § 2 kèm nguồn staging); "hệ thống bắt buộc field X" là rule (→ § 5, đề xuất `update-business-rules`).
+- Không suy diễn hành vi từ UI thành rule. "Nút Save disabled khi thiếu field" là quan sát (ghi được ở § 2 kèm nguồn staging); "hệ thống bắt buộc field X" là rule (→ § 5, đề xuất `hae-update-business-rules`).
 - Không credential, token, store domain merchant thật, dữ liệu khách hàng. Tài khoản chỉ ghi tên biến env.
 - **Quyền trên store Shopify** (người dùng duyệt 2026-10-22) — áp cho app TEPO / QSC / QCO / DUOS trên store staging / dev store của team và store `shiki-perfect`: được **mọi thao tác trừ billing / đổi plan và thanh toán thật** (tạo / Save / sửa / xoá data, đổi setting, gỡ / cài app, bật / tắt app embed, thêm cart, đặt đơn **chỉ bằng cổng thanh toán test** — Bogus Gateway / test mode, không thấy cổng test → dừng ở bước đó; xoá team member, domain, gửi email, tạo tài khoản / đổi mật khẩu / tắt 2FA khi việc cần). Mỗi thao tác có tác động phụ ghi lại (đơn, xoá, gỡ app, đổi tài khoản). Không áp cho MTRO và mọi store production khác. Hai dòng "Không thêm sản phẩm vào cart…" và "Ngoại lệ cart/checkout" dưới đây giờ chỉ áp cho MTRO.
 - Không thêm sản phẩm vào cart, không tạo item trong app, không Test connection / gửi thật (digest, webhook). Muốn xem form thì mở Edit của item có sẵn rồi Discard.
@@ -102,7 +102,7 @@ HAE-SUMMARY
 - Feature: <N> mục (lần trước <N0>) — ✅ <a> · 🟡 <b> · ❌ <c>
 - Phát hiện lệch (§ 5): <N> dòng (lần trước <M0>) · <K> dòng chạm business rule — <2–3 dòng đáng chú ý nhất>
 - Đã gỡ so với build trước: <… | "không">
-- Đề xuất cho người dùng: sửa reference § … · hỏi Dev … · chạy update-business-rules cho …
+- Đề xuất cho người dùng: sửa reference § … · hỏi Dev … · chạy hae-update-business-rules cho …
 - Cần Hae quyết: <…> hoặc "không"
 ```
 
@@ -112,4 +112,4 @@ Theo sự kiện, không theo lịch — xem [`conventions/inventory.md`](../../
 
 ## Bước tiếp theo
 
-Sau khi file có: chạy `qa-requirement-analysis` cho một ticket của app đó để kiểm xem GAP giả có giảm không. § 5 có dòng "Feature chưa có business rule" → khi có ticket chạm feature đó, chạy `update-business-rules`.
+Sau khi file có: chạy `hae-qa-requirement-analysis` cho một ticket của app đó để kiểm xem GAP giả có giảm không. § 5 có dòng "Feature chưa có business rule" → khi có ticket chạm feature đó, chạy `hae-update-business-rules`.

@@ -1,6 +1,6 @@
 ---
-name: qa-requirement-analysis
-description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết test case — trích xuất business rule đã xác nhận (kèm nguồn trích dẫn), thông tin thiếu/mơ hồ phân mức Blocker/Major/Minor, khu vực bị ảnh hưởng, rủi ro QA, khía cạnh bảo mật (security) và hiệu năng (performance) cần kiểm thử, câu hỏi cần hỏi PO/Dev, và Readiness Score chấm theo rubric 7 tiêu chí / 14 điểm (Ready/Partially Ready/Not Ready). Dùng khi người dùng paste một Jira issue, key ticket, user story, AC, hoặc mô tả tính năng và cần hiểu rõ yêu cầu — kể cả khi không nói rõ \"phân tích yêu cầu\"; cũng dùng khi người dùng hỏi \"yêu cầu này đã đủ để viết test case chưa\", \"review user story\", \"thiếu gì trước khi test\", \"trước khi viết case còn thiếu gì\", \"lấy business rule từ ticket ra\", \"phân tích requirement\". Tối ưu cho các app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro — app email marketing, project MTRO), nhưng vẫn chạy được với yêu cầu ngoài các app đó. Đây là BƯỚC 1/2 của quy trình QA; bước 2 dùng skill \"gen-testcase\". Nếu người dùng paste trực tiếp 1 link hoặc key issue Jira (vd TEPO-980, https://ownego.atlassian.net/browse/TEPO-980), skill tự động thực hiện cả phân tích LẪN tạo task QA tương ứng trên QA Hub, không cần nói thêm \"tạo task\". Skill này KHÔNG tạo issue trên Jira project QA nữa."
+name: hae-qa-requirement-analysis
+description: "Phân tích yêu cầu Jira/user story/feature TRƯỚC KHI viết test case — trích xuất business rule đã xác nhận (kèm nguồn trích dẫn), thông tin thiếu/mơ hồ phân mức Blocker/Major/Minor, khu vực bị ảnh hưởng, rủi ro QA, khía cạnh bảo mật (security) và hiệu năng (performance) cần kiểm thử, câu hỏi cần hỏi PO/Dev, và Readiness Score chấm theo rubric 7 tiêu chí / 14 điểm (Ready/Partially Ready/Not Ready). Dùng khi người dùng paste một Jira issue, key ticket, user story, AC, hoặc mô tả tính năng và cần hiểu rõ yêu cầu — kể cả khi không nói rõ \"phân tích yêu cầu\"; cũng dùng khi người dùng hỏi \"yêu cầu này đã đủ để viết test case chưa\", \"review user story\", \"thiếu gì trước khi test\", \"trước khi viết case còn thiếu gì\", \"lấy business rule từ ticket ra\", \"phân tích requirement\". Tối ưu cho các app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, và Mailtro — app email marketing, project MTRO), nhưng vẫn chạy được với yêu cầu ngoài các app đó. Đây là BƯỚC 1/2 của quy trình QA; bước 2 dùng skill \"hae-gen-testcase\". Nếu người dùng paste trực tiếp 1 link hoặc key issue Jira (vd TEPO-980, https://ownego.atlassian.net/browse/TEPO-980), skill tự động thực hiện cả phân tích LẪN tạo task QA tương ứng trên QA Hub, không cần nói thêm \"tạo task\". Skill này KHÔNG tạo issue trên Jira project QA nữa."
 ---
 
 ## Vai trò
@@ -15,22 +15,22 @@ Nhiệm vụ: phân tích yêu cầu Jira **trước khi** QA viết test case, 
 
 Đây là **Bước 1 / 2** của quy trình QA chuẩn:
 
-1. **`qa-requirement-analysis`** (skill này) → phân tích yêu cầu, xuất ra bản Requirement Analysis và tạo luôn task tương ứng trên QA Hub.
-2. **`gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên QA Hub — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.
+1. **`hae-qa-requirement-analysis`** (skill này) → phân tích yêu cầu, xuất ra bản Requirement Analysis và tạo luôn task tương ứng trên QA Hub.
+2. **`hae-gen-testcase`** → nhận bản Requirement Analysis (hoặc câu trả lời đã xác nhận từ PO/Dev) làm input, sinh test case và ghi thẳng vào task tương ứng trên QA Hub — id do QA Hub cấp theo `key` của project. Không còn `.xlsx`, không còn Google Sheets.
 
-Sau khi hoàn thành phân tích và tạo task trên QA Hub, gợi ý người dùng: nếu yêu cầu đã đủ rõ (Ready hoặc Partially Ready với các open question không blocking), có thể chuyển sang skill `gen-testcase` để sinh test case. Nếu Not Ready, khuyến nghị người dùng lấy câu trả lời từ PO/Dev cho các Open Questions trước.
+Sau khi hoàn thành phân tích và tạo task trên QA Hub, gợi ý người dùng: nếu yêu cầu đã đủ rõ (Ready hoặc Partially Ready với các open question không blocking), có thể chuyển sang skill `hae-gen-testcase` để sinh test case. Nếu Not Ready, khuyến nghị người dùng lấy câu trả lời từ PO/Dev cho các Open Questions trước.
 
 ## Mục tiêu chính
 
 Giúp QA hiểu rõ yêu cầu, xác định các business rule đã được xác nhận, phát hiện thông tin còn thiếu hoặc mơ hồ, xác định các khu vực bị ảnh hưởng, và chuẩn bị các câu hỏi rõ ràng cho PO/Dev. Skill cũng chịu trách nhiệm tạo task tương ứng trên QA Hub để lưu lại bản phân tích và giao việc test.
 
-**Không viết test case cuối cùng ở bước này** trừ khi được yêu cầu rõ ràng — đó là việc của skill `gen-testcase`.
+**Không viết test case cuối cùng ở bước này** trừ khi được yêu cầu rõ ràng — đó là việc của skill `hae-gen-testcase`.
 
 ## Tài liệu tham khảo dùng chung
 
 Trước khi phân tích, đọc `references/apps/<KEY>/README.md` — **một thư mục cho một app**, tên thư mục là `key` của project trên QA Hub (`TEPO`, `QCO`, `QSC`, `DUOS`, `MTRO`) — để nắm bối cảnh nền (feature đã có, giới hạn kỹ thuật, hành vi đặc thù) của app liên quan. Mỗi file có skeleton 5 mục cố định: *App là gì → Feature map → Giới hạn kỹ thuật đã biết → QA focus → Nguồn & cập nhật*. Danh mục app, glossary và các tích hợp cross-app nằm ở `references/apps/README.md`. File app chưa tồn tại hoặc còn rỗng (ví dụ `QAF`, `SHUB`, `QIK` chưa có `README.md`) → bỏ qua bước này, **không tự bịa bối cảnh**.
 
-> Đây là **bản duy nhất** của thư mục reference. Skill `gen-testcase` đọc chung qua đường dẫn `../qa-requirement-analysis/references/apps/` — sửa ở đây là cả 2 skill cùng thấy, không cần copy sang đâu nữa. Thư mục này là symlink vào repo `knowledge-work`, nên thêm app mới chỉ là thêm thư mục `apps/<KEY>/`, không phải sửa wiring.
+> Đây là **bản duy nhất** của thư mục reference. Skill `hae-gen-testcase` đọc chung qua đường dẫn `../qa-requirement-analysis/references/apps/` — sửa ở đây là cả 2 skill cùng thấy, không cần copy sang đâu nữa. Thư mục này là symlink vào repo `knowledge-work`, nên thêm app mới chỉ là thêm thư mục `apps/<KEY>/`, không phải sửa wiring.
 
 **Nếu issue thuộc project `MTRO` (Mailtro):** đọc kỹ `references/apps/MTRO/README.md` trước khi phân tích, và lưu ý:
 - Mailtro **không phải Shopify app** — không suy luận theo Shopify plan/theme/checkout extensibility. Mục "7. Impacted Areas" nên soi theo kiến trúc riêng: Mailtro ID (`staging-id.mailtro.ai`: signup/login/verify/reset password) vs app workspace (`<slug>.wisle.app`), phân quyền Owner/Admin/Member, sending domain, và các ràng buộc chéo (Sending domain chặn gửi Campaign; Campaign phụ thuộc Contacts + Templates).
@@ -180,7 +180,7 @@ Nếu người dùng paste một **link hoặc key issue Jira cụ thể** (ví 
 Bản phân tích có **hai phần**:
 
 - **Phần A — Tóm tắt cho PO/Dev**: gọn trong một màn hình — **tối đa 25 dòng** (dòng bảng tính một dòng), QA copy thẳng vào Jira/Slack được. Đây là thứ in trong chat.
-- **Phần B — Chi tiết cho QA**: 14 mục như trước, là nguồn cho `gen-testcase` và reviewer. Lưu trong `notes` của task QA Hub, dưới phần A.
+- **Phần B — Chi tiết cho QA**: 14 mục như trước, là nguồn cho `hae-gen-testcase` và reviewer. Lưu trong `notes` của task QA Hub, dưới phần A.
 
 In trong chat: **phần A** + một dòng *"Chi tiết 14 mục: {link task QA Hub}"*. Không tạo được task (không có project, MCP lỗi) → in cả phần B ngay dưới. Người dùng nói "cho xem bản đầy đủ" → in cả hai. Không tạo file.
 
@@ -254,7 +254,7 @@ Rule giải được bằng nguồn E1–E2 ở bước "Tự giải" cũng nằ
 | AS-01 | | E3 — inventory § 2.4 (2026-10-15) | Cao | |
 | AS-02 | | E4 — banner Y đang dismiss theo store | TB | |
 
-Tin cậy `Cao` chỉ ở phần B; `TB` lên phần A mục "Em đã giả định". Skill `gen-testcase` gắn `AS-xx` vào case dựa trên giả định, để PO bác thì biết case nào phải sửa.
+Tin cậy `Cao` chỉ ở phần B; `TB` lên phần A mục "Em đã giả định". Skill `hae-gen-testcase` gắn `AS-xx` vào case dựa trên giả định, để PO bác thì biết case nào phải sửa.
 
 ### 4. User Flow
 Mô tả flow chính và flow thay thế nếu có.
@@ -398,7 +398,7 @@ Chỉ làm bước này khi issue thuộc project `MTRO`. Với 4 app Shopify, b
 
 Ba lưu ý:
 
-- Đây là **định hướng phân bổ công sức**, không phải cam kết. Không kết luận "case X sẽ được automate" — đó là quyết định ở bước `gen-testcase` và khi UI đã ổn định.
+- Đây là **định hướng phân bổ công sức**, không phải cam kết. Không kết luận "case X sẽ được automate" — đó là quyết định ở bước `hae-gen-testcase` và khi UI đã ổn định.
 - **Không tự sửa số trong file reference.** Nếu issue đang phân tích đã có AC chi tiết và scope thật lệch rõ so với ước lượng trong bảng (bảng đang ở trạng thái draft vì phần lớn epic MTRO chưa có AC), nêu điều đó ở mục "8. Risks" hoặc "12. Open Questions for PO/Dev" và báo user cân nhắc cập nhật bảng theo mục 4 của file reference.
 - Epic không có trong bảng: áp bộ nguyên tắc chung ở mục 2 của file reference thay vì bịa một con số mới.
 
@@ -439,7 +439,7 @@ Khi luật ghi đè kích hoạt, phải nêu rõ ở mục 14: điểm thô là
 
 Chạy ngay sau khi in bản phân tích cho người dùng xem, **không đợi xác nhận thêm** — trừ khi người dùng nói trước là lần này đừng tạo. Áp dụng cho mọi input, kể cả input không gắn với issue Jira nào.
 
-Task này không phải chỗ lưu trữ cho vui: nó là **đầu ra chính thức duy nhất** của bước phân tích (không còn issue Jira song song nữa), và `gen-testcase` bên QA Hub nhận `taskId` làm đầu vào (`POST /api/ai/generate-testcase`) — không có task thì bước 2 không có gì để bám vào.
+Task này không phải chỗ lưu trữ cho vui: nó là **đầu ra chính thức duy nhất** của bước phân tích (không còn issue Jira song song nữa), và `hae-gen-testcase` bên QA Hub nhận `taskId` làm đầu vào (`POST /api/ai/generate-testcase`) — không có task thì bước 2 không có gì để bám vào.
 
 Trong QA Hub có ba đường ra một task: QA tự bấm "+ New task", QA dán link Jira vào nút "From Jira" (QA Hub tự phân tích bằng chính skill này), hoặc skill này tạo qua MCP. Hai đường sau đều đánh dấu `generated_by='ai'` và hiện nhãn "AI" trên task — nên nếu người dùng vừa dùng nút "From Jira" cho đúng issue đó thì task đã có rồi, đừng tạo thêm cái thứ hai.
 
@@ -502,10 +502,10 @@ Dùng khi task QA Hub **đã có** bản phân tích trong `notes`, và người
 
 Sau khi xuất bản phân tích và tạo task trên QA Hub, hỏi ngắn gọn người dùng có muốn:
 
-1. Chuyển sang sinh test case (skill `gen-testcase`) luôn không, đặc biệt nếu Readiness Score là Ready hoặc Partially Ready. Task vừa tạo ở trên chính là chỗ test case sẽ nằm vào — đưa id của nó sang.
+1. Chuyển sang sinh test case (skill `hae-gen-testcase`) luôn không, đặc biệt nếu Readiness Score là Ready hoặc Partially Ready. Task vừa tạo ở trên chính là chỗ test case sẽ nằm vào — đưa id của nó sang.
 2. Lưu lại mục "3. Business Rules" vừa phân tích — hai đích, chọn theo chỗ team đang đọc:
    - **QA Hub** (`upsert_knowledge`, `kind: business-rule`, `sourceUrl` = link issue, `status: draft` nếu PO chưa xác nhận) — cả team và mọi session sau cùng thấy. Ưu tiên đích này.
-   - File local `references/apps/<KEY>/business-rules.md` (skill `update-business-rules`) — khi đang làm offline hoặc team chưa dùng tab Knowledge.
+   - File local `references/apps/<KEY>/business-rules.md` (skill `hae-update-business-rules`) — khi đang làm offline hoặc team chưa dùng tab Knowledge.
 
    Skill này **không tự ghi** — chỉ hỏi. Ghi rule là việc không đảo ngược với người khác đọc sau.
 

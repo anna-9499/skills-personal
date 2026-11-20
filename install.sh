@@ -3,7 +3,8 @@
 #
 #   bash install.sh
 #
-# Làm: symlink mọi skills/*/ → ~/.claude/skills/, hae/*.md → ~/.claude/agents/Hae/,
+# Làm: symlink mọi skills/<x>/ → ~/.claude/skills/hae-<x> (tên gọi, prefix hae- để không trùng skill team)
+#      và ~/.claude/hae-skills/<x> (đường dẫn cố định agent đọc file), hae/*.md → ~/.claude/agents/Hae/,
 #      luke/*.md (trừ profiles.*) → ~/.claude/agents/Luke/, gitty/*.md → ~/.claude/agents/Gitty/,
 #      bật pre-commit hook.
 # KHÔNG làm (chị tự chạy, vì sửa settings.json): bash hae/hooks/apply-settings.sh
@@ -28,9 +29,16 @@ link() {  # link <nguồn> <đích>; báo khi đích là file thật (không ghi
   ln -sfn "$1" "$2"; echo "  $2"
 }
 
-mkdir -p ~/.claude/skills ~/.claude/agents/Hae ~/.claude/agents/Luke ~/.claude/agents/Gitty
+mkdir -p ~/.claude/skills ~/.claude/hae-skills ~/.claude/agents/Hae ~/.claude/agents/Luke ~/.claude/agents/Gitty
 echo "Skill:"
-for d in skills/*/; do link "$REPO/${d%/}" ~/.claude/skills/"$(basename "$d")"; done
+for d in skills/*/; do
+  n="$(basename "$d")"
+  link "$REPO/${d%/}" ~/.claude/skills/"hae-$n"
+  link "$REPO/${d%/}" ~/.claude/hae-skills/"$n"
+  # tên cũ không prefix (trước 2026-11-20) trỏ vào repo này → gỡ, tránh trùng skill team
+  old=~/.claude/skills/"$n"
+  [ -L "$old" ] && case "$(readlink "$old")" in "$REPO"/*) rm "$old"; echo "Gỡ tên cũ: $old" ;; esac
+done
 echo "Agent Hae:"
 for f in hae/*.md; do link "$REPO/$f" ~/.claude/agents/Hae/"$(basename "$f")"; done
 echo "Agent Luke:"
@@ -44,7 +52,7 @@ echo "Agent Gitty:"
 for f in gitty/*.md; do link "$REPO/$f" ~/.claude/agents/Gitty/"$(basename "$f")"; done
 
 # Symlink chết (skill / agent đã xoá khỏi repo)
-for l in ~/.claude/skills/* ~/.claude/agents/Hae/* ~/.claude/agents/Luke/* ~/.claude/agents/Gitty/*; do
+for l in ~/.claude/skills/* ~/.claude/hae-skills/* ~/.claude/agents/Hae/* ~/.claude/agents/Luke/* ~/.claude/agents/Gitty/*; do
   [ -L "$l" ] && [ ! -e "$l" ] && case "$(readlink "$l")" in "$REPO"/*) rm "$l"; echo "Gỡ symlink chết: $l" ;; esac
 done
 

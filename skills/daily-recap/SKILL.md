@@ -1,5 +1,5 @@
 ---
-name: daily-recap
+name: hae-daily-recap
 description: Tổng hợp công việc QA đang mở của chính mình mỗi sáng — task QA Hub theo trạng thái, case đang blocked/failed, bug chưa đóng, task bị bỏ quên lâu ngày, và issue Jira đổi trạng thái trong 24h qua. Dùng khi người dùng nói "recap", "hôm nay làm gì", "tổng hợp việc", "daily recap", "việc đang mở", "task nào đang chờ dev", "có gì mới không", hoặc đầu ngày làm việc muốn biết bắt đầu từ đâu. CHỈ ĐỌC — không sửa task, không đóng bug, không comment Jira.
 ---
 
@@ -11,14 +11,14 @@ Trả lời đúng một câu hỏi: **sáng nay bắt đầu từ đâu.**
 
 Skill này **không** tạo, sửa, đóng, hay comment bất cứ thứ gì — không task, không bug, không issue Jira, không business rule. Chỉ đọc và tóm tắt.
 
-Lý do: agent tự update data thì noise và mess, sau không quản lý được. Muốn ghi thì người dùng chạy skill tương ứng (`update-business-rules`, `gen-testcase`) và tự xác nhận.
+Lý do: agent tự update data thì noise và mess, sau không quản lý được. Muốn ghi thì người dùng chạy skill tương ứng (`hae-update-business-rules`, `hae-gen-testcase`) và tự xác nhận.
 
 Nếu trong lúc chạy phát hiện thứ đáng ghi lại, **nêu ra trong báo cáo** và để người dùng quyết định — đừng tự làm.
 
 ## Bước 1 — Task QA Hub (bắt buộc)
 
 ```bash
-python3 "$HOME/.claude/skills/daily-recap/scripts/testlane-digest.py"
+python3 "$HOME/.claude/hae-skills/daily-recap/scripts/testlane-digest.py"
 ```
 
 Thêm `--json` nếu cần dữ liệu thô để tính toán. Thêm `--all-assignees` để xem cả task của người khác (mặc định chỉ task của mình).

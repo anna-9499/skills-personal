@@ -4,7 +4,7 @@ Capability cá nhân: skill và agent tự viết. Tách khỏi knowledge của 
 
 Ranh giới: **skill là *cách làm*, knowledge là *biết gì*.** Rule của app không nằm ở đây — nó ở repo [`knowledge-work`](knowledge-work), mount vào đây làm submodule.
 
-**Mục lục:** [Yêu cầu](#yêu-cầu) · [Nội dung](#nội-dung) · [Nối vào Claude Code](#nối-vào-claude-code) · [Phụ thuộc knowledge-work](#phụ-thuộc-knowledge-work) · [Sửa skill](#sửa-skill) · [Hae](#hae--agent-điều-phối) · [Luke](#luke--agent-điều-phối-playwright-automation) · [daily-recap](#daily-recap-vì-sao-có-scriptstestlane-digestpy)
+**Mục lục:** [Yêu cầu](#yêu-cầu) · [Nội dung](#nội-dung) · [Nối vào Claude Code](#nối-vào-claude-code) · [Phụ thuộc knowledge-work](#phụ-thuộc-knowledge-work) · [Sửa skill](#sửa-skill) · [Hae](#hae--agent-điều-phối) · [Luke](#luke--agent-điều-phối-playwright-automation) · [hae-daily-recap](#daily-recap-vì-sao-có-scriptstestlane-digestpy)
 
 ## Yêu cầu
 
@@ -29,12 +29,12 @@ skills/
   context-change-request/    Soạn CCR theo nguyên văn template leader → knowledge-work/apps/<KEY>/ccr/ (scripts/ccr.py: lint, chống trùng, bản gửi QA Hub)
 hae/                         Nhóm QA manual — agent mặc định mọi session (xem mục "Hae")
   hae.md                     Hae — agent điều phối, chạy ở main thread
-  terra.md                   Sub-agent: chạy trọn vẹn qa-requirement-analysis → task QA Hub
-  ore.md                     Sub-agent: chạy trọn vẹn gen-testcase → test case trên QA Hub
+  terra.md                   Sub-agent: chạy trọn vẹn hae-qa-requirement-analysis → task QA Hub
+  ore.md                     Sub-agent: chạy trọn vẹn hae-gen-testcase → test case trên QA Hub
   flint.md                   Sub-agent: review độc lập bản phân tích + bộ test case (chỉ đọc, Opus)
   sonder.md                  Sub-agent: chạy manual test case trên staging → status lên QA Hub
-  ash.md                     Sub-agent: chạy trọn vẹn build-app-context → inventory app
-  slate.md                   Sub-agent: chạy trọn vẹn context-change-request → file CCR (Hae gắn draft lên QA Hub sau khi chị duyệt)
+  ash.md                     Sub-agent: chạy trọn vẹn hae-build-app-context → inventory app
+  slate.md                   Sub-agent: chạy trọn vẹn hae-context-change-request → file CCR (Hae gắn draft lên QA Hub sau khi chị duyệt)
   bin/staging-lock.sh        Khoá staging một app một khoá, dùng chung Hae (sonder, ash) và Luke (healer)
   bin/preflight.sh           Kiểm repo / MCP / staging / khoá trước khi Hae giao sonder hoặc ash
   hooks/                     env-guard (chặn browser vào URL production) + apply-settings.sh vá settings.json
@@ -52,7 +52,7 @@ luke/                        Nhóm Playwright automation — mở bằng `claude
 
 ## Nối vào Claude Code
 
-`~/.claude/skills/<tên>`, `~/.claude/agents/Hae/*.md` và `~/.claude/agents/Luke/*.md` là symlink trỏ vào repo này. Sửa ở repo = sửa ở skill/agent đang chạy.
+`~/.claude/skills/hae-<tên>` (tên gọi skill — prefix `hae-` từ 2026-11-20 để không trùng skill cùng tên của repo team), `~/.claude/hae-skills/<tên>` (đường dẫn cố định agent đọc file), `~/.claude/agents/Hae/*.md` và `~/.claude/agents/Luke/*.md` là symlink trỏ vào repo này. Sửa ở repo = sửa ở skill/agent đang chạy.
 
 Skill khác trong `~/.claude/skills/` (cloudflare, wrangler, sandbox-*, nodeterm…) là skill vendor, **không** thuộc repo này.
 
@@ -127,7 +127,7 @@ Quyền do org quản, sửa có audit qua git log, cả team mount cùng một 
 
 ### Bẫy: publish.json
 
-`qa-requirement-analysis`, `gen-testcase`, `update-business-rules` được port sang Cloudflare Worker để chạy trong QA Hub. `publish.json` mô tả phần nào bị bỏ / thay khi port, và nó trỏ theo **tên section chính xác** trong SKILL.md.
+`hae-qa-requirement-analysis`, `hae-gen-testcase`, `hae-update-business-rules` được port sang Cloudflare Worker để chạy trong QA Hub. `publish.json` mô tả phần nào bị bỏ / thay khi port, và nó trỏ theo **tên section chính xác** trong SKILL.md.
 
 Đổi tiêu đề một section mà quên sửa `publish.json` → trỏ trượt, không báo lỗi, bản trên Worker âm thầm sai. Sửa tiêu đề thì mở `publish.json` cùng skill sửa theo.
 
@@ -143,7 +143,7 @@ Worker **không có filesystem**. Thêm một câu "đọc `references/...`" và
 
 ### Lịch sử: analyze-req đã bị gộp
 
-`analyze-req` từng là một skill riêng làm cùng việc phân tích requirement, product-agnostic, không tạo task QA Hub. Hai `description` gần trùng nhau nên lúc gọi hay phân vân. Đã gộp hẳn vào `qa-requirement-analysis`:
+`analyze-req` từng là một skill riêng làm cùng việc phân tích requirement, product-agnostic, không tạo task QA Hub. Hai `description` gần trùng nhau nên lúc gọi hay phân vân. Đã gộp hẳn vào `hae-qa-requirement-analysis`:
 
 - rubric 7 tiêu chí / 14 điểm + luật ghi đè, phân mức gap Blocker/Major/Minor, kỷ luật trích nguồn cho từng business rule, và các bảng có ID (BR/AS/GAP/RISK/SEC/PERF) → inline vào `SKILL.md`
 - `analysis-guide.md`, `security-checklist.md`, `performance-checklist.md` → `references/method/`
@@ -156,30 +156,30 @@ Người dùng chỉ nói chuyện với **Hae**. Hae không tự phân tích y�
 
 ```
 chị ──▶ hae (main thread, settings.agent = "hae")
-          ├──▶ terra    chạy trọn vẹn qa-requirement-analysis → báo cáo 14 mục + task QA Hub
+          ├──▶ terra    chạy trọn vẹn hae-qa-requirement-analysis → báo cáo 14 mục + task QA Hub
           │               + chế độ cập nhật: gộp câu trả lời PO/Dev → đóng GAP, chấm lại Verdict, ghi đè notes
-          ├──▶ ore      chạy trọn vẹn gen-testcase → test case trên QA Hub
+          ├──▶ ore      chạy trọn vẹn hae-gen-testcase → test case trên QA Hub
           ├──▶ flint    review độc lập: sau terra (RA) và sau ore (TC) → BLOCK/WARN/PASS, thiếu case → ore bổ sung
           │               + chế độ MISS: bug production → case nào lẽ ra bắt được / ứng viên thiếu case
           ├──▶ sonder   chạy manual test case đã có, trên staging → status + actualResult lên QA Hub
           │               + case cần mắt nhìn: chụp ảnh từng bước, để not-run · chế độ retest bug: Passed / To Do
-          ├──▶ ash      chạy trọn vẹn build-app-context → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
-          ├──▶ slate    chạy trọn vẹn context-change-request → apps/<KEY>/ccr/CCR-….md (+ bản Anh, ⏳ chờ chị)
+          ├──▶ ash      chạy trọn vẹn hae-build-app-context → knowledge-work/apps/<KEY>/inventory.md + item context QA Hub
+          ├──▶ slate    chạy trọn vẹn hae-context-change-request → apps/<KEY>/ccr/CCR-….md (+ bản Anh, ⏳ chờ chị)
           │               Hae gắn draft (set_task_ccr_file) + Submit (submit_task_ccr) sau câu 12
           └──  (tự làm) báo cáo gửi Dev/PO cho một task — chỉ trong chat
 ```
 
 Vì sao Hae phải là **main thread** chứ không phải sub-agent: sub-agent trong Claude Code không gọi được Agent tool, nên "agent cha" bắt buộc là session chính. Claude Code ≥ 2.1 có `--agent <tên>` và setting `agent` cho việc này.
 
-Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 7 file là `~/.claude/skills/...`, không phụ thuộc vị trí file agent.
+Claude Code quét `~/.claude/agents/` đệ quy và nhận agent theo `name:` trong frontmatter, nên gom vào thư mục con `Hae/` không đổi gì. Đường dẫn tới skill trong 7 file là `~/.claude/hae-skills/...`, không phụ thuộc vị trí file agent.
 
 Các quyết định trong `hae/hae.md` đáng biết trước khi sửa:
 
 | Tình huống | Hae làm gì | Vì sao |
 |---|---|---|
-| Verdict Ready / Partially Ready | `flint` review RA rồi tự nối sang `ore`, không hỏi | đúng gợi ý sẵn trong skill qa-requirement-analysis; case chạm GAP mở đã có nhãn `PO/DEV confirm` |
+| Verdict Ready / Partially Ready | `flint` review RA rồi tự nối sang `ore`, không hỏi | đúng gợi ý sẵn trong skill hae-qa-requirement-analysis; case chạm GAP mở đã có nhãn `PO/DEV confirm` |
 | Verdict Not Ready | vẫn đi tiếp, sinh bộ case **nháp**: case chạm GAP Blocker gắn `PO/DEV confirm`, Expected theo giả định `AS-xx`; GAP Blocker + câu hỏi mục 12 lên đầu "Chị cần làm" (chốt 2026-10-05) | dừng hẳn thì chờ PO lâu mà không có gì để chạy; PO trả lời → `terra` chế độ cập nhật → `flint` TC sửa trên case cũ. Chị nói "chỉ phân tích" / "Not Ready thì dừng" thì vẫn dừng |
-| "Tạo test case" mà chưa có task QA Hub | chạy `terra` trước, nói một câu, không hỏi | gen-testcase không tự tạo task |
+| "Tạo test case" mà chưa có task QA Hub | chạy `terra` trước, nói một câu, không hỏi | hae-gen-testcase không tự tạo task |
 | "Chạy test" mà task chưa có test case | đi `terra` → `ore` trước; xong mới hỏi có chạy `sonder` không | bước chạy cần môi trường + tài khoản, nên **không** tự nối `ore` → `sonder` |
 | Chạy manual cho MTRO | không hỏi URL / tài khoản — `sonder` tự đọc `.env` của repo `qikify-QA-mailtro` | data test đã nằm trong repo; 4 app Shopify thì hỏi một câu gộp URL + cách đăng nhập |
 | `sonder` báo nghi vấn bug | liệt kê bug, hỏi có report lên QA Hub không; chỉ gọi lại `sonder` cho đúng các case đó | `report_bug` có thể announce Slack/Jira — luôn không kèm `reportTo` |
@@ -208,7 +208,7 @@ Không sub-agent nào có tool ghi lên Jira / Slack. `sonder` và `ash` mở ap
 
 ### Lịch sử: agent req-analyst đã bị xoá
 
-`agents/req-analyst.md` từng là subagent chạy `qa-requirement-analysis` ở chế độ chỉ đọc (không tạo task QA Hub, không hỏi tiếp), dành cho việc phân tích nhiều ticket song song. Nó không có phương pháp riêng — chỉ đọc lại SKILL.md — nhưng `description` trùng ~90% với skill nên khi paste 1 ticket model hay chọn nhầm agent, mất task QA Hub và bước nối sang `gen-testcase`. Cùng một lỗi với `analyze-req` ở trên. Đã xoá; cần chạy song song thì spawn agent `general-purpose` và bảo nó chạy skill này ở chế độ chỉ đọc.
+`agents/req-analyst.md` từng là subagent chạy `hae-qa-requirement-analysis` ở chế độ chỉ đọc (không tạo task QA Hub, không hỏi tiếp), dành cho việc phân tích nhiều ticket song song. Nó không có phương pháp riêng — chỉ đọc lại SKILL.md — nhưng `description` trùng ~90% với skill nên khi paste 1 ticket model hay chọn nhầm agent, mất task QA Hub và bước nối sang `hae-gen-testcase`. Cùng một lỗi với `analyze-req` ở trên. Đã xoá; cần chạy song song thì spawn agent `general-purpose` và bảo nó chạy skill này ở chế độ chỉ đọc.
 
 ## Luke — agent điều phối Playwright automation
 
@@ -246,4 +246,4 @@ Token đọc từ `~/.claude.json` lúc chạy, không hardcode, không in ra.
 | QA Hub | Bearer token tĩnh trong `~/.claude.json` | Không |
 | Atlassian | OAuth | **Có** — gặp `requires re-authorization` thì chạy `/mcp` đăng nhập lại |
 
-Vì vậy `daily-recap` được viết để **chịu được việc Jira chết**: vẫn xuất báo cáo phần QA Hub và ghi một dòng nói phần Jira bỏ trống. Đừng sửa thành fail cả bài.
+Vì vậy `hae-daily-recap` được viết để **chịu được việc Jira chết**: vẫn xuất báo cáo phần QA Hub và ghi một dòng nói phần Jira bỏ trống. Đừng sửa thành fail cả bài.

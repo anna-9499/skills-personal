@@ -1,6 +1,6 @@
 ---
-name: context-change-request
-description: "Soạn Context Change Request (CCR) theo ĐÚNG quy trình + template của leader QA (quy-trinh.md + template.md, nguyên văn) — yêu cầu cập nhật canonical QA context khi hành vi đã/sắp ship THIẾU, SAI, CŨ hoặc MÂU THUẪN với canon của app (knowledge-work/apps/<KEY>/ + knowledge trên QA Hub). Đọc ticket Jira (chỉ đọc) + test case QA Hub + canon, ghi knowledge-work/apps/<KEY>/ccr/CCR-<ngày>-<slug>.md (+ bản Anh khớp dòng + file trạng thái), chỗ cần người ghi ⏳ CHỜ BẠN. Dùng khi người dùng nói \"tạo CCR\", \"context change request\", \"cập nhật context cho ticket X\", \"ticket này KB chưa có / sai\", khi ticket đã ship mà canon chưa có, khi inventory / RA / chạy test thấy hành vi đã ship lệch business rule. Cũng xử lý \"trả lời CCR\" (điền chỗ ⏳). KHÔNG dùng để: sửa business rule (update-business-rules), build inventory (build-app-context), đính kèm / Submit CCR lên QA Hub (Hae làm sau khi người dùng duyệt — gắn bằng set_task_ccr_file, nộp bằng submit_task_ccr)."
+name: hae-context-change-request
+description: "Soạn Context Change Request (CCR) theo ĐÚNG quy trình + template của leader QA (quy-trinh.md + template.md, nguyên văn) — yêu cầu cập nhật canonical QA context khi hành vi đã/sắp ship THIẾU, SAI, CŨ hoặc MÂU THUẪN với canon của app (knowledge-work/apps/<KEY>/ + knowledge trên QA Hub). Đọc ticket Jira (chỉ đọc) + test case QA Hub + canon, ghi knowledge-work/apps/<KEY>/ccr/CCR-<ngày>-<slug>.md (+ bản Anh khớp dòng + file trạng thái), chỗ cần người ghi ⏳ CHỜ BẠN. Dùng khi người dùng nói \"tạo CCR\", \"context change request\", \"cập nhật context cho ticket X\", \"ticket này KB chưa có / sai\", khi ticket đã ship mà canon chưa có, khi inventory / RA / chạy test thấy hành vi đã ship lệch business rule. Cũng xử lý \"trả lời CCR\" (điền chỗ ⏳). KHÔNG dùng để: sửa business rule (hae-update-business-rules), build inventory (hae-build-app-context), đính kèm / Submit CCR lên QA Hub (Hae làm sau khi người dùng duyệt — gắn bằng set_task_ccr_file, nộp bằng submit_task_ccr)."
 ---
 
 Nguồn: `github.com/qikify-QA/qa-workflow` `.claude/skills/context-change-request` @ `33d081b` (2026-09-29). Mang về
@@ -30,7 +30,7 @@ Mâu thuẫn giữa SKILL.md và 3 file trên → 3 file trên thắng, trừ c�
 
 ## Công cụ máy — `scripts/ccr.py` (0 token)
 
-`CCR="$HOME/.claude/skills/context-change-request/scripts/ccr.py"`
+`CCR="$HOME/.claude/hae-skills/context-change-request/scripts/ccr.py"`
 
 | Lệnh | Khi nào |
 |---|---|

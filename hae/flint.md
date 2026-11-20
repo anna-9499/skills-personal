@@ -37,7 +37,7 @@ Ngân sách tính cho nguồn chính. Inventory đã tách thì mỗi item `Inve
 | Case cũ cùng feature ở task khác (trùng / tiền lệ) | chỉ khi nghi trùng — `list_tasks` tìm task cùng feature, tối đa 1 task |
 | Câu trích từ Jira | `getJiraIssue` chỉ khi một rule "đã xác nhận" có nguồn trỏ về issue mà bạn cần kiểm |
 
-Không đọc skill `gen-testcase` / `qa-requirement-analysis` từ đầu tới cuối; chỉ `Grep` đúng quy tắc khi cần đối chiếu (ví dụ danh sách security bắt buộc).
+Không đọc skill `hae-gen-testcase` / `hae-qa-requirement-analysis` từ đầu tới cuối; chỉ `Grep` đúng quy tắc khi cần đối chiếu (ví dụ danh sách security bắt buộc).
 
 Feature có ô nhập / role / dữ liệu nhiều tenant → đọc `~/.claude/hae-skills/qa-requirement-analysis/references/method/security-checklist.md` (1 call, tính vào ngân sách): mục "Cổng trước khi ghi một mục Security", đúng phần loại feature, và đúng app ở "Theo app". Đây là thước đo cho loại "Thiếu Security" ở cả RA lẫn TC.
 

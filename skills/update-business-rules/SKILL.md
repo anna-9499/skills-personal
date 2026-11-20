@@ -1,25 +1,25 @@
 ---
-name: update-business-rules
-description: "Lưu hoặc cập nhật business rule đã xác nhận của một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) vào file tham chiếu dùng chung `qa-requirement-analysis/references/apps/<APP_PREFIX>/business-rules.md`. Dùng sau khi đã chạy skill `qa-requirement-analysis` và muốn lưu lại mục \"3. Business Rules\" để dùng làm ngữ cảnh cho các issue sau của cùng app, hoặc khi người dùng muốn thêm/sửa/xoá một business rule cụ thể trực tiếp (không nhất thiết phải qua bước phân tích Jira). Kích hoạt khi người dùng nói \"lưu business rule\", \"cập nhật business rule\", \"ghi nhận rule này cho app X\", hoặc paste mục Business Rules từ một bản Requirement Analysis và yêu cầu lưu lại."
+name: hae-update-business-rules
+description: "Lưu hoặc cập nhật business rule đã xác nhận của một app đang test (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B, Mailtro) vào file tham chiếu dùng chung `qa-requirement-analysis/references/apps/<APP_PREFIX>/business-rules.md`. Dùng sau khi đã chạy skill `hae-qa-requirement-analysis` và muốn lưu lại mục \"3. Business Rules\" để dùng làm ngữ cảnh cho các issue sau của cùng app, hoặc khi người dùng muốn thêm/sửa/xoá một business rule cụ thể trực tiếp (không nhất thiết phải qua bước phân tích Jira). Kích hoạt khi người dùng nói \"lưu business rule\", \"cập nhật business rule\", \"ghi nhận rule này cho app X\", hoặc paste mục Business Rules từ một bản Requirement Analysis và yêu cầu lưu lại."
 ---
 
 ## Vai trò
 
 QA Knowledge Base Maintainer cho đội QA Qikify — 4 app Shopify (Tepo, Slide Cart Drawer, Checkout Customizer, Duos B2B) và Mailtro (SaaS email marketing, project `MTRO`, không chạy trên Shopify).
 
-Nhiệm vụ: duy trì file `apps/<APP_PREFIX>/business-rules.md` cho từng app — nơi lưu các business rule **đã được xác nhận** (từ Jira, PO, Dev, hoặc comment), để `qa-requirement-analysis` và `gen-testcase` dùng làm ngữ cảnh nền cho các issue sau, tránh phải phân tích lại từ đầu và giúp phát hiện mâu thuẫn với rule cũ. Điểm **chưa chốt** không vào file này — nó thuộc `apps/<APP_PREFIX>/open-questions.md`.
+Nhiệm vụ: duy trì file `apps/<APP_PREFIX>/business-rules.md` cho từng app — nơi lưu các business rule **đã được xác nhận** (từ Jira, PO, Dev, hoặc comment), để `hae-qa-requirement-analysis` và `hae-gen-testcase` dùng làm ngữ cảnh nền cho các issue sau, tránh phải phân tích lại từ đầu và giúp phát hiện mâu thuẫn với rule cũ. Điểm **chưa chốt** không vào file này — nó thuộc `apps/<APP_PREFIX>/open-questions.md`.
 
 ## Vị trí trong quy trình QA
 
 Đây là bước bổ trợ (không đánh số cố định) cho quy trình 2 bước chính:
 
-1. `qa-requirement-analysis` → phân tích yêu cầu, xuất ra mục "3. Business Rules".
-2. `gen-testcase` → sinh test case, có đọc `apps/<APP_PREFIX>/business-rules.md` nếu tồn tại để bổ sung coverage.
-3. **`update-business-rules`** (skill này) → ghi/merge business rule đã xác nhận vào file trên, chạy sau bước 1 (hoặc độc lập khi người dùng muốn thêm rule thủ công, hoặc khi một open question vừa được PO/Dev trả lời).
+1. `hae-qa-requirement-analysis` → phân tích yêu cầu, xuất ra mục "3. Business Rules".
+2. `hae-gen-testcase` → sinh test case, có đọc `apps/<APP_PREFIX>/business-rules.md` nếu tồn tại để bổ sung coverage.
+3. **`hae-update-business-rules`** (skill này) → ghi/merge business rule đã xác nhận vào file trên, chạy sau bước 1 (hoặc độc lập khi người dùng muốn thêm rule thủ công, hoặc khi một open question vừa được PO/Dev trả lời).
 
 ## Vị trí file lưu trữ
 
-Tất cả business rule được đọc/ghi qua skill `qa-requirement-analysis`, tại đường dẫn **tương đối so với thư mục skill này**:
+Tất cả business rule được đọc/ghi qua skill `hae-qa-requirement-analysis`, tại đường dẫn **tương đối so với thư mục skill này**:
 
 ```
 ../qa-requirement-analysis/references/apps/<APP_PREFIX>/business-rules.md
@@ -29,11 +29,11 @@ Dùng đường dẫn tương đối, **không hardcode** `/mnt/skills/user/...`
 
 - `<APP_PREFIX>` viết HOA, theo đúng `key` của project trên QA Hub (`list_projects` — cũng là prefix của Test Case ID, và cũng là tên thư mục trong `references/apps/`): TEPO, QCO, DUOS, QSC, MTRO, QAF, QCF, QVL, KOIN, MYS, TIB... Các app đang test có key trùng với Jira Project Key; lệch nhau thì theo QA Hub. Với Mailtro dùng `apps/MTRO/business-rules.md` (theo project key, không tách theo màn hình).
 - **Rule nền tảng chung** (Jira `QIK`, backend `qikify/api` — Security Checker, auth, metafield app-owned; áp cho mọi app) **không** có thư mục app: ghi vào `../qa-requirement-analysis/references/platform/business-rules.md` (= `knowledge-work/platform/business-rules.md`). Rule app chỉ link sang, không chép.
-- `references/apps/` là **symlink thư mục** trỏ vào `apps/` của repo knowledge (mỗi app một thư mục `apps/<KEY>/`) [`ownego/qa-knowledge-work`](https://github.com/ownego/qa-knowledge-work), mount làm submodule `knowledge-work/` trong repo skill `skills-personal`. Mọi app — kể cả MTRO — là file thường `apps/<KEY>/business-rules.md` trong repo đó; `qa-requirement-analysis` và `gen-testcase` đọc cùng đường dẫn nên ghi một lần là cả hai skill thấy. Cách đấu dây chi tiết: `knowledge-work/integrations/claude-code.md` — không mô tả lại ở đây.
+- `references/apps/` là **symlink thư mục** trỏ vào `apps/` của repo knowledge (mỗi app một thư mục `apps/<KEY>/`) [`ownego/qa-knowledge-work`](https://github.com/ownego/qa-knowledge-work), mount làm submodule `knowledge-work/` trong repo skill `skills-personal`. Mọi app — kể cả MTRO — là file thường `apps/<KEY>/business-rules.md` trong repo đó; `hae-qa-requirement-analysis` và `hae-gen-testcase` đọc cùng đường dẫn nên ghi một lần là cả hai skill thấy. Cách đấu dây chi tiết: `knowledge-work/integrations/claude-code.md` — không mô tả lại ở đây.
 - Cùng repo có hai chỗ skill này cũng dùng (tính từ thư mục skill: `../../knowledge-work/`):
   - `apps/<APP_PREFIX>/open-questions.md` — rule chưa chốt: câu hỏi + hỏi ai + case đang treo.
   - `templates/business-rule.md`, `templates/open-question.md` — mẫu chuẩn của một mục rule / một mục câu hỏi.
-- Nếu file `<APP_PREFIX>.md` chưa tồn tại, tự tạo mới (đây là skill duy nhất được phép tạo file này — `qa-requirement-analysis` và `gen-testcase` chỉ đọc, không tự tạo).
+- Nếu file `<APP_PREFIX>.md` chưa tồn tại, tự tạo mới (đây là skill duy nhất được phép tạo file này — `hae-qa-requirement-analysis` và `hae-gen-testcase` chỉ đọc, không tự tạo).
 - Nếu **symlink chết** (thường do clone `skills-personal` thiếu `--recurse-submodules`, thư mục `knowledge-work/` rỗng) → **báo cho người dùng** kèm cách chữa `git submodule update --init` và dừng. **Không** tạo file thường đè lên symlink — làm vậy tách đôi nguồn sự thật.
 
 ### Bản copy MTRO trong repo `qikify-QA-mailtro`
@@ -60,7 +60,7 @@ Message commit ghi rõ app, nhóm rule và ticket nguồn (ví dụ "Thêm busin
 
 ## Input cần thu thập
 
-Không cần hỏi nếu người dùng đã cung cấp đủ; tự suy luận từ ngữ cảnh chat trước đó (ví dụ vừa chạy `qa-requirement-analysis` xong). Nếu thiếu, hỏi ngắn gọn:
+Không cần hỏi nếu người dùng đã cung cấp đủ; tự suy luận từ ngữ cảnh chat trước đó (ví dụ vừa chạy `hae-qa-requirement-analysis` xong). Nếu thiếu, hỏi ngắn gọn:
 
 - **APP_PREFIX**: app nào (TEPO / QCO / DUOS / QSC / MTRO / ...). Nếu người dùng vừa phân tích 1 issue Jira cụ thể, tự suy ra từ project key.
 - **Business rule(s)**: nội dung rule — có thể là mục "3. Business Rules" vừa phân tích, rule người dùng gõ tay, hoặc câu trả lời PO/Dev cho một open question.
@@ -101,7 +101,7 @@ Người dùng chỉ đưa task QA Hub (đã có test case) mà không đưa rul
 ```markdown
 # Business Rules — <APP_PREFIX>
 
-> File này được duy trì bởi skill `update-business-rules`. Đọc bởi `qa-requirement-analysis` và `gen-testcase` làm ngữ cảnh nền. Không tự ý xoá thủ công — dùng skill để cập nhật.
+> File này được duy trì bởi skill `hae-update-business-rules`. Đọc bởi `hae-qa-requirement-analysis` và `hae-gen-testcase` làm ngữ cảnh nền. Không tự ý xoá thủ công — dùng skill để cập nhật.
 
 ## <Tên nhóm / module / flow>
 
@@ -127,7 +127,7 @@ Người dùng chỉ đưa task QA Hub (đã có test case) mà không đưa rul
 ## Bước tiếp theo
 
 Sau khi cập nhật xong, nhắc người dùng:
-- Nếu vừa phân tích 1 issue Jira mới cho app này, có thể chạy `gen-testcase` để rule mới được dùng làm ngữ cảnh sinh test case.
+- Nếu vừa phân tích 1 issue Jira mới cho app này, có thể chạy `hae-gen-testcase` để rule mới được dùng làm ngữ cảnh sinh test case.
 - Nếu phát hiện mâu thuẫn chưa xử lý, nhắc lại để người dùng xác nhận rule đúng trước khi tiếp tục.
 - Nếu có mục mới trong `apps/<APP_PREFIX>/open-questions.md`, liệt kê câu hỏi và người cần hỏi để người dùng mang đi hỏi PO/Dev.
 - Rule đang nằm local — chưa lên GitHub nếu người dùng chưa yêu cầu push (xem "Sau khi ghi: đưa lên GitHub").
